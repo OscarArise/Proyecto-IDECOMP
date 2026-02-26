@@ -96,24 +96,24 @@ class Panels:
         
         return text_widget
     
-    #Metodo publico: escribir en un panel
+    #escribir en un panel
     def write(self, widget, content):
-        #Escribe el contenido en un papel de solo lectura
+        
         widget.config(state = "normal")
         widget.delete(1.0, tk.END)
         widget.insert(tk.END, content)
         widget.config(state = "disabled")        
     
-    #Metodo publico limpiar un panel
+    #limpiar un panel
     def clear(self, widget):
-        #Limpia el contenido del panel
+        
         widget.config(state = "normal")
         widget.delete(1.0, tk.END)
         widget.config(state = "disabled")
         
-    #Metodo publico: limpiar todos los paneles
+    #limpiar todos los paneles
     def clear_all(self):
-        #limpia todos los paneles
+
         for widget in [
             self.tab_lexico, self.tab_sintactico, self.tab_semantico,
             self.tab_intermedio, self.tab_simbolos,
