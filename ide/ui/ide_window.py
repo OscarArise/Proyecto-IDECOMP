@@ -143,11 +143,17 @@ class IDEWindow:
 
     def _bind_editor_events(self):
         """Bindings propios del área de texto."""
+        self.text_area.bind("<KeyPress>", self._on_key_press)
         self.text_area.bind("<KeyRelease>", self._on_key_release)
         self.text_area.bind("<MouseWheel>", self._update_line_numbers)
         self.text_area.bind("<ButtonRelease-1>", self._update_cursor_position)
         self._update_line_numbers()
         self._update_cursor_position()
+        
+        self._key_held = False
+        self._polling = False
+        
+        self._sync()
 
 
     # Handlers de eventos del editor
@@ -159,6 +165,28 @@ class IDEWindow:
         "Alt_L", "Alt_R",
         "Escape", "caps_lock", "F5", "F6", "F7", "F8", "F9",
     })
+    
+    def _on_key_press(self, event = None):
+        self._key_held = True
+        self._sync()
+        if not self._polling:
+            self._start_polling()
+            
+    def _start_polling(self):
+        self._polling = True
+        self._poll()
+        
+    def _poll(self):
+        if self._key_held:
+            self._sync()
+            self.root.after(30, self._poll)
+        else:
+            self._polling = False
+    
+    def _sync(self, event = None):
+        self.update_line_numbers()
+        self.update_cursor_position()
+
 
     def _on_key_release(self, event=None):
         """Actualiza numeración, cursor y flag de modificación al escribir."""
@@ -166,6 +194,8 @@ class IDEWindow:
         self._update_cursor_position(event)
         if event and event.keysym not in self._NO_CONTENT_KEYS:
             self._mark_as_modified()
+        self._key_held = False
+        self._sync()
 
     def _mark_as_modified(self):
         """Marca el documento como modificado y refleja el cambio en la UI."""
@@ -191,6 +221,11 @@ class IDEWindow:
         pos = self.text_area.index(tk.INSERT)
         line, col = pos.split(".")
         self.status_cursor.config(text=f"Ln {line}, Col {int(col) + 1}")
+        
+    # Funcion para crear la barra de estado
+    def create_status_bar(self):
+        self.status_bar = tk.Label(self.root, text="Ln 1, Col 1", bd=1, relief=tk.SUNKEN, anchor='w')
+        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
 
 
     # Callbacks inyectados en FileManager
