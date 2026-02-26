@@ -72,17 +72,42 @@ class IDEWindow:
         scrollbar.config(command=self.text_area.yview)
         
         #Actualizar numeracion de lineas
-        self.text_area.bind("<KeyRelease>", self.update_line_numbers)
-        self.text_area.bind("<MouseWheel>", self.update_line_numbers)
-        self.text_area.bind("<ButtonRelease-1>",self.update_cursor_position)
+        self.text_area.bind("<KeyPress>", self._on_key_press)
+        self.text_area.bind("<KeyRelease>", self._on_key_release)
+        self.text_area.bind("<MouseWheel>", self._sync)
+        self.text_area.bind("<ButtonRelease-1>",self._sync)
+        
+        self._key_held = False
+        self._polling = False
+        
+        self._sync()
+        
+    #Sincronizacion en tiempo real
+    def _on_key_press(self, event = None):
+        self._key_held = True
+        self._sync()
+        if not self._polling:
+            self._start_polling()
+    
+    def _on_key_release(self, event = None):
+        self._key_held = False
+        self._sync()
+        
+    def _start_polling(self):
+        self._polling = True
+        self._poll()
+        
+    def _poll(self):
+        if self._key_held:
+            self._sync()
+            self.root.after(30, self._poll)
+        else:
+            self._polling = False
+    
+    def _sync(self, event = None):
         self.update_line_numbers()
         self.update_cursor_position()
-    
-    # Funcion para crear la barra de estado
-    def create_status_bar(self):
-        self.status_bar = tk.Label(self.root, text="Ln 1, Col 1", bd=1, relief=tk.SUNKEN, anchor='w')
-        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
-    
+        
     #Actualizar la numeracion de lineas 
     def update_line_numbers(self, event=None):
         self.line_numbers.delete("all")
@@ -95,12 +120,17 @@ class IDEWindow:
             if dline:
                 y = dline[1]
                 self.line_numbers.create_text(18, y, anchor="nw", text=str(line))
-                
+
     #Actualizar la posicion del cursor
     def update_cursor_position(self, event=None):
         cursor_position = self.text_area.index(tk.INSERT)
         line, col = cursor_position.split('.')
         self.status_bar.config(text=f"Ln {line}, Col {int(col) + 1}")
+    
+    # Funcion para crear la barra de estado
+    def create_status_bar(self):
+        self.status_bar = tk.Label(self.root, text="Ln 1, Col 1", bd=1, relief=tk.SUNKEN, anchor='w')
+        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
         
     #Logica para el nuevo archivo
     def new_file(self):
@@ -108,7 +138,7 @@ class IDEWindow:
         self.current_file = None
         self.root.title("IDE - Nuevo Archivo")
         self.status_bar.config(text="Nuevo Archivo")
-        self.update_line_numbers()
+        self._sync()        
         
     #Logica para abrir un archivo
     def open_file(self):
@@ -122,14 +152,14 @@ class IDEWindow:
             self.text_area.insert(tk.END, content)
             self.current_file = path
             self.root.title(f"IDE - {path}")
-            self.update_line_numbers()
-            
+            self._sync()
+                        
     def close_file(self):
         self.text_area.delete(1.0, tk.END)
         self.current_file = None
         self.root.title("IDE")
         self.status_bar.config(text="Archivo cerrado")
-        self.update_line_numbers()
+        self._sync()
     
     #Logica para guardar un archivo
     def save_file(self):
