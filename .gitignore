@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Outputs del compilador (generados en tiempo de ejecución)
+ide/outputs/*.txt
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# IDEs
+.vscode/
+.idea/
+*.code-workspace
+
+# Sistema operativo
+Thumbs.db
+.DS_Store
