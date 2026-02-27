@@ -143,15 +143,15 @@ class IDEWindow:
 
     def _bind_editor_events(self):
         """Bindings propios del área de texto."""
+        self._key_held = False
+        self._polling = False
+        
         self.text_area.bind("<KeyPress>", self._on_key_press)
         self.text_area.bind("<KeyRelease>", self._on_key_release)
         self.text_area.bind("<MouseWheel>", self._update_line_numbers)
         self.text_area.bind("<ButtonRelease-1>", self._update_cursor_position)
         self._update_line_numbers()
         self._update_cursor_position()
-        
-        self._key_held = False
-        self._polling = False
         
         self._sync()
 
@@ -184,8 +184,8 @@ class IDEWindow:
             self._polling = False
     
     def _sync(self, event = None):
-        self.update_line_numbers()
-        self.update_cursor_position()
+        self._update_line_numbers()
+        self._update_cursor_position()
 
 
     def _on_key_release(self, event=None):
@@ -222,12 +222,6 @@ class IDEWindow:
         line, col = pos.split(".")
         self.status_cursor.config(text=f"Ln {line}, Col {int(col) + 1}")
         
-    # Funcion para crear la barra de estado
-    def create_status_bar(self):
-        self.status_bar = tk.Label(self.root, text="Ln 1, Col 1", bd=1, relief=tk.SUNKEN, anchor='w')
-        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
-
-
     # Callbacks inyectados en FileManager
     def _get_editor_content(self) -> str:
         """Devuelve el texto del editor sin el '\n' final que añade tk.Text."""
