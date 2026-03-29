@@ -267,7 +267,7 @@ class DFALexer:
             # Por ahora solo se reconoce el operador DIVIDE simple.
             # ------------------------------------------------------------------
             if ch == "/":
-                tok, pos, columna = self._read_divide_or_comment(
+                tok, pos, columna, linea = self._read_divide_or_comment(
                     source, pos, linea, columna
                 )
                 if tok is not None:
@@ -576,16 +576,20 @@ class DFALexer:
 
     def _read_divide_or_comment(
         self, source: str, pos: int, linea: int, columna: int
-    ) -> tuple[Optional[Token], int, int]:
+    ) -> tuple[Optional[Token], int, int, int]:
         """
         Estado: COMENTARIOS
         Si el / va seguido de otro / o de * → comentario (ignorado, retorna None).
         De lo contrario → token DIVIDE.
 
-        TODO: implementar los estados completos:
-            COMENTARIOS_LINEA: INICIO --[/]--> COMENTARIOS --[/]--> loop hasta \\n --> INICIO
+        Transiciones:
+            COMENTARIOS_LINEA:  INICIO --[/]--> COMENTARIOS --[/]--> loop hasta \\n --> INICIO
             COMENTARIOS_BLOQUE: INICIO --[/]--> COMENTARIOS --[*]--> loop --> Q3 --[/]--> INICIO
             Q3: manejo de asteriscos múltiples dentro del bloque
+
+        Retorna (Token|None, nueva_pos, nueva_col, nueva_linea).
+        Si el comentario de bloque no se cierra antes del EOF, se consume
+        todo el resto del archivo y se retorna None (nada se tokeniza).
         """
         start_col = columna
         pos      += 1   # consumir /
@@ -594,33 +598,37 @@ class DFALexer:
         n = len(source)
 
         if pos < n and source[pos] == "/":
-            # Comentario de línea — consumir hasta \n
+            # Comentario de línea — consumir hasta \n (sin incluir el \n)
             pos     += 1
             columna += 1
             while pos < n and source[pos] != "\n":
                 pos     += 1
                 columna += 1
-            return None, pos, columna   # comentario ignorado
+            return None, pos, columna, linea   # comentario ignorado
 
         if pos < n and source[pos] == "*":
-            # Comentario de bloque — consumir hasta */
+            # Comentario de bloque — consumir hasta */ o hasta EOF
             pos     += 1
             columna += 1
-            while pos < n - 1:
-                if source[pos] == "*" and source[pos + 1] == "/":
+            closed = False
+            while pos < n:
+                if source[pos] == "*" and pos + 1 < n and source[pos + 1] == "/":
+                    # Cierre encontrado
                     pos     += 2
                     columna += 2
+                    closed = True
                     break
                 if source[pos] == "\n":
-                    linea  += 1   # noqa: F841 — linea se actualiza localmente
+                    linea  += 1
                     columna = 1
                 else:
                     columna += 1
                 pos += 1
-            return None, pos, columna   # comentario ignorado
+            # Si closed es False, llegamos al EOF sin cerrar → todo consumido
+            return None, pos, columna, linea   # comentario ignorado
 
         # [Otro] → token DIVISION simple
-        return Token("DIVISION", "/", linea, start_col), pos, columna
+        return Token("DIVISION", "/", linea, start_col), pos, columna, linea
 # --------------------------------------------------------------------------
 
     def _read_string(
