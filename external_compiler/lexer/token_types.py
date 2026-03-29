@@ -37,6 +37,9 @@ class TokenType(Enum):
     KW_RETURN  = auto()
     KW_BREAK   = auto()
     KW_DEFAULT = auto()
+    KW_REAL    = auto()
+    KW_THEN    = auto()
+    KW_UNTIL   = auto()
 
     # ------------------------------------------------------------------
     # Operadores aritméticos
@@ -82,8 +85,8 @@ class TokenType(Enum):
     # Tokens reservados para implementación futura
     # ------------------------------------------------------------------
     # TODO: aquí se agregarán los tipos STRING y CHAR
-    #   STRING = auto()   # "cadena de texto"
-    #   CHAR   = auto()   # 'c'
+    STRING = auto()   # "cadena de texto"
+    CHAR   = auto()   # 'c'
 
     # TODO: aquí se agregarán los tipos de tokens para comentarios
     #   COMMENT_LINE  = auto()   # // comentario de línea
