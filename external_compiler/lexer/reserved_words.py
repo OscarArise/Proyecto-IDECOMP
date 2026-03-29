@@ -21,6 +21,7 @@ RESERVED: dict[str, str] = {
     "switch":  "KW_SWITCH",
     "case":    "KW_CASE",
     "int":     "KW_INT",
+    "real":    "KW_REAL",
     "float":   "KW_FLOAT",
     "main":    "KW_MAIN",
     "cin":     "KW_CIN",
@@ -28,5 +29,7 @@ RESERVED: dict[str, str] = {
     "for":     "KW_FOR",
     "return":  "KW_RETURN",
     "break":   "KW_BREAK",
+    "then":    "KW_THEN",
+    "until":   "KW_UNTIL",
     "default": "KW_DEFAULT",
 }
