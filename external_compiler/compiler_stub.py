@@ -108,37 +108,44 @@ def main():
 
 def _run_lexico(source: str, errors: list) -> list[tuple]:
     """
-    Tokenizador stub: produce una lista de (tipo, valor, línea, columna).
-    Solo reconoce patrones muy básicos como demostración.
+    Analizador léxico real basado en DFA.
+
+    Delega completamente al DFALexer definido en lexer/dfa_lexer.py,
+    el cual implementa el autómata de automata.md estado por estado.
+
+    Retorna una lista de tuplas (tipo, valor, línea, columna) compatible
+    con el resto del pipeline del compilador.
+
+    Los tokens de tipo ERROR se excluyen de la lista de tokens válidos y
+    sus mensajes se propagan al listado de `errors`.
+
+    TODO: cuando se implemente el reporte a errors.txt con línea/columna,
+          los mensajes de errors[] de aquí deben escribirse en ese archivo.
     """
-    import re
-    token_patterns = [
-        ("NUMERO",    r"\b\d+(\.\d+)?\b"),
-        ("CADENA",    r'"[^"]*"'),
-        ("RESERVADA", r"\b(si|sino|mientras|para|funcion|retorna|verdadero|falso)\b"),
-        ("IDENT",     r"\b[a-zA-Z_][a-zA-Z0-9_]*\b"),
-        ("OP",        r"[+\-*/=<>!&|]{1,2}"),
-        ("DELIM",     r"[(){}\[\];,.]"),
-        ("ESPACIO",   r"\s+"),
-        ("DESCONOCIDO", r"."),
-    ]
-    combined = "|".join(f"(?P<{name}>{pat})" for name, pat in token_patterns)
-    tokens = []
-    for line_no, line in enumerate(source.splitlines(), start=1):
-        for m in re.finditer(combined, line):
-            kind = m.lastgroup
-            value = m.group()
-            col = m.start() + 1
-            if kind == "ESPACIO":
-                continue
-            if kind == "DESCONOCIDO":
-                errors.append(
-                    f"[LEXICO] Carácter inválido {value!r} "
-                    f"en línea {line_no}, columna {col}"
-                )
-            else:
-                tokens.append((kind, value, line_no, col))
-    return tokens
+    import sys
+    import os
+    # Asegurar que el directorio external_compiler esté en el path
+    # para que Python resuelva el subpaquete lexer/
+    _ec_dir = os.path.dirname(os.path.abspath(__file__))
+    if _ec_dir not in sys.path:
+        sys.path.insert(0, _ec_dir)
+
+    from lexer.dfa_lexer import DFALexer
+
+    lexer = DFALexer()
+    raw_tokens, lex_errors = lexer.tokenize(source)
+
+    # Propagar errores léxicos al listado general de errores
+    errors.extend(lex_errors)
+
+    # Convertir Token dataclass → tupla, excluyendo ERROR y EOF
+    result = []
+    for tok in raw_tokens:
+        if tok.tipo in ("ERROR", "EOF"):
+            continue
+        result.append((tok.tipo, tok.valor, tok.linea, tok.columna))
+
+    return result
 
 
 def _format_tokens(tokens: list[tuple]) -> str:
