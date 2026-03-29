@@ -281,15 +281,15 @@ class DFALexer:
             #       INICIO --["]--> CADENA --[texto]--> CADENA --["]--> HECHO
             # ------------------------------------------------------------------
             if ch == '"':
-                # Placeholder — por ahora emite ERROR y avanza
-                err_msg = (
-                    f"[LEXICO] Cadenas de texto aún no implementadas "
-                    f"en línea {linea}, columna {columna}"
+                tok, pos, columna, linea = self._read_string(
+                    source, pos, linea, columna
                 )
-                errors.append(err_msg)
-                tokens.append(Token("ERROR", ch, linea, columna))
-                pos += 1
-                columna += 1
+                if tok.tipo == "ERROR":
+                    errors.append(
+                        f"[LEXICO] Cadena sin cerrar en línea {tok.linea}, "
+                        f"columna {tok.columna}"
+                    )
+                tokens.append(tok)
                 continue
 
             # ------------------------------------------------------------------
@@ -298,15 +298,15 @@ class DFALexer:
             #       INICIO --[']--> Q1 --[c]--> Q2 --[']--> HECHO
             # ------------------------------------------------------------------
             if ch == "'":
-                # Placeholder — por ahora emite ERROR y avanza
-                err_msg = (
-                    f"[LEXICO] Caracteres literales aún no implementados "
-                    f"en línea {linea}, columna {columna}"
+                tok, pos, columna, linea = self._read_char(
+                    source, pos, linea, columna
                 )
-                errors.append(err_msg)
-                tokens.append(Token("ERROR", ch, linea, columna))
-                pos += 1
-                columna += 1
+                if tok.tipo == "ERROR":
+                    errors.append(
+                        f"[LEXICO] Carácter literal inválido en línea {tok.linea}, "
+                        f"columna {tok.columna}"
+                    )
+                tokens.append(tok)
                 continue
 
             # ------------------------------------------------------------------
@@ -621,3 +621,81 @@ class DFALexer:
 
         # [Otro] → token DIVISION simple
         return Token("DIVISION", "/", linea, start_col), pos, columna
+# --------------------------------------------------------------------------
+
+    def _read_string(
+        self, source: str, pos: int, linea: int, columna: int
+    ) -> tuple[Token, int, int, int]:
+        start_col = columna
+        start     = pos
+        n         = len(source)
+
+        pos     += 1
+        columna += 1
+
+        while pos < n:
+            ch = source[pos]
+
+            if ch == '"':
+                pos     += 1
+                columna += 1
+                lexema = source[start:pos]
+                return Token("STRING", lexema, linea, start_col), pos, columna, linea
+
+            if ch == '\n':
+                lexema = source[start:pos]
+                return Token("ERROR", lexema, linea, start_col), pos, columna, linea
+
+            pos     += 1
+            columna += 1
+
+        lexema = source[start:pos]
+        return Token("ERROR", lexema, linea, start_col), pos, columna, linea
+
+    # --------------------------------------------------------------------------
+
+    def _read_char(
+        self, source: str, pos: int, linea: int, columna: int
+    ) -> tuple[Token, int, int, int]:
+        start_col = columna
+        start     = pos
+        n         = len(source)
+
+        pos     += 1
+        columna += 1
+
+        if pos >= n:
+            return Token("ERROR", source[start:pos], linea, start_col), pos, columna, linea
+
+        contenido = source[pos]
+
+        if contenido == "'":
+            pos     += 1
+            columna += 1
+            return Token("ERROR", source[start:pos], linea, start_col), pos, columna, linea
+
+        if contenido == '\n':
+            return Token("ERROR", source[start:pos], linea, start_col), pos, columna, linea
+
+        pos     += 1
+        columna += 1
+
+        if pos >= n:
+            return Token("ERROR", source[start:pos], linea, start_col), pos, columna, linea
+
+        siguiente = source[pos]
+
+        if siguiente == "'":
+            pos     += 1
+            columna += 1
+            lexema = source[start:pos]
+            return Token("CHAR", lexema, linea, start_col), pos, columna, linea
+
+        while pos < n and source[pos] != "'" and source[pos] != '\n':
+            pos     += 1
+            columna += 1
+        if pos < n and source[pos] == "'":
+            pos     += 1
+            columna += 1
+        lexema = source[start:pos]
+        return Token("ERROR", lexema, linea, start_col), pos, columna, linea
