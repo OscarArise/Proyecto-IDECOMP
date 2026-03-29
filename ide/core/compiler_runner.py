@@ -92,6 +92,10 @@ class CompilerRunner:
         self.outputs_dir = Path(outputs_dir)
         self.timeout = timeout
 
+        # Asegurar que el directorio de salida exista antes de lanzar
+        # el compilador (éste escribe tokens.txt, errors.txt, etc. aquí).
+        self.outputs_dir.mkdir(parents=True, exist_ok=True)
+
 
 
     def run(self, source_file: str, phase: str = "all") -> CompilerResult:
