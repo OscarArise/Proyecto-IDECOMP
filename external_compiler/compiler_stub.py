@@ -56,9 +56,9 @@ def main():
     if "lexico" in phases_to_run:
         tokens = _run_lexico(source_code, errors)
         _write(OUTPUT_FILES["lexico"], _format_tokens(tokens))
+        _write(OUTPUT_FILES["errors"], "\n".join(errors) + ("\n" if errors else ""))
 
     if errors:
-        _write(OUTPUT_FILES["errors"], "\n".join(errors))
         sys.exit(1)
 
     # Fase 2: Sintáctico
