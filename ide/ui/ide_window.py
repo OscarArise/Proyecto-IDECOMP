@@ -8,6 +8,9 @@ from core.state import AppState
 from core.file_manager import FileManager
 from core.compiler_runner import CompilerRunner
 
+#Lexico
+from ui.highlighter import SyntaxHighlighter
+
 
 class IDEWindow:
     def __init__(self, root):
@@ -93,6 +96,7 @@ class IDEWindow:
         )
         self.text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.config(command=self.text_area.yview)
+        self.highlighter = SyntaxHighlighter(self.text_area)
 
 
     # Barra de estado (fila inferior)
@@ -150,6 +154,7 @@ class IDEWindow:
         self.text_area.bind("<KeyRelease>", self._on_key_release)
         self.text_area.bind("<MouseWheel>", self._update_line_numbers)
         self.text_area.bind("<ButtonRelease-1>", self._update_cursor_position)
+        self.text_area.bind("<KeyRelease>", self._on_key_release_highlight)
         self._update_line_numbers()
         self._update_cursor_position()
         
@@ -222,6 +227,10 @@ class IDEWindow:
         line, col = pos.split(".")
         self.status_cursor.config(text=f"Ln {line}, Col {int(col) + 1}")
         
+    def _on_key_release_highlight(self, event = None):
+        self._on_key_release(event)
+        self.highlighter.highlight()
+        
     # Callbacks inyectados en FileManager
     def _get_editor_content(self) -> str:
         """Devuelve el texto del editor sin el '\n' final que añade tk.Text."""
@@ -233,6 +242,7 @@ class IDEWindow:
         self.text_area.insert(tk.END, content)
         self._update_line_numbers()
         self._update_cursor_position()
+        self.highlighter.highlight()
 
     def _on_title_update(self, path: str | None, modified: bool):
         """
