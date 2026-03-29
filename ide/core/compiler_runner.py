@@ -91,6 +91,7 @@ class CompilerRunner:
         self.compiler_path = Path(compiler_path)
         self.outputs_dir = Path(outputs_dir)
         self.timeout = timeout
+        self.outputs_dir.mkdir(parents=True, exist_ok=True)  
 
 
 
