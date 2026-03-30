@@ -17,6 +17,7 @@ class IDEWindow:
         self.root = root
         self.root.geometry("800x600")
         self.state = AppState()
+        self._last_errors_content = ""
         self._create_ui()
 
         self.file_manager = FileManager(
@@ -151,10 +152,10 @@ class IDEWindow:
         self._polling = False
         
         self.text_area.bind("<KeyPress>", self._on_key_press)
-        self.text_area.bind("<KeyRelease>", self._on_key_release)
+        self.text_area.bind("<KeyRelease>", self._on_key_release_highlight)
         self.text_area.bind("<MouseWheel>", self._update_line_numbers)
         self.text_area.bind("<ButtonRelease-1>", self._update_cursor_position)
-        self.text_area.bind("<KeyRelease>", self._on_key_release_highlight)
+        self.text_area.bind("<<Paste>>", self._on_paste)
         self._update_line_numbers()
         self._update_cursor_position()
         
@@ -174,6 +175,9 @@ class IDEWindow:
     def _on_key_press(self, event = None):
         self._key_held = True
         self._sync()
+        self._last_errors_content = ""
+        self.highlighter.clear_error_marks()
+        self.line_numbers.delete("error_line")
         if not self._polling:
             self._start_polling()
             
@@ -221,11 +225,20 @@ class IDEWindow:
             if dline:
                 y = dline[1]
                 self.line_numbers.create_text(18, y, anchor="nw", text=str(line))
+                
+        #Redibujar las lineas de error si existen
+        if hasattr(self, '_last_errors_content') and self._last_errors_content:
+            self.highlighter.mark_error_lines(
+                self._last_errors_content, self.line_numbers
+            )
 
     def _update_cursor_position(self, event=None):
         pos = self.text_area.index(tk.INSERT)
         line, col = pos.split(".")
         self.status_cursor.config(text=f"Ln {line}, Col {int(col) + 1}")
+        
+    def _on_paste(self, event = None):
+        self._mark_as_modified()
         
     def _on_key_release_highlight(self, event = None):
         self._on_key_release(event)
@@ -329,6 +342,9 @@ class IDEWindow:
             text=f"\u23f3 Ejecutando fase: {phase.capitalize()}...", fg="#7f8c8d"
         )
         self.root.update_idletasks()  # Refrescar UI antes de bloquear
+        #Limpiar marcas anteriores
+        self.highlighter.clear_error_marks()
+        self.line_numbers.delete("error_line")
 
         #Ejecutar compilador
         result = self.compiler.run(
@@ -360,7 +376,13 @@ class IDEWindow:
             content = result.errors_by_phase.get(key, "")
             if content.strip():
                 self.panels.write(widget, content)
-
+                
+        #Marcar errores en el editor
+        errors_content = result.errors_by_phase.get("err_lexico", "")
+        self._last_errors_content = errors_content
+        self.highlighter.mark_errors(errors_content)
+        self.highlighter.mark_error_lines(errors_content, self.line_numbers)
+        
         #stderr del proceso (error interno del compilador)
         if result.stderr.strip():
             self.panels.write(
@@ -423,3 +445,15 @@ class IDEWindow:
                 notebook.select(tab_widget.master)
             except Exception:
                 pass  # Silenciar si el frame no es directamente seleccionable
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            

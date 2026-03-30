@@ -26,7 +26,7 @@ TOKEN_PATTERNS = [
     #Operadores racionales
     ("relational", r"<=|>=|==|!=|<|>"),
     #Operadores aritmeticos
-    ("arithmetic", r"\+\+|--|[+\-*/%^]"),
+    ("arithmetic",  r"\+\+|--|[+\-*/%^]"),
     #Asignacion simple
     ("assing", r"=(?!=)"),
     #Simbolos
@@ -104,7 +104,7 @@ class SyntaxHighlighter:
             self.text.tag_remove(tag, "1.0", tk.END)
             
         #Aplicar cada match
-        for match in _COMBINED_PATTERN.finditer(content):
+        for match in _COMBINED_PATTERN.finditer(content):   
             start_idx = match.start()
             end_idx = match.end()
             
@@ -135,3 +135,79 @@ class SyntaxHighlighter:
     def _index(self, char_pos: int) -> str:
         #Convierte la posicion de caracter a formato linea-columna del Tkinter
         return self.text.index(f"1.0 + {char_pos}c") 
+    
+    #Marcado de errores lexicos
+    
+    #Patron para extraer linea y columna del formato:
+    _ERROR_PATTERN = re.compile(
+        r"en\s+l.nea\s+(\d+),\s+columna\s+(\d+)",
+        re.IGNORECASE
+    )
+    
+    def mark_errors(self, errors_content: str):
+        #Lee el contenido de los errors.txt y marca cada error en el editor
+        #Con un subrayado rojo en la posicion exacta
+        
+        #Limpiar marcas anteriores
+        self.text.tag_remove("error_mark", "1.0", tk.END)
+        #Configurar el tag de marcado si no existe
+        self.text.tag_configure(
+            "error_mark",
+            underline=True,
+            foreground="#FF0000"
+        )
+        
+        if not errors_content.strip():
+            return
+        
+        for line in errors_content.splitlines():
+            match = self._ERROR_PATTERN.search(line)
+            if not match:
+                continue
+            
+            linea = int(match.group(1))
+            columna = int(match.group(2))
+            
+            #Construir indices de inicio y fin del caracter erroneo
+            start = f"{linea}.{columna - 1}"
+            end = f"{linea}.{columna}"
+            
+            #Verificar que el indice existe en el editor
+            try:
+                self.text.tag_add("error_mark", start, end)
+            except Exception:
+                pass #Ignorar si la posicion no existe
+    
+    def clear_error_marks(self):
+        #Elimina todas las marcas de error del editor
+        self.text.tag_remove("error_mark", "1.0", tk.END)
+        
+    def mark_error_lines(self, errors_content: str, line_numbers_canvas):
+        line_numbers_canvas.delete("error_line")
+        
+        if not errors_content.strip():
+            return
+        
+        error_lines = set()
+        for line in errors_content.splitlines():
+            match = self._ERROR_PATTERN.search(line)
+            if match:
+                error_lines.add(int(match.group(1)))
+                
+        for linea in error_lines:
+            dline = self.text.dlineinfo(f"{linea}.0")
+            if dline:
+                y = dline[1]
+                h = dline[3]
+                line_numbers_canvas.create_rectangle(
+                    2, y, 33, y + h,
+                    fill = "#FF0000",
+                    outline = "",
+                    tags = "error_line"
+                )
+                line_numbers_canvas.create_text(
+                    18, y, anchor = "nw",
+                    text = str(linea),
+                    fill = "white",
+                    tags = "error_line"
+                )
