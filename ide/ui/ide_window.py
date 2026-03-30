@@ -9,12 +9,16 @@ from ui.menu import Menu
 from ui.panels import Panels
 from ui.toolbar import Toolbar
 
+#Lexico
+from ui.highlighter import SyntaxHighlighter
+
 
 class IDEWindow:
     def __init__(self, root):
         self.root = root
         self.root.geometry("800x600")
         self.state = AppState()
+        self._last_errors_content = ""
         self._create_ui()
 
         self.file_manager = FileManager(
@@ -100,6 +104,7 @@ class IDEWindow:
         )
         self.text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.config(command=self.text_area.yview)
+        self.highlighter = SyntaxHighlighter(self.text_area)
 
     # Barra de estado (fila inferior)
     def _create_status_bar(self):
@@ -144,15 +149,21 @@ class IDEWindow:
 
     def _bind_editor_events(self):
         """Bindings propios del área de texto."""
+        self._key_held = False
+        self._polling = False
+        
         self.text_area.bind("<KeyPress>", self._on_key_press)
-        self.text_area.bind("<KeyRelease>", self._on_key_release)
+        self.text_area.bind("<KeyRelease>", self._on_key_release_highlight)
         self.text_area.bind("<MouseWheel>", self._update_line_numbers)
         self.text_area.bind("<ButtonRelease-1>", self._update_cursor_position)
+        self.text_area.bind("<<Paste>>", self._on_paste)
         self._update_line_numbers()
         self._update_cursor_position()
 
         self._key_held = False
         self._polling = False
+        
+        self._sync()
 
         self._sync()
 
@@ -186,6 +197,9 @@ class IDEWindow:
     def _on_key_press(self, event=None):
         self._key_held = True
         self._sync()
+        self._last_errors_content = ""
+        self.highlighter.clear_error_marks()
+        self.line_numbers.delete("error_line")
         if not self._polling:
             self._start_polling()
 
@@ -199,6 +213,10 @@ class IDEWindow:
             self.root.after(30, self._poll)
         else:
             self._polling = False
+    
+    def _sync(self, event = None):
+        self._update_line_numbers()
+        self._update_cursor_position()
 
     def _sync(self, event=None):
         self._update_line_numbers()
@@ -230,19 +248,25 @@ class IDEWindow:
             if dline:
                 y = dline[1]
                 self.line_numbers.create_text(18, y, anchor="nw", text=str(line))
+                
+        #Redibujar las lineas de error si existen
+        if hasattr(self, '_last_errors_content') and self._last_errors_content:
+            self.highlighter.mark_error_lines(
+                self._last_errors_content, self.line_numbers
+            )
 
     def _update_cursor_position(self, event=None):
         pos = self.text_area.index(tk.INSERT)
         line, col = pos.split(".")
         self.status_cursor.config(text=f"Ln {line}, Col {int(col) + 1}")
-
-    # Funcion para crear la barra de estado
-    def create_status_bar(self):
-        self.status_bar = tk.Label(
-            self.root, text="Ln 1, Col 1", bd=1, relief=tk.SUNKEN, anchor="w"
-        )
-        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
-
+        
+    def _on_paste(self, event = None):
+        self._mark_as_modified()
+        
+    def _on_key_release_highlight(self, event = None):
+        self._on_key_release(event)
+        self.highlighter.highlight()
+        
     # Callbacks inyectados en FileManager
     def _get_editor_content(self) -> str:
         """Devuelve el texto del editor sin el '\n' final que añade tk.Text."""
@@ -254,6 +278,7 @@ class IDEWindow:
         self.text_area.insert(tk.END, content)
         self._update_line_numbers()
         self._update_cursor_position()
+        self.highlighter.highlight()
 
     def _on_title_update(self, path: str | None, modified: bool):
         """
@@ -348,6 +373,9 @@ class IDEWindow:
             text=f"\u23f3 Ejecutando fase: {phase.capitalize()}...", fg="#7f8c8d"
         )
         self.root.update_idletasks()  # Refrescar UI antes de bloquear
+        #Limpiar marcas anteriores
+        self.highlighter.clear_error_marks()
+        self.line_numbers.delete("error_line")
 
         # Ejecutar compilador
         result = self.compiler.run(
@@ -381,6 +409,14 @@ class IDEWindow:
                 self.panels.write(widget, content)
 
         # stderr del proceso (error interno del compilador)
+                
+        #Marcar errores en el editor
+        errors_content = result.errors_by_phase.get("err_lexico", "")
+        self._last_errors_content = errors_content
+        self.highlighter.mark_errors(errors_content)
+        self.highlighter.mark_error_lines(errors_content, self.line_numbers)
+        
+        #stderr del proceso (error interno del compilador)
         if result.stderr.strip():
             self.panels.write(
                 self.panels.tab_err_lexico,
@@ -442,3 +478,15 @@ class IDEWindow:
                 notebook.select(tab_widget.master)
             except Exception:
                 pass  # Silenciar si el frame no es directamente seleccionable
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
