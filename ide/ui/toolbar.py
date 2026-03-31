@@ -10,11 +10,12 @@ class Toolbar:
         # Guardar referencia a botones que dependen del estado (compilar/ejecutar)
         self._compile_buttons: list = []
         self.icons = {} # guardar referencias para evitar garbage collection
-        
+        self.tooltip: tk.Toplevel | None = None  # Tooltip activo (máximo uno a la vez)
+
         #Ruta de los iconos
         base_dir = os.path.dirname(os.path.abspath(__file__))
         self.icons_dir = os.path.join(base_dir, "..", "assets", "icons")
-        
+
         self._build_toolbar()
 
     def _build_toolbar(self):
@@ -45,7 +46,7 @@ class Toolbar:
                 btn = self._add_button(icon, tooltip, key)
                 if group == "compile":
                     self._compile_buttons.append(btn)
-    
+
     #Carga y redimensiona el icono
     def _load_icon(self, filename):
         path = os.path.join(self.icons_dir, filename)
@@ -59,22 +60,20 @@ class Toolbar:
             rgb = ImageEnhance.Sharpness(rgb).enhance(2.0)
             r, g, b = rgb.split()
             img = Image.merge("RGBA", (r, g, b, a))
-            
+
             photo = ImageTk.PhotoImage(img)
             self.icons[filename] = photo
             return photo
-        
+
         except Exception as e:
             print(f"No se pudo encontrar el icono {filename}: {e}")
             return None
-                
+
     def _add_button(self, icon_file, tooltip, callback_key):
         icon = self._load_icon(icon_file)
-        
-        btn = tk.Button(
-            self.frame,
-            image=icon if icon else None,
-            text="" if icon else tooltip,
+
+        # Construir kwargs condicionalmente para no pasar image=None al Button
+        btn_kw: dict = dict(
             relief=tk.FLAT,
             bg="#e0e0e0",
             activebackground="#c8c8c8",
@@ -84,13 +83,19 @@ class Toolbar:
             borderwidth=2,
             command=self.callbacks.get(callback_key),
         )
+        if icon:
+            btn_kw["image"] = icon
+            btn_kw["text"] = ""
+        else:
+            btn_kw["text"] = tooltip
+        btn = tk.Button(self.frame, **btn_kw)
         btn.pack(side=tk.LEFT, padx=2, pady=2)
-        
+
         # Efecto visual al presionar y soltar
         btn.bind("<ButtonPress-1>",   lambda e, b=btn: b.config(relief=tk.SUNKEN, bg="#b8b8b8"))
         btn.bind("<ButtonRelease-1>", lambda e, b=btn: b.config(relief=tk.FLAT,   bg="#e0e0e0"))
 
-        
+
         self._add_tooltip(btn, tooltip)
         return btn
 
@@ -103,6 +108,10 @@ class Toolbar:
     def _add_tooltip(self, widget, text):
         """Tooltip emergente al pasar el mouse."""
         def on_enter(event):
+            # Destruir cualquier tooltip anterior antes de crear uno nuevo
+            if self.tooltip:
+                self.tooltip.destroy()
+                self.tooltip = None
             self.tooltip = tk.Toplevel(self.root)
             self.tooltip.wm_overrideredirect(True)
             x = widget.winfo_rootx() + 20
@@ -121,8 +130,9 @@ class Toolbar:
             ).pack()
 
         def on_leave(event):
-            if hasattr(self, "tooltip"):
+            if self.tooltip:
                 self.tooltip.destroy()
+                self.tooltip = None
 
         widget.bind("<Enter>", on_enter)
         widget.bind("<Leave>", on_leave)
@@ -130,11 +140,9 @@ class Toolbar:
     # API pública: habilitar / deshabilitar botones de compilación
 
     def set_compile_buttons_state(self, enabled: bool):
-        
+
         #Habilita o deshabilita los botones de fase de compilación.
-        
+
         state = tk.NORMAL if enabled else tk.DISABLED
         for btn in self._compile_buttons:
             btn.config(state=state)
-            
-

@@ -19,6 +19,7 @@ class IDEWindow:
         self.root.geometry("800x600")
         self.state = AppState()
         self._last_errors_content = ""
+        self._suppress_modified = False
         self._create_ui()
 
         self.file_manager = FileManager(
@@ -149,87 +150,31 @@ class IDEWindow:
 
     def _bind_editor_events(self):
         """Bindings propios del área de texto."""
-        self._key_held = False
-        self._polling = False
-        
-        self.text_area.bind("<KeyPress>", self._on_key_press)
+        self.text_area.bind("<<Modified>>", self._on_text_modified)
         self.text_area.bind("<KeyRelease>", self._on_key_release_highlight)
         self.text_area.bind("<MouseWheel>", self._update_line_numbers)
         self.text_area.bind("<ButtonRelease-1>", self._update_cursor_position)
-        self.text_area.bind("<<Paste>>", self._on_paste)
         self._update_line_numbers()
         self._update_cursor_position()
 
-        self._key_held = False
-        self._polling = False
-        
+    def _on_text_modified(self, event=None):
+        """Se dispara via <<Modified>> cuando el contenido del editor cambia.
+        Reemplaza el mecanismo de polling: más eficiente y reactivo."""
+        # Resetear el flag para que el evento vuelva a dispararse en el próximo cambio
+        self.text_area.edit_modified(False)
+        if self._suppress_modified:
+            return
         self._sync()
-
-        self._sync()
-
-    # Handlers de eventos del editor
-    _NO_CONTENT_KEYS = frozenset(
-        {
-            "Left",
-            "Right",
-            "Up",
-            "Down",
-            "Home",
-            "End",
-            "Prior",
-            "Next",
-            "Shift_L",
-            "Shift_R",
-            "Control_L",
-            "Control_R",
-            "Alt_L",
-            "Alt_R",
-            "Escape",
-            "caps_lock",
-            "F5",
-            "F6",
-            "F7",
-            "F8",
-            "F9",
-        }
-    )
-
-    def _on_key_press(self, event=None):
-        self._key_held = True
-        self._sync()
-        self._last_errors_content = ""
-        self.highlighter.clear_error_marks()
-        self.line_numbers.delete("error_line")
-        if not self._polling:
-            self._start_polling()
-
-    def _start_polling(self):
-        self._polling = True
-        self._poll()
-
-    def _poll(self):
-        if self._key_held:
-            self._sync()
-            self.root.after(30, self._poll)
-        else:
-            self._polling = False
-    
-    def _sync(self, event = None):
-        self._update_line_numbers()
-        self._update_cursor_position()
+        # Limpiar marcas de error al detectar cualquier cambio de contenido
+        if self._last_errors_content:
+            self._last_errors_content = ""
+            self.highlighter.clear_error_marks()
+            self.line_numbers.delete("error_line")
+        self._mark_as_modified()
 
     def _sync(self, event=None):
         self._update_line_numbers()
         self._update_cursor_position()
-
-    def _on_key_release(self, event=None):
-        """Actualiza numeración, cursor y flag de modificación al escribir."""
-        self._update_line_numbers(event)
-        self._update_cursor_position(event)
-        if event and event.keysym not in self._NO_CONTENT_KEYS:
-            self._mark_as_modified()
-        self._key_held = False
-        self._sync()
 
     def _mark_as_modified(self):
         """Marca el documento como modificado y refleja el cambio en la UI."""
@@ -248,7 +193,7 @@ class IDEWindow:
             if dline:
                 y = dline[1]
                 self.line_numbers.create_text(18, y, anchor="nw", text=str(line))
-                
+
         #Redibujar las lineas de error si existen
         if hasattr(self, '_last_errors_content') and self._last_errors_content:
             self.highlighter.mark_error_lines(
@@ -259,14 +204,13 @@ class IDEWindow:
         pos = self.text_area.index(tk.INSERT)
         line, col = pos.split(".")
         self.status_cursor.config(text=f"Ln {line}, Col {int(col) + 1}")
-        
-    def _on_paste(self, event = None):
-        self._mark_as_modified()
-        
-    def _on_key_release_highlight(self, event = None):
-        self._on_key_release(event)
+
+    def _on_key_release_highlight(self, event=None):
+        """Actualiza numeración, cursor y resaltado al soltar una tecla."""
+        self._update_line_numbers()
+        self._update_cursor_position()
         self.highlighter.highlight()
-        
+
     # Callbacks inyectados en FileManager
     def _get_editor_content(self) -> str:
         """Devuelve el texto del editor sin el '\n' final que añade tk.Text."""
@@ -274,8 +218,11 @@ class IDEWindow:
 
     def _set_editor_content(self, content: str):
         """Reemplaza el contenido completo del editor."""
+        self._suppress_modified = True
         self.text_area.delete("1.0", tk.END)
         self.text_area.insert(tk.END, content)
+        self.text_area.edit_modified(False)  # Descartar el <<Modified>> generado al cargar
+        self._suppress_modified = False
         self._update_line_numbers()
         self._update_cursor_position()
         self.highlighter.highlight()
@@ -409,13 +356,13 @@ class IDEWindow:
                 self.panels.write(widget, content)
 
         # stderr del proceso (error interno del compilador)
-                
+
         #Marcar errores en el editor
         errors_content = result.errors_by_phase.get("err_lexico", "")
         self._last_errors_content = errors_content
         self.highlighter.mark_errors(errors_content)
         self.highlighter.mark_error_lines(errors_content, self.line_numbers)
-        
+
         #stderr del proceso (error interno del compilador)
         if result.stderr.strip():
             self.panels.write(
@@ -474,19 +421,9 @@ class IDEWindow:
         tab_widget = getattr(self.panels, tab_attr, None)
 
         if notebook and tab_widget:
-            try:
-                notebook.select(tab_widget.master)
-            except Exception:
-                pass  # Silenciar si el frame no es directamente seleccionable
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+            frame = self.panels.get_tab_frame(tab_widget)
+            if frame:
+                try:
+                    notebook.select(frame)
+                except Exception:
+                    pass  # Silenciar si el frame no es seleccionable
