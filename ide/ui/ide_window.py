@@ -259,8 +259,11 @@ class IDEWindow:
         else:
             self.status_bar.config(text="Listo", fg="#2c2c2c")
 
-        # Habilitar botones de compilación solo si hay archivo guardado
-        has_file = bool(path and not modified)
+        # Habilitar botones de compilación si hay un archivo abierto.
+        # Se deshabilitan únicamente cuando no hay ningún archivo (estado inicial
+        # o tras cerrar). Si hay cambios sin guardar, _run_phase se encarga de
+        # pedir guardar antes de ejecutar el compilador.
+        has_file = bool(path)
         self.toolbar.set_compile_buttons_state(has_file)
 
     # Operaciones de archivo (delegan a FileManager)
