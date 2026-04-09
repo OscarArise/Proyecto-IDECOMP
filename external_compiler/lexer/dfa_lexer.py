@@ -208,7 +208,7 @@ class DFALexer:
             # INICIO --[+]--> PLUS_STATE
             # ------------------------------------------------------------------
             if ch == "+":
-                tok, pos, columna = self._read_plus(source, pos, linea, columna)
+                tok, pos, columna, linea = self._read_plus(source, pos, linea, columna)
                 tokens.append(tok)
                 continue
 
@@ -217,7 +217,7 @@ class DFALexer:
             # INICIO --[-]--> MIN_STATE
             # ------------------------------------------------------------------
             if ch == "-":
-                tok, pos, columna = self._read_minus(source, pos, linea, columna)
+                tok, pos, columna, linea = self._read_minus(source, pos, linea, columna)
                 tokens.append(tok)
                 continue
 
@@ -498,47 +498,81 @@ class DFALexer:
 
     def _read_plus(
         self, source: str, pos: int, linea: int, columna: int
-    ) -> tuple[Token, int, int]:
+    ) -> tuple[Token, int, int, int]:
         """
         Estado: PLUS_STATE
         Transiciones:
-            PLUS_STATE --[+]    --> HECHO  (emitir INCREMENT ++)
-            PLUS_STATE --[Otro] --> HECHO  (emitir PLUS +; retroceder)
+            PLUS_STATE --[espacio/\\n]--> PLUS_STATE  (saltar blancos)
+            PLUS_STATE --[+]           --> HECHO  (emitir INCREMENTO ++)
+            PLUS_STATE --[Otro]        --> HECHO  (emitir SUMA +; retroceder)
+
+        Nota: los espacios y saltos de línea entre los dos '+' se ignoran,
+        de modo que "+\n\n+" se tokeniza como INCREMENTO ++.
         """
         start_col = columna
         pos      += 1   # consumir el primer +
         columna  += 1
 
         n = len(source)
-        if pos < n and source[pos] == "+":
-            pos     += 1
-            columna += 1
-            return Token("INCREMENTO", "++", linea, start_col), pos, columna
+
+        # Saltar espacios/saltos de línea antes de buscar el segundo '+'
+        lookahead_pos   = pos
+        lookahead_col   = columna
+        lookahead_linea = linea
+        while lookahead_pos < n and source[lookahead_pos] in (" ", "\t", "\r", "\n"):
+            if source[lookahead_pos] == "\n":
+                lookahead_linea += 1
+                lookahead_col    = 1
+            else:
+                lookahead_col += 1
+            lookahead_pos += 1
+
+        if lookahead_pos < n and source[lookahead_pos] == "+":
+            lookahead_pos += 1
+            lookahead_col += 1
+            return Token("INCREMENTO", "++", linea, start_col), lookahead_pos, lookahead_col, lookahead_linea
         else:
-            return Token("SUMA", "+", linea, start_col), pos, columna
+            return Token("SUMA", "+", linea, start_col), pos, columna, linea
 
     # --------------------------------------------------------------------------
 
     def _read_minus(
         self, source: str, pos: int, linea: int, columna: int
-    ) -> tuple[Token, int, int]:
+    ) -> tuple[Token, int, int, int]:
         """
         Estado: MIN_STATE
         Transiciones:
-            MIN_STATE --[-]    --> HECHO  (emitir DECREMENT --)
-            MIN_STATE --[Otro] --> HECHO  (emitir MINUS -; retroceder)
+            MIN_STATE --[espacio/\\n]--> MIN_STATE  (saltar blancos)
+            MIN_STATE --[-]           --> HECHO  (emitir DECREMENTO --)
+            MIN_STATE --[Otro]        --> HECHO  (emitir RESTA -; retroceder)
+
+        Nota: los espacios y saltos de línea entre los dos '-' se ignoran,
+        de modo que "-\n\n-" se tokeniza como DECREMENTO --.
         """
         start_col = columna
         pos      += 1   # consumir el primer -
         columna  += 1
 
         n = len(source)
-        if pos < n and source[pos] == "-":
-            pos     += 1
-            columna += 1
-            return Token("DECREMENTO", "--", linea, start_col), pos, columna
+
+        # Saltar espacios/saltos de línea antes de buscar el segundo '-'
+        lookahead_pos   = pos
+        lookahead_col   = columna
+        lookahead_linea = linea
+        while lookahead_pos < n and source[lookahead_pos] in (" ", "\t", "\r", "\n"):
+            if source[lookahead_pos] == "\n":
+                lookahead_linea += 1
+                lookahead_col    = 1
+            else:
+                lookahead_col += 1
+            lookahead_pos += 1
+
+        if lookahead_pos < n and source[lookahead_pos] == "-":
+            lookahead_pos += 1
+            lookahead_col += 1
+            return Token("DECREMENTO", "--", linea, start_col), lookahead_pos, lookahead_col, lookahead_linea
         else:
-            return Token("RESTA", "-", linea, start_col), pos, columna
+            return Token("RESTA", "-", linea, start_col), pos, columna, linea
 
     # --------------------------------------------------------------------------
 
