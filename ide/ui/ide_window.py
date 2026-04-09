@@ -1,16 +1,16 @@
 import os
 import tkinter as tk
-from tkinter import font, messagebox
+from tkinter import messagebox
 
 from core.compiler_runner import CompilerRunner
 from core.file_manager import FileManager
 from core.state import AppState
+
+# Lexico
+from ui.highlighter import SyntaxHighlighter
 from ui.menu import Menu
 from ui.panels import Panels
 from ui.toolbar import Toolbar
-
-#Lexico
-from ui.highlighter import SyntaxHighlighter
 
 
 class IDEWindow:
@@ -92,8 +92,8 @@ class IDEWindow:
         self.line_numbers.pack(side=tk.LEFT, fill=tk.Y)
 
         # Scrollbar vertical
-        scrollbar = tk.Scrollbar(frame)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.scrollbar = tk.Scrollbar(frame)
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         # Editor principal
         self.text_area = tk.Text(
@@ -101,10 +101,10 @@ class IDEWindow:
             wrap="none",
             width=80,
             height=20,
-            yscrollcommand=scrollbar.set,
+            yscrollcommand=self._on_yscroll,
         )
         self.text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.config(command=self.text_area.yview)
+        self.scrollbar.config(command=self.text_area.yview)
         self.highlighter = SyntaxHighlighter(self.text_area)
 
     # Barra de estado (fila inferior)
@@ -152,10 +152,15 @@ class IDEWindow:
         """Bindings propios del área de texto."""
         self.text_area.bind("<<Modified>>", self._on_text_modified)
         self.text_area.bind("<KeyRelease>", self._on_key_release_highlight)
-        self.text_area.bind("<MouseWheel>", self._update_line_numbers)
         self.text_area.bind("<ButtonRelease-1>", self._update_cursor_position)
         self._update_line_numbers()
         self._update_cursor_position()
+
+    def _on_yscroll(self, first: float, last: float) -> None:
+        """Intercepta el scroll vertical del editor.
+        Actualiza la scrollbar y sincroniza el canvas de números de línea."""
+        self.scrollbar.set(first, last)
+        self._update_line_numbers()
 
     def _on_text_modified(self, event=None):
         """Se dispara via <<Modified>> cuando el contenido del editor cambia.
@@ -194,8 +199,8 @@ class IDEWindow:
                 y = dline[1]
                 self.line_numbers.create_text(18, y, anchor="nw", text=str(line))
 
-        #Redibujar las lineas de error si existen
-        if hasattr(self, '_last_errors_content') and self._last_errors_content:
+        # Redibujar las lineas de error si existen
+        if hasattr(self, "_last_errors_content") and self._last_errors_content:
             self.highlighter.mark_error_lines(
                 self._last_errors_content, self.line_numbers
             )
@@ -221,7 +226,9 @@ class IDEWindow:
         self._suppress_modified = True
         self.text_area.delete("1.0", tk.END)
         self.text_area.insert(tk.END, content)
-        self.text_area.edit_modified(False)  # Descartar el <<Modified>> generado al cargar
+        self.text_area.edit_modified(
+            False
+        )  # Descartar el <<Modified>> generado al cargar
         self._suppress_modified = False
         self._update_line_numbers()
         self._update_cursor_position()
@@ -323,7 +330,7 @@ class IDEWindow:
             text=f"\u23f3 Ejecutando fase: {phase.capitalize()}...", fg="#7f8c8d"
         )
         self.root.update_idletasks()  # Refrescar UI antes de bloquear
-        #Limpiar marcas anteriores
+        # Limpiar marcas anteriores
         self.highlighter.clear_error_marks()
         self.line_numbers.delete("error_line")
 
@@ -360,13 +367,13 @@ class IDEWindow:
 
         # stderr del proceso (error interno del compilador)
 
-        #Marcar errores en el editor
+        # Marcar errores en el editor
         errors_content = result.errors_by_phase.get("err_lexico", "")
         self._last_errors_content = errors_content
         self.highlighter.mark_errors(errors_content)
         self.highlighter.mark_error_lines(errors_content, self.line_numbers)
 
-        #stderr del proceso (error interno del compilador)
+        # stderr del proceso (error interno del compilador)
         if result.stderr.strip():
             self.panels.write(
                 self.panels.tab_err_lexico,
