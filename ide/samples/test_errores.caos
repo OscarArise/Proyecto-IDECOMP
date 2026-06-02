@@ -1,0 +1,12 @@
+main {
+    int x
+    float y;
+    
+    x = 5
+    y = 3.14;
+    
+    if x > 0 then
+        cout << "Positivo";
+    
+    resultado = x + y;
+}

@@ -1,0 +1,18 @@
+main {
+    int numero;
+    float promedio;
+    
+    cin >> numero;
+    
+    if numero > 0 then
+        if numero > 100 then
+            cout << "Número grande";
+        else
+            cout << "Número pequeño";
+        end
+    else
+        cout << "Número no válido";
+    end
+    
+    promedio = numero / 2;
+}
