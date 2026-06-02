@@ -343,7 +343,6 @@ class IDEWindow:
         # Volcar salidas en paneles de resultados
         panel_map = {
             "lexico": self.panels.tab_lexico,
-            "sintactico": self.panels.tab_sintactico,
             "semantico": self.panels.tab_semantico,
             "intermedio": self.panels.tab_intermedio,
             "simbolos": self.panels.tab_simbolos,
@@ -353,6 +352,16 @@ class IDEWindow:
             content = result.outputs.get(key, "")
             if content.strip():
                 self.panels.write(widget, content)
+        
+        # Caso especial para sintáctico: cargar en árbol colapsable
+        if result.outputs.get("sintactico", "").strip():
+            self.panels.write(
+                self.panels.tab_sintactico_analisis,
+                result.outputs["sintactico"],
+            )
+
+        if result.outputs.get("sintactico", "").strip() and self.panels.ast_tree_viewer:
+            self._load_ast_to_tree(result.outputs["sintactico"])
 
         # Volcar errores en paneles de error
         error_panel_map = {
@@ -400,7 +409,6 @@ class IDEWindow:
     # Mapa fase → (notebook_attr, tab_widget_attr)
     _PHASE_TAB = {
         "lexico": ("results_notebook", "tab_lexico"),
-        "sintactico": ("results_notebook", "tab_sintactico"),
         "semantico": ("results_notebook", "tab_semantico"),
         "intermedio": ("results_notebook", "tab_intermedio"),
         "ejecutar": ("bottom_notebook", "tab_ejecucion"),
@@ -418,6 +426,18 @@ class IDEWindow:
         Selecciona la pestaña de resultado (éxito) o de error (fallo)
         correspondiente a la fase que acaba de ejecutarse.
         """
+        # Caso especial para sintáctico con árbol
+        if phase == "sintactico" and success:
+            try:
+                notebook = self.panels.results_notebook
+                # Buscar la pestaña "Sintactico" por su nombre
+                for tab_id in notebook.tabs():
+                    if "Sintactico" in notebook.tab(tab_id, 'text'):
+                        notebook.select(tab_id)
+                        return
+            except Exception as e:
+                print(f"Error al seleccionar pestaña sintáctica: {e}")
+        
         if success:
             entry = self._PHASE_TAB.get(phase)
         else:
@@ -437,3 +457,67 @@ class IDEWindow:
                     notebook.select(frame)
                 except Exception:
                     pass  # Silenciar si el frame no es seleccionable
+
+    def _load_ast_to_tree(self, syntax_output: str):
+        """
+        Extrae el JSON del AST de la salida de análisis sintáctico
+        y lo carga en el visualizador de árbol colapsable.
+        """
+        try:
+            import json
+            
+            # Buscar la sección JSON en la salida
+            if not syntax_output or not syntax_output.strip():
+                self.panels.ast_tree_viewer.clear()
+                self.panels.ast_tree_viewer.tree.insert("", "end", text="Salida vacía del compilador")
+                return
+            
+            # Buscar el primer { que inicia un JSON válido
+            marker = "estructurada"
+            marker_idx = syntax_output.find(marker)
+            search_start = marker_idx if marker_idx >= 0 else 0
+            brace_idx = syntax_output.find('{', search_start)
+            if brace_idx < 0:
+                self.panels.ast_tree_viewer.clear()
+                self.panels.ast_tree_viewer.tree.insert("", "end", text="No se encontró JSON en la salida")
+                return
+            
+            # Extraer desde el primer { hasta el final
+            json_str = syntax_output[brace_idx:]
+            
+            # Intentar parsear y cargar en el árbol
+            ast_dict, _ = json.JSONDecoder().raw_decode(json_str)
+            self.panels.ast_tree_viewer.load_ast_json(json.dumps(ast_dict))
+            self.panels.write(
+                self.panels.tab_sintactico_conectado,
+                self._ast_to_connected_text(ast_dict),
+            )
+            
+        except json.JSONDecodeError as e:
+            self.panels.ast_tree_viewer.clear()
+            self.panels.ast_tree_viewer.tree.insert("", "end", text=f"Error JSON: {str(e)[:100]}")
+        except Exception as e:
+            self.panels.ast_tree_viewer.clear()
+            self.panels.ast_tree_viewer.tree.insert("", "end", text=f"Error: {str(e)[:100]}")
+
+    def _ast_to_connected_text(self, ast_dict: dict) -> str:
+        lines: list[str] = []
+
+        def label_for(node: dict) -> str:
+            label = node.get("label", node.get("type", "Nodo"))
+            if "valor" in node:
+                label = f"{label} ({node['valor']})"
+            elif "nombre" in node:
+                label = f"{label} ({node['nombre']})"
+            return str(label)
+
+        def walk(node: dict, prefix: str = "", is_last: bool = True, is_root: bool = True):
+            connector = "" if is_root else ("`-- " if is_last else "|-- ")
+            lines.append(f"{prefix}{connector}{label_for(node)}")
+            children = [child for child in node.get("children", []) if child is not None]
+            child_prefix = prefix if is_root else prefix + ("    " if is_last else "|   ")
+            for index, child in enumerate(children):
+                walk(child, child_prefix, index == len(children) - 1, False)
+
+        walk(ast_dict)
+        return "\n".join(lines) + "\n"
