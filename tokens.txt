@@ -1,0 +1,37 @@
+#     TIPO            VALOR                  LÍN   COL
+--------------------------------------------------
+1     KW_MAIN         main                     1     1
+2     LLAVE_IZQ       {                        1     6
+3     KW_INT          int                      2     5
+4     IDENTIFIER      x                        2     9
+5     COMA            ,                        2    10
+6     IDENTIFIER      y                        2    12
+7     PUNTO_COMA      ;                        2    13
+8     KW_FLOAT        float                    3     5
+9     IDENTIFIER      resultado                3    11
+10    PUNTO_COMA      ;                        3    20
+11    KW_CIN          cin                      5     5
+12    MAYOR           >                        5     9
+13    MAYOR           >                        5    10
+14    IDENTIFIER      x                        5    12
+15    PUNTO_COMA      ;                        5    13
+16    KW_CIN          cin                      6     5
+17    MAYOR           >                        6     9
+18    MAYOR           >                        6    10
+19    IDENTIFIER      y                        6    12
+20    PUNTO_COMA      ;                        6    13
+21    IDENTIFIER      resultado                8     5
+22    ASIGNACION      =                        8    15
+23    IDENTIFIER      x                        8    17
+24    SUMA            +                        8    19
+25    IDENTIFIER      y                        8    21
+26    PUNTO_COMA      ;                        8    22
+27    KW_COUT         cout                     9     5
+28    MENOR           <                        9    10
+29    MENOR           <                        9    11
+30    STRING          "La suma es: "           9    13
+31    MENOR           <                        9    28
+32    MENOR           <                        9    29
+33    IDENTIFIER      resultado                9    31
+34    PUNTO_COMA      ;                        9    40
+35    LLAVE_DER       }                       10     1

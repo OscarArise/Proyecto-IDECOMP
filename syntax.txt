@@ -1,0 +1,270 @@
+Árbol Sintáctico Abstracto (AST)
+==================================================
+
+Representación de texto:
+--------------------------------------------------
+main {
+  int x, y;
+  float resultado;
+  cin >> x;
+  cin >> y;
+  resultado = x + y;
+  cout << ""La suma es: "" << resultado;
+}
+
+Representación estructurada (para visualización):
+--------------------------------------------------
+{
+  "type": "Programa",
+  "linea": 0,
+  "columna": 0,
+  "children": [
+    {
+      "type": "ListaDeclaracion",
+      "linea": 0,
+      "columna": 0,
+      "children": [
+        {
+          "type": "Declaracion",
+          "linea": 0,
+          "columna": 0,
+          "children": [
+            {
+              "type": "DeclaracionVariable",
+              "linea": 0,
+              "columna": 0,
+              "children": [],
+              "label": "int: x, y",
+              "tipo": "int",
+              "identificadores": [
+                "x",
+                "y"
+              ]
+            }
+          ],
+          "label": "Declaración"
+        },
+        {
+          "type": "Declaracion",
+          "linea": 0,
+          "columna": 0,
+          "children": [
+            {
+              "type": "DeclaracionVariable",
+              "linea": 0,
+              "columna": 0,
+              "children": [],
+              "label": "float: resultado",
+              "tipo": "float",
+              "identificadores": [
+                "resultado"
+              ]
+            }
+          ],
+          "label": "Declaración"
+        },
+        {
+          "type": "Declaracion",
+          "linea": 0,
+          "columna": 0,
+          "children": [
+            {
+              "type": "ListaSentencias",
+              "linea": 0,
+              "columna": 0,
+              "children": [
+                {
+                  "type": "Sentencia",
+                  "linea": 0,
+                  "columna": 0,
+                  "children": [
+                    {
+                      "type": "EntradaEstandar",
+                      "linea": 0,
+                      "columna": 0,
+                      "children": [],
+                      "label": "cin >> x",
+                      "identificador": "x"
+                    }
+                  ],
+                  "label": "Sentencia"
+                },
+                {
+                  "type": "Sentencia",
+                  "linea": 0,
+                  "columna": 0,
+                  "children": [
+                    {
+                      "type": "EntradaEstandar",
+                      "linea": 0,
+                      "columna": 0,
+                      "children": [],
+                      "label": "cin >> y",
+                      "identificador": "y"
+                    }
+                  ],
+                  "label": "Sentencia"
+                },
+                {
+                  "type": "Sentencia",
+                  "linea": 0,
+                  "columna": 0,
+                  "children": [
+                    {
+                      "type": "Asignacion",
+                      "linea": 0,
+                      "columna": 0,
+                      "children": [
+                        {
+                          "type": "Expresion",
+                          "linea": 0,
+                          "columna": 0,
+                          "children": [
+                            {
+                              "type": "ExpresionSimple",
+                              "linea": 0,
+                              "columna": 0,
+                              "children": [
+                                {
+                                  "type": "Termino",
+                                  "linea": 0,
+                                  "columna": 0,
+                                  "children": [
+                                    {
+                                      "type": "Factor",
+                                      "linea": 0,
+                                      "columna": 0,
+                                      "children": [
+                                        {
+                                          "type": "Componente",
+                                          "linea": 0,
+                                          "columna": 0,
+                                          "children": [],
+                                          "label": "Componente: x"
+                                        }
+                                      ],
+                                      "label": "Factor: x"
+                                    }
+                                  ],
+                                  "label": "Termino: x"
+                                },
+                                {
+                                  "type": "Termino",
+                                  "linea": 0,
+                                  "columna": 0,
+                                  "children": [
+                                    {
+                                      "type": "Factor",
+                                      "linea": 0,
+                                      "columna": 0,
+                                      "children": [
+                                        {
+                                          "type": "Componente",
+                                          "linea": 0,
+                                          "columna": 0,
+                                          "children": [],
+                                          "label": "Componente: y"
+                                        }
+                                      ],
+                                      "label": "Factor: y"
+                                    }
+                                  ],
+                                  "label": "Termino: y"
+                                }
+                              ],
+                              "label": "ExpresionSimple: x + y"
+                            }
+                          ],
+                          "label": "Expresión: x + y"
+                        }
+                      ],
+                      "label": "Asignación: resultado = ...",
+                      "identificador": "resultado"
+                    }
+                  ],
+                  "label": "Sentencia"
+                },
+                {
+                  "type": "Sentencia",
+                  "linea": 0,
+                  "columna": 0,
+                  "children": [
+                    {
+                      "type": "SalidaEstandar",
+                      "linea": 0,
+                      "columna": 0,
+                      "children": [
+                        {
+                          "type": "Salida",
+                          "linea": 0,
+                          "columna": 0,
+                          "children": [
+                            {
+                              "type": "Cadena",
+                              "linea": 0,
+                              "columna": 0,
+                              "children": [],
+                              "label": "Cadena: \"\"La suma es: \"\"",
+                              "valor": "\"La suma es: \""
+                            },
+                            {
+                              "type": "Expresion",
+                              "linea": 0,
+                              "columna": 0,
+                              "children": [
+                                {
+                                  "type": "ExpresionSimple",
+                                  "linea": 0,
+                                  "columna": 0,
+                                  "children": [
+                                    {
+                                      "type": "Termino",
+                                      "linea": 0,
+                                      "columna": 0,
+                                      "children": [
+                                        {
+                                          "type": "Factor",
+                                          "linea": 0,
+                                          "columna": 0,
+                                          "children": [
+                                            {
+                                              "type": "Componente",
+                                              "linea": 0,
+                                              "columna": 0,
+                                              "children": [],
+                                              "label": "Componente: resultado"
+                                            }
+                                          ],
+                                          "label": "Factor: resultado"
+                                        }
+                                      ],
+                                      "label": "Termino: resultado"
+                                    }
+                                  ],
+                                  "label": "ExpresionSimple: resultado"
+                                }
+                              ],
+                              "label": "Expresión: resultado"
+                            }
+                          ],
+                          "label": "Salida"
+                        }
+                      ],
+                      "label": "cout << ..."
+                    }
+                  ],
+                  "label": "Sentencia"
+                }
+              ],
+              "label": "Sentencias"
+            }
+          ],
+          "label": "Declaración"
+        }
+      ],
+      "label": "Declaraciones"
+    }
+  ],
+  "label": "main"
+}
+Sin errores sintácticos.
