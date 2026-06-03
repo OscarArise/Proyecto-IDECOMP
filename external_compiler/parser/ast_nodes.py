@@ -173,6 +173,7 @@ class Componente(ASTNode):
     """componente → ( expresion ) | número | id | bool | op_logico componente"""
     tipo: str = ""  # "expresion", "numero", "identificador", "booleano", "logico"
     valor: Any = None
+    es_entero: bool = False  # NUEVO: Distinguir INT de FLOAT
     expresion: Optional['Expresion'] = None
     operador_logico: Optional[str] = None  # &&, ||, !
     siguiente: Optional['Componente'] = None

@@ -67,6 +67,10 @@ class Parser:
         self.pos = 0
         self.errors: List[SyntaxError] = []
         self.current_token = self.tokens[0] if self.tokens else None
+        self.type_starts = ("KW_INT", "KW_FLOAT", "KW_BOOL")
+        self.statement_starts = ("IDENTIFIER", "KW_IF", "KW_WHILE", "KW_DO", "KW_CIN", "KW_COUT")
+        self.declaration_starts = self.type_starts + self.statement_starts
+        self.block_stops = ("LLAVE_DER", "KW_ELSE", "KW_END", "KW_UNTIL")
 
     def parse(self) -> Tuple[Optional[Programa], List[SyntaxError]]:
         """
@@ -139,6 +143,63 @@ class Parser:
         while self.current_token and self.current_token.tipo not in sync_tokens:
             self._advance()
 
+    def _sync_to_main_body(self) -> bool:
+        """
+        Recupera el inicio real del bloque main cuando hay tokens inválidos
+        entre main y la llave de apertura.
+        """
+        fallback_pos = None
+        for index in range(self.pos, len(self.tokens)):
+            token = self.tokens[index]
+            if token.tipo != "LLAVE_IZQ":
+                continue
+
+            if fallback_pos is None:
+                fallback_pos = index
+
+            next_token = self.tokens[index + 1] if index + 1 < len(self.tokens) else None
+            if not next_token or next_token.tipo in self.declaration_starts + ("LLAVE_DER",):
+                self.pos = index
+                self.current_token = self.tokens[self.pos]
+                self._advance()
+                return True
+
+        if fallback_pos is not None:
+            self.pos = fallback_pos
+            self.current_token = self.tokens[self.pos]
+            self._advance()
+            return True
+
+        return False
+
+    def _recover_to_construct(self, context_stops: tuple[str, ...] = ()):
+        """
+        Recupera avanzando hasta un punto seguro con contexto.
+        
+        Args:
+            context_stops: Límites del contexto actual (ej: LLAVE_DER, KW_END, KW_ELSE)
+        """
+        if not self.current_token:
+            return
+        
+        # Tokens seguros: siempre buscar ; dentro del contexto actual
+        safe_sync = ("PUNTO_COMA",) + context_stops
+        
+        # Limitar avance a 15 tokens para evitar "volar" sin control
+        tokens_advanced = 0
+        max_advance = 15
+    
+        while self.current_token and tokens_advanced < max_advance:
+            if self.current_token.tipo in safe_sync:
+                break
+        
+        # Nunca cruzar límites de bloque principales
+            if self.current_token.tipo == "LLAVE_DER":
+                break
+        
+            self._advance()
+            tokens_advanced += 1
+
     # ========================================================================
     # REGLAS GRAMATICALES
     # ========================================================================
@@ -158,7 +219,7 @@ class Parser:
         self._advance()  # consume main
 
         if not self._consume("LLAVE_IZQ", "Se esperaba '{' después de 'main'"):
-            self._skip_on_error("LLAVE_DER", "KW_IF", "KW_WHILE", "KW_DO")
+            self._sync_to_main_body()
 
         programa.lista_declaracion = self._lista_declaracion()
 
@@ -174,18 +235,25 @@ class Parser:
         """lista_declaracion → lista_declaracion declaracion | declaracion | ε"""
         lista = ListaDeclaracion()
 
-        while (self.current_token and 
-               self.current_token.tipo in ("KW_INT", "KW_FLOAT", "KW_BOOL", 
-                                          "IDENTIFIER", "KW_IF", "KW_WHILE", 
-                                          "KW_DO", "KW_CIN", "KW_COUT")):
+        while self.current_token and self.current_token.tipo != "LLAVE_DER":
+            if self._match("PUNTO_COMA"):
+                self._advance()
+                continue
+
+            if self.current_token.tipo not in self.declaration_starts:
+                self._recover_to_construct(("LLAVE_DER",))
+                if self._match("PUNTO_COMA"):
+                    self._advance()
+                continue
+
             decl = self._declaracion()
             if decl:
                 lista.declaraciones.append(decl)
                 lista.children.append(decl)
-
-            # Prevenir bucle infinito si algo falla
-            if not decl:
-                break
+            else:
+                self._recover_to_construct(("LLAVE_DER",))
+                if self._match("PUNTO_COMA"):
+                    self._advance()
 
         return lista if lista.declaraciones else None
 
@@ -248,7 +316,8 @@ class Parser:
         if not self._match("IDENTIFIER"):
             self.errors.append(SyntaxError(
                 f"Se esperaba identificador pero se encontró {self.current_token.tipo if self.current_token else 'EOF'}",
-                linea=self.current_token.linea if self.current_token else 0
+                linea=self.current_token.linea if self.current_token else 0,
+                columna=self.current_token.columna if self.current_token else 0  # NUEVO
             ))
             return []
 
@@ -260,7 +329,8 @@ class Parser:
             if not self._match("IDENTIFIER"):
                 self.errors.append(SyntaxError(
                     "Se esperaba identificador después de coma",
-                    linea=self.current_token.linea if self.current_token else 0
+                    linea=self.current_token.linea if self.current_token else 0,
+                    columna=self.current_token.columna if self.current_token else 0  # NUEVO
                 ))
                 break
             identificadores.append(self.current_token.valor)
@@ -272,16 +342,27 @@ class Parser:
         """lista_sentencias → lista_sentencias sentencia | ε"""
         lista = ListaSentencias()
 
-        while (self.current_token and
-               self.current_token.tipo not in stop_tokens and
-               self.current_token.tipo in ("IDENTIFIER", "KW_IF", "KW_WHILE", 
-                                                                   "KW_DO", "KW_CIN", "KW_COUT")):
+        effective_stops = stop_tokens + self.block_stops
+
+        while self.current_token and self.current_token.tipo not in effective_stops:
+            if self._match("PUNTO_COMA"):
+                self._advance()
+                continue
+
+            if self.current_token.tipo not in self.statement_starts:
+                self._recover_to_construct(effective_stops)
+                if self._match("PUNTO_COMA"):
+                    self._advance()
+                continue
+
             sent = self._sentencia()
             if sent:
                 lista.sentencias.append(sent)
                 lista.children.append(sent)
             else:
-                break
+                self._recover_to_construct(effective_stops)
+                if self._match("PUNTO_COMA"):
+                    self._advance()
 
         return lista if lista.sentencias else None
 
@@ -348,19 +429,46 @@ class Parser:
         if not self._consume("KW_IF", "Se esperaba 'if'"):
             return None
 
+        # CRÍTICO: Obtener condición
         sel.condicion = self._expresion()
+        
+        # Si no hay condición, reportar error
+        if not sel.condicion:
+            error = SyntaxError(
+                "Se esperaba condición después de 'if'",
+                linea=self.current_token.linea if self.current_token else 0,
+                columna=self.current_token.columna if self.current_token else 0
+            )
+            self.errors.append(error)
+            # Recuperarse hacia 'then'
+            self._skip_on_error("KW_THEN", "KW_ELSE", "KW_END")
 
         if not self._consume("KW_THEN", "Se esperaba 'then' después de condición"):
-            self._skip_on_error("KW_ELSE", "KW_END")
+            self._skip_on_error("KW_THEN", "KW_ELSE", "KW_END")
+            if self._match("KW_THEN"):
+                self._advance()
 
-        sel.rama_entonces = self._lista_sentencias()
+        # CRÍTICO: Pasar stop_tokens para parar en else/end
+        sel.rama_entonces = self._lista_sentencias(stop_tokens=("KW_ELSE", "KW_END"))
 
         if self._match("KW_ELSE"):
             self._advance()
-            sel.rama_sino = self._lista_sentencias()
+            sel.rama_sino = self._lista_sentencias(stop_tokens=("KW_END",))
 
         if not self._consume("KW_END", "Se esperaba 'end' para cerrar if"):
             self._skip_on_error("KW_END")
+            if self._match("KW_END"):
+                self._advance()
+        
+        # NUEVO: Detectar ';' inesperado después de 'end'
+        if self.current_token and self.current_token.tipo == "PUNTO_COMA":
+            error = SyntaxError(
+                f"Se encontró ';' inesperado después de 'end'",
+                linea=self.current_token.linea,
+                columna=self.current_token.columna
+            )
+            self.errors.append(error)
+            self._advance()
 
         children = []
         if sel.condicion:
@@ -382,7 +490,8 @@ class Parser:
 
         iter_node.condicion = self._expresion()
 
-        iter_node.cuerpo = self._lista_sentencias()
+        # NUEVO: Pasar stop_tokens para parar en 'end'
+        iter_node.cuerpo = self._lista_sentencias(stop_tokens=("KW_END",))
 
         if not self._consume("KW_END", "Se esperaba 'end' para cerrar while"):
             self._skip_on_error("KW_END")
@@ -610,16 +719,27 @@ class Parser:
             comp.expresion = self._expresion()
             if not self._consume("PAR_DER", "Se esperaba ')'"):
                 self._skip_on_error("PAR_DER")
+                if self._match("PAR_DER"):
+                    self._advance()
             comp.children = [comp.expresion] if comp.expresion else []
 
         elif self._match("INT_NUM", "FLOAT_NUM"):
-            # número
+            # número - distinguir tipo
             try:
                 comp.tipo = "numero"
-                comp.valor = float(self.current_token.valor)
+                
+                # NUEVO: Preservar tipo INT vs FLOAT
+                if self.current_token.tipo == "INT_NUM":
+                    comp.valor = int(self.current_token.valor)
+                    comp.es_entero = True
+                else:  # FLOAT_NUM
+                    comp.valor = float(self.current_token.valor)
+                    comp.es_entero = False
+                
                 comp.children = [Numero(valor=comp.valor)]
             except ValueError:
                 comp.valor = 0
+                comp.es_entero = False
             self._advance()
 
         elif self._match("IDENTIFIER"):
@@ -644,11 +764,35 @@ class Parser:
             if comp.siguiente:
                 comp.children = [comp.siguiente]
 
+        elif self._match("AND", "OR", "NEGACION"):
+            # op_logico componente - CON SINCRONIZACIÓN
+            comp.tipo = "logico"
+            comp.operador_logico = self.current_token.valor
+            self._advance()
+            
+            comp.siguiente = self._componente()
+            
+            # NUEVO: Si no hay componente, recuperarse
+            if not comp.siguiente:
+                error = SyntaxError(
+                    f"Se esperaba componente después de '{comp.operador_logico}'",
+                    linea=self.current_token.linea if self.current_token else 0,
+                    columna=self.current_token.columna if self.current_token else 0
+                )
+                self.errors.append(error)
+                # Recuperarse al ) o ;
+                self._skip_on_error("PAR_DER", "PUNTO_COMA", "KW_THEN", "KW_ELSE", "KW_END")
+                return comp
+            
+            if comp.siguiente:
+                comp.children = [comp.siguiente]
+
         else:
             if self.current_token:
                 self.errors.append(SyntaxError(
                     f"Se esperaba componente pero se encontró {self.current_token.tipo}",
-                    linea=self.current_token.linea
+                    linea=self.current_token.linea,
+                    columna=self.current_token.columna  # NUEVO
                 ))
             return None
 

@@ -16,11 +16,20 @@ class ASTFormatter:
     """Formatea y serializa nodos AST para visualización."""
 
     @staticmethod
-    def _leaf(label: str, node_type: str = "Token") -> Dict[str, Any]:
+    def _leaf(label: str, node_type: str = "Token", linea: int = 0, columna: int = 0) -> Dict[str, Any]:
+        """
+        Crea un nodo hoja con información de posición.
+        
+        Args:
+            label: Etiqueta del nodo
+            node_type: Tipo de nodo
+            linea: Número de línea (default 0)
+            columna: Número de columna (default 0)
+        """
         return {
             "type": node_type,
-            "linea": 0,
-            "columna": 0,
+            "linea": linea,
+            "columna": columna,
             "children": [],
             "label": label,
         }
