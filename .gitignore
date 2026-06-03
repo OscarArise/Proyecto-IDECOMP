@@ -20,3 +20,4 @@ env/
 # Sistema operativo
 Thumbs.db
 .DS_Store
+/.commandcode
