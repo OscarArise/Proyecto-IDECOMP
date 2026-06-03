@@ -9,12 +9,17 @@ from ui.menu import Menu
 from ui.panels import Panels
 from ui.toolbar import Toolbar
 
+#Lexico
+from ui.highlighter import SyntaxHighlighter
+
 
 class IDEWindow:
     def __init__(self, root):
         self.root = root
         self.root.geometry("800x600")
         self.state = AppState()
+        self._last_errors_content = ""
+        self._suppress_modified = False
         self._create_ui()
 
         self.file_manager = FileManager(
@@ -100,6 +105,7 @@ class IDEWindow:
         )
         self.text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.config(command=self.text_area.yview)
+        self.highlighter = SyntaxHighlighter(self.text_area)
 
     # Barra de estado (fila inferior)
     def _create_status_bar(self):
@@ -144,74 +150,31 @@ class IDEWindow:
 
     def _bind_editor_events(self):
         """Bindings propios del área de texto."""
-        self.text_area.bind("<KeyPress>", self._on_key_press)
-        self.text_area.bind("<KeyRelease>", self._on_key_release)
+        self.text_area.bind("<<Modified>>", self._on_text_modified)
+        self.text_area.bind("<KeyRelease>", self._on_key_release_highlight)
         self.text_area.bind("<MouseWheel>", self._update_line_numbers)
         self.text_area.bind("<ButtonRelease-1>", self._update_cursor_position)
         self._update_line_numbers()
         self._update_cursor_position()
 
-        self._key_held = False
-        self._polling = False
-
+    def _on_text_modified(self, event=None):
+        """Se dispara via <<Modified>> cuando el contenido del editor cambia.
+        Reemplaza el mecanismo de polling: más eficiente y reactivo."""
+        # Resetear el flag para que el evento vuelva a dispararse en el próximo cambio
+        self.text_area.edit_modified(False)
+        if self._suppress_modified:
+            return
         self._sync()
-
-    # Handlers de eventos del editor
-    _NO_CONTENT_KEYS = frozenset(
-        {
-            "Left",
-            "Right",
-            "Up",
-            "Down",
-            "Home",
-            "End",
-            "Prior",
-            "Next",
-            "Shift_L",
-            "Shift_R",
-            "Control_L",
-            "Control_R",
-            "Alt_L",
-            "Alt_R",
-            "Escape",
-            "caps_lock",
-            "F5",
-            "F6",
-            "F7",
-            "F8",
-            "F9",
-        }
-    )
-
-    def _on_key_press(self, event=None):
-        self._key_held = True
-        self._sync()
-        if not self._polling:
-            self._start_polling()
-
-    def _start_polling(self):
-        self._polling = True
-        self._poll()
-
-    def _poll(self):
-        if self._key_held:
-            self._sync()
-            self.root.after(30, self._poll)
-        else:
-            self._polling = False
+        # Limpiar marcas de error al detectar cualquier cambio de contenido
+        if self._last_errors_content:
+            self._last_errors_content = ""
+            self.highlighter.clear_error_marks()
+            self.line_numbers.delete("error_line")
+        self._mark_as_modified()
 
     def _sync(self, event=None):
         self._update_line_numbers()
         self._update_cursor_position()
-
-    def _on_key_release(self, event=None):
-        """Actualiza numeración, cursor y flag de modificación al escribir."""
-        self._update_line_numbers(event)
-        self._update_cursor_position(event)
-        if event and event.keysym not in self._NO_CONTENT_KEYS:
-            self._mark_as_modified()
-        self._key_held = False
-        self._sync()
 
     def _mark_as_modified(self):
         """Marca el documento como modificado y refleja el cambio en la UI."""
@@ -231,17 +194,22 @@ class IDEWindow:
                 y = dline[1]
                 self.line_numbers.create_text(18, y, anchor="nw", text=str(line))
 
+        #Redibujar las lineas de error si existen
+        if hasattr(self, '_last_errors_content') and self._last_errors_content:
+            self.highlighter.mark_error_lines(
+                self._last_errors_content, self.line_numbers
+            )
+
     def _update_cursor_position(self, event=None):
         pos = self.text_area.index(tk.INSERT)
         line, col = pos.split(".")
         self.status_cursor.config(text=f"Ln {line}, Col {int(col) + 1}")
 
-    # Funcion para crear la barra de estado
-    def create_status_bar(self):
-        self.status_bar = tk.Label(
-            self.root, text="Ln 1, Col 1", bd=1, relief=tk.SUNKEN, anchor="w"
-        )
-        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+    def _on_key_release_highlight(self, event=None):
+        """Actualiza numeración, cursor y resaltado al soltar una tecla."""
+        self._update_line_numbers()
+        self._update_cursor_position()
+        self.highlighter.highlight()
 
     # Callbacks inyectados en FileManager
     def _get_editor_content(self) -> str:
@@ -250,10 +218,14 @@ class IDEWindow:
 
     def _set_editor_content(self, content: str):
         """Reemplaza el contenido completo del editor."""
+        self._suppress_modified = True
         self.text_area.delete("1.0", tk.END)
         self.text_area.insert(tk.END, content)
+        self.text_area.edit_modified(False)  # Descartar el <<Modified>> generado al cargar
+        self._suppress_modified = False
         self._update_line_numbers()
         self._update_cursor_position()
+        self.highlighter.highlight()
 
     def _on_title_update(self, path: str | None, modified: bool):
         """
@@ -287,8 +259,11 @@ class IDEWindow:
         else:
             self.status_bar.config(text="Listo", fg="#2c2c2c")
 
-        # Habilitar botones de compilación solo si hay archivo guardado
-        has_file = bool(path and not modified)
+        # Habilitar botones de compilación si hay un archivo abierto.
+        # Se deshabilitan únicamente cuando no hay ningún archivo (estado inicial
+        # o tras cerrar). Si hay cambios sin guardar, _run_phase se encarga de
+        # pedir guardar antes de ejecutar el compilador.
+        has_file = bool(path)
         self.toolbar.set_compile_buttons_state(has_file)
 
     # Operaciones de archivo (delegan a FileManager)
@@ -348,6 +323,9 @@ class IDEWindow:
             text=f"\u23f3 Ejecutando fase: {phase.capitalize()}...", fg="#7f8c8d"
         )
         self.root.update_idletasks()  # Refrescar UI antes de bloquear
+        #Limpiar marcas anteriores
+        self.highlighter.clear_error_marks()
+        self.line_numbers.delete("error_line")
 
         # Ejecutar compilador
         result = self.compiler.run(
@@ -381,6 +359,14 @@ class IDEWindow:
                 self.panels.write(widget, content)
 
         # stderr del proceso (error interno del compilador)
+
+        #Marcar errores en el editor
+        errors_content = result.errors_by_phase.get("err_lexico", "")
+        self._last_errors_content = errors_content
+        self.highlighter.mark_errors(errors_content)
+        self.highlighter.mark_error_lines(errors_content, self.line_numbers)
+
+        #stderr del proceso (error interno del compilador)
         if result.stderr.strip():
             self.panels.write(
                 self.panels.tab_err_lexico,
@@ -438,7 +424,9 @@ class IDEWindow:
         tab_widget = getattr(self.panels, tab_attr, None)
 
         if notebook and tab_widget:
-            try:
-                notebook.select(tab_widget.master)
-            except Exception:
-                pass  # Silenciar si el frame no es directamente seleccionable
+            frame = self.panels.get_tab_frame(tab_widget)
+            if frame:
+                try:
+                    notebook.select(frame)
+                except Exception:
+                    pass  # Silenciar si el frame no es seleccionable

@@ -1,5 +1,5 @@
 import tkinter as tk
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageEnhance
 import os
 
 
@@ -8,23 +8,23 @@ class Toolbar:
         self.root = root
         self.callbacks = callbacks
         # Guardar referencia a botones que dependen del estado (compilar/ejecutar)
-        self._compile_buttons: list[tk.Button] = []
+        self._compile_buttons: list = []
         self.icons = {} # guardar referencias para evitar garbage collection
-        
+        self.tooltip: tk.Toplevel | None = None  # Tooltip activo (máximo uno a la vez)
+
         #Ruta de los iconos
         base_dir = os.path.dirname(os.path.abspath(__file__))
         self.icons_dir = os.path.join(base_dir, "..", "assets", "icons")
-        
+
         self._build_toolbar()
 
     def _build_toolbar(self):
         # Contenedor del Toolbar
-        self.frame = tk.Frame(self.root, bd=1, relief=tk.RAISED, bg="#f0f0f0")
+        self.frame = tk.Frame(self.root, bd=1, relief=tk.RAISED, bg="#e0e0e0")
         self.frame.pack(side=tk.TOP, fill=tk.X, padx=2, pady=(0, 1))
 
         # Definición de los botones
         # (icono, tooltip, callback_key, grupo)
-        # grupo = "file" | "compile" — los del grupo "compile" se desactivan sin archivo
         buttons = [
             ("new_file.png", "Nuevo       Ctrl+N", "new_file",   "file"),
             ("open_file.png", "Abrir       Ctrl+O", "open_file",  "file"),
@@ -47,47 +47,55 @@ class Toolbar:
                 if group == "compile":
                     self._compile_buttons.append(btn)
 
-    def _add_button(self, icon, tooltip, callback_key) -> tk.Button:
-                icon_file, tooltip, key, = item
-                self._add_button(icon_file, tooltip, key)
-    
     #Carga y redimensiona el icono
     def _load_icon(self, filename):
         path = os.path.join(self.icons_dir, filename)
         try:
             img = Image.open(path).resize((32, 32), Image.LANCZOS).convert("RGBA")
-            
-            data = img.getdata()
-            new_data = []
-            for r, g, b ,a in data:
-                if r < 30 and g < 30 and b< 30:
-                    new_data.append((r, g, b, 0))
-                else:
-                    new_data.append((r, g, b, a))
-            img.putdata(new_data)
-    
+
+            r, g, b, a = img.split()
+            rgb = Image.merge("RGB", (r, g, b))
+            rgb = ImageEnhance.Brightness(rgb).enhance(1.1)
+            rgb = ImageEnhance.Color(rgb).enhance(1.8)
+            rgb = ImageEnhance.Sharpness(rgb).enhance(2.0)
+            r, g, b = rgb.split()
+            img = Image.merge("RGBA", (r, g, b, a))
+
             photo = ImageTk.PhotoImage(img)
             self.icons[filename] = photo
             return photo
+
         except Exception as e:
-            print(f"No se pudo cargar el icono {filename}: {e}")
+            print(f"No se pudo encontrar el icono {filename}: {e}")
             return None
-                
+
     def _add_button(self, icon_file, tooltip, callback_key):
         icon = self._load_icon(icon_file)
-        btn = tk.Button(
-            self.frame,
-            image=icon if icon else None,
-            text="" if icon else tooltip,
+
+        # Construir kwargs condicionalmente para no pasar image=None al Button
+        btn_kw: dict = dict(
             relief=tk.FLAT,
-            bg="#f0f0f0",
-            activebackground="#dde8f0",
+            bg="#e0e0e0",
+            activebackground="#c8c8c8",
             cursor="hand2",
-            width=28,
-            height=28,
-            command=self.callbacks.get(callback_key)
+            width=34,
+            height=34,
+            borderwidth=2,
+            command=self.callbacks.get(callback_key),
         )
+        if icon:
+            btn_kw["image"] = icon
+            btn_kw["text"] = ""
+        else:
+            btn_kw["text"] = tooltip
+        btn = tk.Button(self.frame, **btn_kw)
         btn.pack(side=tk.LEFT, padx=2, pady=2)
+
+        # Efecto visual al presionar y soltar
+        btn.bind("<ButtonPress-1>",   lambda e, b=btn: b.config(relief=tk.SUNKEN, bg="#b8b8b8"))
+        btn.bind("<ButtonRelease-1>", lambda e, b=btn: b.config(relief=tk.FLAT,   bg="#e0e0e0"))
+
+
         self._add_tooltip(btn, tooltip)
         return btn
 
@@ -100,12 +108,16 @@ class Toolbar:
     def _add_tooltip(self, widget, text):
         """Tooltip emergente al pasar el mouse."""
         def on_enter(event):
+            # Destruir cualquier tooltip anterior antes de crear uno nuevo
+            if self.tooltip:
+                self.tooltip.destroy()
+                self.tooltip = None
             self.tooltip = tk.Toplevel(self.root)
             self.tooltip.wm_overrideredirect(True)
             x = widget.winfo_rootx() + 20
             y = widget.winfo_rooty() + 30
             self.tooltip.wm_geometry(f"+{x}+{y}")
-            label = tk.Label(
+            tk.Label(
                 self.tooltip,
                 text=text,
                 bg="#ffffe0",
@@ -115,12 +127,12 @@ class Toolbar:
                 borderwidth=1,
                 padx=4,
                 pady=2,
-            )
-            label.pack()
+            ).pack()
 
         def on_leave(event):
-            if hasattr(self, "tooltip"):
+            if self.tooltip:
                 self.tooltip.destroy()
+                self.tooltip = None
 
         widget.bind("<Enter>", on_enter)
         widget.bind("<Leave>", on_leave)
@@ -128,11 +140,9 @@ class Toolbar:
     # API pública: habilitar / deshabilitar botones de compilación
 
     def set_compile_buttons_state(self, enabled: bool):
-        """
-        Habilita o deshabilita los botones de fase de compilación.
-        Llamar con enabled=True cuando hay un archivo abierto/guardado,
-        False cuando no hay archivo activo.
-        """
+
+        #Habilita o deshabilita los botones de fase de compilación.
+
         state = tk.NORMAL if enabled else tk.DISABLED
         for btn in self._compile_buttons:
             btn.config(state=state)

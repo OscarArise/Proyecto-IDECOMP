@@ -169,6 +169,15 @@ class DFALexer:
                 tok, pos, columna, linea = self._read_number(
                     source, pos, linea, columna
                 )
+                if tok.tipo == _ERROR_STATE:
+                    # Número flotante malformado (ej. "32.algo"): registrar error
+                    err_msg = (
+                        f"[LEXICO] Número flotante malformado '{tok.valor}' en línea "
+                        f"{tok.linea}, columna {tok.columna} "
+                        f"— se esperaba un dígito después del punto decimal"
+                    )
+                    errors.append(err_msg)
+                    tok = Token("ERROR", tok.valor, tok.linea, tok.columna)
                 tokens.append(tok)
                 continue
 
@@ -188,7 +197,7 @@ class DFALexer:
             # INICIO --[> < ! =]--> OP_RELACIONAL
             # ------------------------------------------------------------------
             if ch in (">", "<", "!", "="):
-                tok, pos, columna = self._read_relacional(
+                tok, pos, columna, linea = self._read_relacional(
                     source, pos, linea, columna
                 )
                 tokens.append(tok)
@@ -199,7 +208,7 @@ class DFALexer:
             # INICIO --[+]--> PLUS_STATE
             # ------------------------------------------------------------------
             if ch == "+":
-                tok, pos, columna = self._read_plus(source, pos, linea, columna)
+                tok, pos, columna, linea = self._read_plus(source, pos, linea, columna)
                 tokens.append(tok)
                 continue
 
@@ -208,7 +217,7 @@ class DFALexer:
             # INICIO --[-]--> MIN_STATE
             # ------------------------------------------------------------------
             if ch == "-":
-                tok, pos, columna = self._read_minus(source, pos, linea, columna)
+                tok, pos, columna, linea = self._read_minus(source, pos, linea, columna)
                 tokens.append(tok)
                 continue
 
@@ -372,34 +381,28 @@ class DFALexer:
                     pos += 1
                     columna += 1
                 elif ch == ".":
-                    # Verificar que después del punto venga un dígito
-                    if pos + 1 < n and source[pos + 1].isdigit():
-                        state = _NUMERO_FLOTANTE
-                        pos += 1
-                        columna += 1
-                    else:
-                        # Punto sin dígito → es un entero; el punto lo procesará
-                        # el siguiente ciclo desde INICIO
-                        break
+                    # Siempre consumir el punto y transicionar a NUMERO_FLOTANTE.
+                    # El estado NUMERO_FLOTANTE revisará si el siguiente char es dígito.
+                    state = _NUMERO_FLOTANTE
+                    pos += 1
+                    columna += 1
                 else:
                     # [Otro] → HECHO, retroceder (no consumir el delimitador)
                     break
 
             elif state == _NUMERO_FLOTANTE:
-                # Debe venir al menos un dígito
+                # Después del punto debe venir al menos un dígito.
                 if ch.isdigit():
                     state = _REAL
                     pos += 1
                     columna += 1
                 else:
-                    # Punto sin decimales → retroceder hasta antes del punto
-                    # (se emite como entero y el punto se reprocesa)
-                    lexema = source[start:pos]
-                    # Quitar el punto que ya se consumió
-                    int_lexema = lexema.rstrip(".")
-                    pos -= 1          # retroceder el punto
-                    columna -= 1
-                    return Token("INT_NUM", int_lexema, linea, start_col), pos, columna, linea
+                    # El carácter siguiente al punto NO es dígito (ej. "32.algo").
+                    # El lexema "NNN." no cumple el patrón de flotante → ERROR.
+                    # Se descarta el lexema completo (incluyendo el punto consumido)
+                    # y se deja el carácter actual para ser reprocesado desde INICIO.
+                    lexema = source[start:pos]   # incluye el punto, ej. "32."
+                    return Token(_ERROR_STATE, lexema, linea, start_col), pos, columna, linea
 
             elif state == _REAL:
                 if ch.isdigit():
@@ -447,14 +450,18 @@ class DFALexer:
 
     def _read_relacional(
         self, source: str, pos: int, linea: int, columna: int
-    ) -> tuple[Token, int, int]:
+    ) -> tuple[Token, int, int, int]:
         """
         Estado: OP_RELACIONAL
         Reconoce operadores simples (>, <, !, =) y dobles (>=, <=, !=, ==).
 
         Transiciones:
-            OP_RELACIONAL --[=]    --> HECHO  (emitir doble: >=, <=, !=, ==)
-            OP_RELACIONAL --[Otro] --> HECHO  (emitir simple: >, <, !, =; retroceder)
+            OP_RELACIONAL --[espacio/\\n]---> OP_RELACIONAL  (saltar blancos)
+            OP_RELACIONAL --[=]           ---> HECHO  (emitir doble: >=, <=, !=, ==)
+            OP_RELACIONAL --[Otro]        ---> HECHO  (emitir simple: >, <, !, =; retroceder)
+
+        Nota: los espacios y saltos de línea entre el primer y el segundo carácter
+        del operador doble se ignoran, de modo que "=\n\n=" se tokeniza como "==".
         """
         start_col = columna
         primer    = source[pos]
@@ -462,63 +469,110 @@ class DFALexer:
         columna  += 1
 
         n = len(source)
-        if pos < n and source[pos] == "=":
-            # Forma doble
+
+        # Saltar espacios en blanco y saltos de línea para buscar el segundo carácter
+        lookahead_pos    = pos
+        lookahead_col    = columna
+        lookahead_linea  = linea
+        while lookahead_pos < n and source[lookahead_pos] in (" ", "\t", "\r", "\n"):
+            if source[lookahead_pos] == "\n":
+                lookahead_linea += 1
+                lookahead_col    = 1
+            else:
+                lookahead_col += 1
+            lookahead_pos += 1
+
+        if lookahead_pos < n and source[lookahead_pos] == "=":
+            # Forma doble — consumir todos los blancos intermedios más el '='
             doble = primer + "="
             tipo  = _RELACIONAL_DOBLE[doble]
-            pos     += 1
-            columna += 1
-            return Token(tipo, doble, linea, start_col), pos, columna
+            lookahead_pos += 1
+            lookahead_col += 1
+            return Token(tipo, doble, linea, start_col), lookahead_pos, lookahead_col, lookahead_linea
         else:
-            # Forma simple — [Otro] ya no se consume
+            # Forma simple — [Otro] ya no se consume; posición sin avanzar al lookahead
             tipo = _RELACIONAL_SIMPLE[primer]
-            return Token(tipo, primer, linea, start_col), pos, columna
+            return Token(tipo, primer, linea, start_col), pos, columna, linea
 
     # --------------------------------------------------------------------------
 
     def _read_plus(
         self, source: str, pos: int, linea: int, columna: int
-    ) -> tuple[Token, int, int]:
+    ) -> tuple[Token, int, int, int]:
         """
         Estado: PLUS_STATE
         Transiciones:
-            PLUS_STATE --[+]    --> HECHO  (emitir INCREMENT ++)
-            PLUS_STATE --[Otro] --> HECHO  (emitir PLUS +; retroceder)
+            PLUS_STATE --[espacio/\\n]--> PLUS_STATE  (saltar blancos)
+            PLUS_STATE --[+]           --> HECHO  (emitir INCREMENTO ++)
+            PLUS_STATE --[Otro]        --> HECHO  (emitir SUMA +; retroceder)
+
+        Nota: los espacios y saltos de línea entre los dos '+' se ignoran,
+        de modo que "+\n\n+" se tokeniza como INCREMENTO ++.
         """
         start_col = columna
         pos      += 1   # consumir el primer +
         columna  += 1
 
         n = len(source)
-        if pos < n and source[pos] == "+":
-            pos     += 1
-            columna += 1
-            return Token("INCREMENTO", "++", linea, start_col), pos, columna
+
+        # Saltar espacios/saltos de línea antes de buscar el segundo '+'
+        lookahead_pos   = pos
+        lookahead_col   = columna
+        lookahead_linea = linea
+        while lookahead_pos < n and source[lookahead_pos] in (" ", "\t", "\r", "\n"):
+            if source[lookahead_pos] == "\n":
+                lookahead_linea += 1
+                lookahead_col    = 1
+            else:
+                lookahead_col += 1
+            lookahead_pos += 1
+
+        if lookahead_pos < n and source[lookahead_pos] == "+":
+            lookahead_pos += 1
+            lookahead_col += 1
+            return Token("INCREMENTO", "++", linea, start_col), lookahead_pos, lookahead_col, lookahead_linea
         else:
-            return Token("SUMA", "+", linea, start_col), pos, columna
+            return Token("SUMA", "+", linea, start_col), pos, columna, linea
 
     # --------------------------------------------------------------------------
 
     def _read_minus(
         self, source: str, pos: int, linea: int, columna: int
-    ) -> tuple[Token, int, int]:
+    ) -> tuple[Token, int, int, int]:
         """
         Estado: MIN_STATE
         Transiciones:
-            MIN_STATE --[-]    --> HECHO  (emitir DECREMENT --)
-            MIN_STATE --[Otro] --> HECHO  (emitir MINUS -; retroceder)
+            MIN_STATE --[espacio/\\n]--> MIN_STATE  (saltar blancos)
+            MIN_STATE --[-]           --> HECHO  (emitir DECREMENTO --)
+            MIN_STATE --[Otro]        --> HECHO  (emitir RESTA -; retroceder)
+
+        Nota: los espacios y saltos de línea entre los dos '-' se ignoran,
+        de modo que "-\n\n-" se tokeniza como DECREMENTO --.
         """
         start_col = columna
         pos      += 1   # consumir el primer -
         columna  += 1
 
         n = len(source)
-        if pos < n and source[pos] == "-":
-            pos     += 1
-            columna += 1
-            return Token("DECREMENTO", "--", linea, start_col), pos, columna
+
+        # Saltar espacios/saltos de línea antes de buscar el segundo '-'
+        lookahead_pos   = pos
+        lookahead_col   = columna
+        lookahead_linea = linea
+        while lookahead_pos < n and source[lookahead_pos] in (" ", "\t", "\r", "\n"):
+            if source[lookahead_pos] == "\n":
+                lookahead_linea += 1
+                lookahead_col    = 1
+            else:
+                lookahead_col += 1
+            lookahead_pos += 1
+
+        if lookahead_pos < n and source[lookahead_pos] == "-":
+            lookahead_pos += 1
+            lookahead_col += 1
+            return Token("DECREMENTO", "--", linea, start_col), lookahead_pos, lookahead_col, lookahead_linea
         else:
-            return Token("RESTA", "-", linea, start_col), pos, columna
+            return Token("RESTA", "-", linea, start_col), pos, columna, linea
 
     # --------------------------------------------------------------------------
 
