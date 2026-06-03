@@ -2,7 +2,6 @@
 ast_formatter.py
 ----------------
 Proporciona funciones para formatear y serializar el AST para visualización.
-
 """
 
 from typing import Optional, List, Dict, Any
@@ -97,6 +96,10 @@ class ASTFormatter:
             if node.condicion:
                 result += ASTFormatter._expresion_to_simple_text(node.condicion)
             result += "\n"
+            if hasattr(node, 'until_condicion') and node.until_condicion:
+                result += f"{prefix}until "
+                result += ASTFormatter._expresion_to_simple_text(node.until_condicion)
+                result += "\n"
 
         elif isinstance(node, EntradaEstandar):
             result += f"{prefix}cin >> {node.identificador};\n"
@@ -157,7 +160,6 @@ class ASTFormatter:
     @staticmethod
     def _componente_to_text(comp: Componente) -> str:
         if comp.tipo == "numero":
-            # FIX 1: mostrar enteros sin decimales
             if comp.es_entero:
                 return str(int(comp.valor))
             return str(comp.valor)
@@ -266,10 +268,14 @@ class ASTFormatter:
             node_dict["children"].append(
                 ASTFormatter._leaf(f"IDENTIFICADOR: {node.identificador}", linea=node.linea, columna=node.columna)
             )
-            node_dict["children"].append(ASTFormatter._leaf("ASIGNACION: ="))
+            node_dict["children"].append(
+                ASTFormatter._leaf("ASIGNACION: =", linea=node.linea, columna=node.columna)
+            )
             if node.expresion:
                 node_dict["children"].append(ASTFormatter.to_dict(node.expresion))
-            node_dict["children"].append(ASTFormatter._leaf("PUNTO_COMA: ;"))
+            node_dict["children"].append(
+                ASTFormatter._leaf("PUNTO_COMA: ;", linea=node.linea, columna=node.columna)
+            )
 
         elif isinstance(node, Seleccion):
             node_dict["label"] = "SELECCION"
@@ -281,19 +287,26 @@ class ASTFormatter:
                 if cond_dict:
                     cond_dict["label"] = "CONDICION"
                     node_dict["children"].append(cond_dict)
-            node_dict["children"].append(ASTFormatter._leaf("THEN: then"))
+            node_dict["children"].append(
+                ASTFormatter._leaf("THEN: then", linea=node.linea, columna=node.columna)
+            )
             if node.rama_entonces:
                 then_dict = ASTFormatter.to_dict(node.rama_entonces)
                 if then_dict:
                     then_dict["label"] = "RAMA_ENTONCES"
                     node_dict["children"].append(then_dict)
             if node.rama_sino:
-                node_dict["children"].append(ASTFormatter._leaf("ELSE: else"))
+                # linea/columna del else no está en el nodo; usamos el del nodo padre como aproximación
+                node_dict["children"].append(
+                    ASTFormatter._leaf("ELSE: else", linea=node.linea, columna=node.columna)
+                )
                 else_dict = ASTFormatter.to_dict(node.rama_sino)
                 if else_dict:
                     else_dict["label"] = "RAMA_SINO"
                     node_dict["children"].append(else_dict)
-            node_dict["children"].append(ASTFormatter._leaf("END: end"))
+            node_dict["children"].append(
+                ASTFormatter._leaf("END: end", linea=node.linea, columna=node.columna)
+            )
 
         elif isinstance(node, Iteracion):
             node_dict["label"] = "ITERACION"
@@ -322,12 +335,22 @@ class ASTFormatter:
                 if body_dict:
                     body_dict["label"] = "CUERPO"
                     node_dict["children"].append(body_dict)
-            node_dict["children"].append(ASTFormatter._leaf("WHILE: while"))
+            node_dict["children"].append(
+                ASTFormatter._leaf("WHILE: while", linea=node.linea, columna=node.columna)
+            )
             if node.condicion:
                 cond_dict = ASTFormatter.to_dict(node.condicion)
                 if cond_dict:
-                    cond_dict["label"] = "CONDICION"
+                    cond_dict["label"] = "CONDICION_WHILE"
                     node_dict["children"].append(cond_dict)
+            if hasattr(node, 'until_condicion') and node.until_condicion:
+                node_dict["children"].append(
+                    ASTFormatter._leaf("UNTIL: until", linea=node.linea, columna=node.columna)
+                )
+                until_dict = ASTFormatter.to_dict(node.until_condicion)
+                if until_dict:
+                    until_dict["label"] = "CONDICION_UNTIL"
+                    node_dict["children"].append(until_dict)
 
         elif isinstance(node, EntradaEstandar):
             node_dict["label"] = "ENTRADA_ESTANDAR"
@@ -406,7 +429,6 @@ class ASTFormatter:
         elif isinstance(node, Componente):
             label = ASTFormatter._componente_to_text(node)
             node_dict["label"] = f"Componente: {label}"
-            # FIX 2: enteros sin .0 ya manejado en _componente_to_text
             if node.siguiente:
                 node_dict["children"].append(ASTFormatter.to_dict(node.siguiente))
 

@@ -2,30 +2,6 @@
 parser.py
 ---------
 Analizador sintáctico descendente recursivo para el lenguaje CAOS.
-
-CORRECCIONES APLICADAS:
-1. _lista_sentencias: ya no incluye KW_WHILE en block_stops, para que el
-   cuerpo del `do` solo pare en KW_WHILE cuando se le pide explícitamente.
-2. _seleccion: el ';' inesperado después de 'end' se consume en silencio
-   (sin reportar error) cuando el input tiene esa forma —es decir, se
-   tolera como parte del lenguaje; si quieres reportarlo déjalo, pero el
-   mensaje ahora es correcto.
-3. _repeticion: soporta la sintaxis real del archivo de prueba:
-       do
-           sentencias
-       while (cond) { sentencias_extra };
-       until (cond);
-   Consume la llave {}, las sentencias dentro, el ';' final, y el
-   until opcional.
-4. _asignacion: cuando falta la expresión después de '=' (p. ej. "a =;")
-   reporta error con posición correcta y NO deja el ';' sin consumir.
-5. _seleccion condición: si _expresion() falla (&&, etc.) recupera
-   avanzando hasta KW_THEN sin generar error de cascada sobre ')'.
-6. Posiciones (linea/columna): se propagan a los nodos AST al construirlos.
-7. _componente: el bloque `elif` duplicado para AND/OR/NEGACION se eliminó
-   (era letra muerta y enmascaraba el primer bloque).
-8. _lista_sentencias: el `_recover_to_construct` acepta el conjunto de
-   stops efectivos para no cruzar límites de bloque.
 """
 
 from typing import List, Optional, Tuple
@@ -85,9 +61,7 @@ class Parser:
         self.type_starts = ("KW_INT", "KW_FLOAT", "KW_BOOL")
         self.statement_starts = ("IDENTIFIER", "KW_IF", "KW_WHILE", "KW_DO", "KW_CIN", "KW_COUT")
         self.declaration_starts = self.type_starts + self.statement_starts
-        # FIX 1: KW_WHILE eliminado de block_stops global; se añade solo
-        # cuando _lista_sentencias lo necesita vía stop_tokens.
-        self.block_stops = ("LLAVE_DER", "KW_ELSE", "KW_END", "KW_UNTIL")
+        self.block_stops = ("LLAVE_DER", "KW_ELSE", "KW_END")
 
     def parse(self) -> Tuple[Optional[Programa], List[SyntaxError]]:
         try:
@@ -197,6 +171,18 @@ class Parser:
             self._advance()
             tokens_advanced += 1
 
+    def _report_unexpected_token(self, contexto: str = "esta parte del programa"):
+        """Registra un token inesperado antes de entrar a recuperación."""
+        tok = self.current_token
+        if not tok:
+            return
+        self.errors.append(SyntaxError(
+            f"Token inesperado '{tok.valor}' en {contexto}",
+            linea=tok.linea,
+            columna=tok.columna,
+            token_encontrado=tok.tipo
+        ))
+
     # ========================================================================
     # REGLAS GRAMATICALES
     # ========================================================================
@@ -241,6 +227,7 @@ class Parser:
                 continue
 
             if self.current_token.tipo not in self.declaration_starts:
+                self._report_unexpected_token("lista de declaraciones")
                 self._recover_to_construct(("LLAVE_DER",))
                 if self._match("PUNTO_COMA"):
                     self._advance()
@@ -349,12 +336,13 @@ class Parser:
                 self._advance()
                 continue
 
-            # Ignorar LLAVE_IZQ sueltas (sintaxis do-while con bloque)
             if self._match("LLAVE_IZQ"):
+                self._report_unexpected_token("lista de sentencias")
                 self._advance()
                 continue
 
             if self.current_token.tipo not in self.statement_starts:
+                self._report_unexpected_token("lista de sentencias")
                 self._recover_to_construct(effective_stops)
                 if self._match("PUNTO_COMA"):
                     self._advance()
@@ -422,13 +410,11 @@ class Parser:
         self._advance()
 
         if not self._consume("ASIGNACION", "Se esperaba '=' en asignación"):
-            # FIX 4: No dejar el ';' sin consumir; recuperar hasta él.
             self._skip_on_error("PUNTO_COMA", *self.block_stops)
             if self._match("PUNTO_COMA"):
                 self._advance()
             return asig
 
-        # FIX 4: Manejar "id =;" (asignación vacía) sin perder el ';'
         if self._match("PUNTO_COMA"):
             # asignación sin expresión: reportar error
             tok = self.current_token
@@ -458,8 +444,6 @@ class Parser:
         sel.linea = tok_if.linea
         sel.columna = tok_if.columna
 
-        # FIX 5: Intentar parsear la condición; si falla (p.ej. por &&),
-        # recuperar hasta KW_THEN sin generar error de cascada.
         sel.condicion = self._expresion()
         if not sel.condicion:
             self.errors.append(SyntaxError(
@@ -485,8 +469,6 @@ class Parser:
             if self._match("KW_END"):
                 self._advance()
 
-        # FIX 2: Consumir ';' opcional después de 'end' (es parte del estilo
-        # del archivo de prueba: "end;"). Se consume silenciosamente.
         if self.current_token and self.current_token.tipo == "PUNTO_COMA":
             self._advance()
 
@@ -540,19 +522,13 @@ class Parser:
 
     def _repeticion(self) -> Optional[Repeticion]:
         """
-        FIX 3: Soporta la sintaxis real del archivo de prueba:
-            do
-                sentencias
-            while (cond) { sentencias_extra };
-            until (cond);
-        Pasos:
-          1. consume 'do'
-          2. parsea cuerpo principal hasta KW_WHILE
-          3. consume 'while'
-          4. parsea condición del while
-          5. si sigue '{', parsea sentencias extra dentro del bloque y '}'
-          6. consume ';' opcional
-          7. consume 'until' opcional + condición + ';'
+        Gramática propia del proyecto:
+            repeticion → do lista_sentencias while ( expresion ) { lista_sentencias } ; until ( expresion ) ;
+
+        Ambas formas de cuerpo son válidas:
+            while (cond) { sentencias }   ← con bloque
+            while (cond) end              ← con end (compatibilidad)
+        until es el terminador formal del do-while.
         """
         rep = Repeticion()
 
@@ -572,7 +548,7 @@ class Parser:
         # Condición del while
         rep.condicion = self._expresion()
 
-        # Bloque extra { ... } del while
+        # Bloque { sentencias } — es la forma canónica del proyecto
         if self._match("LLAVE_IZQ"):
             self._advance()
             extra = self._lista_sentencias(stop_tokens=("LLAVE_DER",))
@@ -583,21 +559,18 @@ class Parser:
                 rep.cuerpo = extra
             if self._match("LLAVE_DER"):
                 self._advance()
+        elif self._match("KW_END"):
+            # Forma alternativa con 'end' (compatibilidad)
+            self._advance()
 
-        # ';' opcional después de '}' del while
+        # ';' opcional después del bloque
         if self._match("PUNTO_COMA"):
             self._advance()
 
-        # 'until' opcional
+        # until (cond); — terminador formal del do-while en este lenguaje
         if self._match("KW_UNTIL"):
             self._advance()
-            # condición del until (la guardamos como condición del nodo si no
-            # hay condición del while, o la descartamos — el AST no tiene
-            # campo dedicado para until, así que si ya hay condición del while
-            # simplemente la consumimos para no dejar tokens sueltos)
-            until_cond = self._expresion()
-            if until_cond and not rep.condicion:
-                rep.condicion = until_cond
+            rep.until_condicion = self._expresion()
             if self._match("PUNTO_COMA"):
                 self._advance()
 
@@ -606,12 +579,17 @@ class Parser:
             children.extend(rep.cuerpo.children)
         if rep.condicion:
             children.append(rep.condicion)
+        if rep.until_condicion:
+            children.append(rep.until_condicion)
         rep.children = children
 
         return rep
 
     def _sent_in(self) -> Optional[EntradaEstandar]:
-        """sent_in → cin >> id ;  (>> como dos tokens MAYOR)"""
+        """sent_in → cin >> id ;
+        '>>' se tokeniza como dos MAYOR consecutivos.
+        Si faltan uno o los dos '>', se reporta error con posición exacta.
+        """
         entrada = EntradaEstandar()
 
         tok_cin = self._consume("KW_CIN", "Se esperaba 'cin'")
@@ -620,13 +598,32 @@ class Parser:
         entrada.linea = tok_cin.linea
         entrada.columna = tok_cin.columna
 
-        # >> interpretado como dos MAYOR consecutivos
+        vio_primer_mayor = False
+
+        # Primer '>'
+        if self._match("MAYOR"):
+            vio_primer_mayor = True
+            self._advance()
+        else:
+            tok = self.current_token
+            self.errors.append(SyntaxError(
+                f"Se esperaba '>>' después de 'cin' pero se encontró '{tok.valor if tok else 'EOF'}'",
+                linea=tok.linea if tok else tok_cin.linea,
+                columna=tok.columna if tok else tok_cin.columna
+            ))
+            if not self._match("IDENTIFIER", "PUNTO_COMA"):
+                self._skip_on_error("IDENTIFIER", "PUNTO_COMA")
+
+        # Segundo '>'
         if self._match("MAYOR"):
             self._advance()
-            if self._match("MAYOR"):
-                self._advance()
-        else:
-            self._skip_on_error("IDENTIFIER", "PUNTO_COMA")
+        elif vio_primer_mayor:
+            tok = self.current_token
+            self.errors.append(SyntaxError(
+                "Se esperaba segundo '>' de '>>' en cin",
+                linea=tok.linea if tok else tok_cin.linea,
+                columna=tok.columna if tok else tok_cin.columna
+            ))
 
         if not self._match("IDENTIFIER"):
             tok = self.current_token
@@ -635,6 +632,9 @@ class Parser:
                 linea=tok.linea if tok else 0,
                 columna=tok.columna if tok else 0
             ))
+            self._skip_on_error("PUNTO_COMA")
+            if self._match("PUNTO_COMA"):
+                self._advance()
             return entrada
 
         entrada.identificador = self.current_token.valor
@@ -645,7 +645,10 @@ class Parser:
         return entrada
 
     def _sent_out(self) -> Optional[SalidaEstandar]:
-        """sent_out → cout << salida ;"""
+        """sent_out → cout << salida ;
+        '<<' se tokeniza como dos MENOR consecutivos.
+        Si faltan uno o los dos '<', se reporta error con posición exacta.
+        """
         salida_node = SalidaEstandar()
 
         tok_cout = self._consume("KW_COUT", "Se esperaba 'cout'")
@@ -654,11 +657,32 @@ class Parser:
         salida_node.linea = tok_cout.linea
         salida_node.columna = tok_cout.columna
 
-        # << interpretado como dos MENOR consecutivos
+        vio_primer_menor = False
+
+        # Primer '<'
+        if self._match("MENOR"):
+            vio_primer_menor = True
+            self._advance()
+        else:
+            tok = self.current_token
+            self.errors.append(SyntaxError(
+                f"Se esperaba '<<' después de 'cout' pero se encontró '{tok.valor if tok else 'EOF'}'",
+                linea=tok.linea if tok else tok_cout.linea,
+                columna=tok.columna if tok else tok_cout.columna
+            ))
+            if not self._match("IDENTIFIER", "INT_NUM", "FLOAT_NUM", "STRING", "PUNTO_COMA"):
+                self._skip_on_error("IDENTIFIER", "INT_NUM", "FLOAT_NUM", "STRING", "PUNTO_COMA")
+
+        # Segundo '<'
         if self._match("MENOR"):
             self._advance()
-            if self._match("MENOR"):
-                self._advance()
+        elif vio_primer_menor:
+            tok = self.current_token
+            self.errors.append(SyntaxError(
+                "Se esperaba segundo '<' de '<<' en cout",
+                linea=tok.linea if tok else tok_cout.linea,
+                columna=tok.columna if tok else tok_cout.columna
+            ))
 
         salida_item = self._salida()
         if salida_item:
@@ -853,7 +877,6 @@ class Parser:
             self._advance()
 
         elif self._match("AND", "OR", "NEGACION"):
-            # FIX 7: bloque duplicado eliminado; solo existe este.
             comp.tipo = "logico"
             comp.operador_logico = self.current_token.valor
             tok_op = self.current_token

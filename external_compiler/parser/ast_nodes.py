@@ -104,9 +104,10 @@ class Iteracion(ASTNode):
 
 @dataclass
 class Repeticion(ASTNode):
-    """repeticion → do lista_sentencias while expresion"""
+    """repeticion → do lista_sentencias while expresion { lista_sentencias } ; until expresion ;"""
     cuerpo: Optional['ListaSentencias'] = None
-    condicion: Optional['Expresion'] = None
+    condicion: Optional['Expresion'] = None          # condición del while interno
+    until_condicion: Optional['Expresion'] = None    # condición del until (terminador)
     children: List[ASTNode] = field(default_factory=list)
 
 
