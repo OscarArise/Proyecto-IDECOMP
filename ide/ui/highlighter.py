@@ -16,12 +16,15 @@ if _EC_DIR not in _sys.path:
 try:
     from lexer.reserved_words import RESERVED as _RESERVED  # type: ignore[import-not-found]
     RESERVED_WORDS: set[str] = set(_RESERVED.keys())
+    RESERVED_WORDS.discard("real")
+    RESERVED_WORDS.update({"bool", "true", "false"})
 except ImportError:
     # Fallback hardcoded: refleja exactamente reserved_words.py
     RESERVED_WORDS = {
         "if", "else", "end", "do", "while", "switch", "case",
-        "int", "real", "float", "main", "cin", "cout",
+        "int", "float", "bool", "main", "cin", "cout",
         "for", "return", "break", "then", "until", "default",
+        "true", "false",
     }
 
 #Definicion de tokens con patrones y tags

@@ -1,6 +1,6 @@
 main {
     int x, y, z;
-    real a, b, c;
+    float a, b, c;
     int suma, mas;
 
     suma = 45;
@@ -35,7 +35,7 @@ main {
         x = 6 + 8 / 9 * 8 / 3;
         cin >> x;
         mas = 36 / 7;
-    while y == 5;
+    while y == 5
 
     while y == 0
         cin >> mas;

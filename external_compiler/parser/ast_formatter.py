@@ -96,7 +96,7 @@ class ASTFormatter:
             result += f"{prefix}while "
             if node.condicion:
                 result += ASTFormatter._expresion_to_simple_text(node.condicion)
-            result += ";\n"
+            result += "\n"
 
         elif isinstance(node, EntradaEstandar):
             result += f"{prefix}cin >> {node.identificador};\n"
@@ -325,7 +325,6 @@ class ASTFormatter:
                     cond_dict["label"] = "Condición: " + (cond_dict.get("label", ""))
                     cond_dict["label"] = "CONDICION"
                     node_dict["children"].append(cond_dict)
-            node_dict["children"].append(ASTFormatter._leaf("PUNTO_COMA: ;"))
 
         elif isinstance(node, EntradaEstandar):
             node_dict["label"] = "ENTRADA_ESTANDAR"

@@ -23,5 +23,5 @@ main {
 
     do
         y = (y + 1) * 2 + 1;
-    while y == 5;
+    while y == 5
 }

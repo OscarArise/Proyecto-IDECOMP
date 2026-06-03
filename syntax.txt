@@ -5,7 +5,7 @@ Representación de texto:
 --------------------------------------------------
 main {
   int x, y, z;
-  real a, b, c;
+  float a, b, c;
   int suma, mas;
   suma = 45.0;
   x = 32.32;
@@ -36,7 +36,7 @@ main {
     x = 6.0 + 8.0 / 9.0 * 8.0 / 3.0;
     cin >> x;
     mas = 36.0 / 7.0;
-  while y == 5.0;
+  while y == 5.0
   while y == 0.0
     cin >> mas;
     cout << x;
@@ -163,7 +163,7 @@ Representación estructurada (para visualización):
                   "linea": 0,
                   "columna": 0,
                   "children": [],
-                  "label": "TIPO_DATO: real"
+                  "label": "TIPO_DATO: float"
                 },
                 {
                   "type": "Variables",
@@ -217,7 +217,7 @@ Representación estructurada (para visualización):
                 }
               ],
               "label": "DECLARACION_VARIABLE",
-              "tipo": "real",
+              "tipo": "float",
               "identificadores": [
                 "a",
                 "b",
@@ -3186,13 +3186,6 @@ Representación estructurada (para visualización):
                             }
                           ],
                           "label": "CONDICION"
-                        },
-                        {
-                          "type": "Token",
-                          "linea": 0,
-                          "columna": 0,
-                          "children": [],
-                          "label": "PUNTO_COMA: ;"
                         }
                       ],
                       "label": "REPETICION"
