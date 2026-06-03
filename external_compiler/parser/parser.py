@@ -90,6 +90,9 @@ class Parser:
         if self.pos < len(self.tokens) - 1:
             self.pos += 1
             self.current_token = self.tokens[self.pos]
+        else:
+            self.pos = len(self.tokens)
+            self.current_token = None
 
     def _peek(self, offset: int = 1) -> Optional[Token]:
         """Mira el token que viene sin avanzar."""
@@ -172,7 +175,7 @@ class Parser:
         lista = ListaDeclaracion()
 
         while (self.current_token and 
-               self.current_token.tipo in ("KW_INT", "KW_FLOAT", "KW_BOOL", 
+               self.current_token.tipo in ("KW_INT", "KW_FLOAT", "KW_REAL", "KW_BOOL", 
                                           "IDENTIFIER", "KW_IF", "KW_WHILE", 
                                           "KW_DO", "KW_CIN", "KW_COUT")):
             decl = self._declaracion()
@@ -191,7 +194,7 @@ class Parser:
         decl = Declaracion()
 
         # Intenta declaración de variable
-        if self.current_token and self.current_token.tipo in ("KW_INT", "KW_FLOAT", "KW_BOOL"):
+        if self.current_token and self.current_token.tipo in ("KW_INT", "KW_FLOAT", "KW_REAL", "KW_BOOL"):
             decl_var = self._declaracion_variable()
             if decl_var:
                 decl.contenido = decl_var
@@ -220,6 +223,9 @@ class Parser:
         elif self._match("KW_FLOAT"):
             decl.tipo = "float"
             self._advance()
+        elif self._match("KW_REAL"):
+            decl.tipo = "real"
+            self._advance()
         elif self._match("KW_BOOL"):
             decl.tipo = "bool"
             self._advance()
@@ -234,7 +240,7 @@ class Parser:
         decl.identificadores = self._lista_identificadores()
 
         if not self._consume("PUNTO_COMA", "Se esperaba ';' después de declaración de variable"):
-            self._skip_on_error("PUNTO_COMA", "KW_INT", "KW_FLOAT", "KW_BOOL")
+            self._skip_on_error("PUNTO_COMA", "KW_INT", "KW_FLOAT", "KW_REAL", "KW_BOOL")
 
         return decl
 
@@ -265,12 +271,14 @@ class Parser:
 
         return identificadores
 
-    def _lista_sentencias(self) -> Optional[ListaSentencias]:
+    def _lista_sentencias(self, stop_tokens: tuple[str, ...] = ()) -> Optional[ListaSentencias]:
         """lista_sentencias → lista_sentencias sentencia | ε"""
         lista = ListaSentencias()
 
-        while self.current_token and self.current_token.tipo in ("IDENTIFIER", "KW_IF", "KW_WHILE", 
-                                                                   "KW_DO", "KW_CIN", "KW_COUT"):
+        while (self.current_token and
+               self.current_token.tipo not in stop_tokens and
+               self.current_token.tipo in ("IDENTIFIER", "KW_IF", "KW_WHILE", 
+                                                                   "KW_DO", "KW_CIN", "KW_COUT")):
             sent = self._sentencia()
             if sent:
                 lista.sentencias.append(sent)
@@ -398,7 +406,7 @@ class Parser:
         if not self._consume("KW_DO", "Se esperaba 'do'"):
             return None
 
-        rep.cuerpo = self._lista_sentencias()
+        rep.cuerpo = self._lista_sentencias(stop_tokens=("KW_WHILE",))
 
         if not self._consume("KW_WHILE", "Se esperaba 'while' después del cuerpo do"):
             self._skip_on_error("PUNTO_COMA")
