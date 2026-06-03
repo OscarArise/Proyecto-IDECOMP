@@ -2,14 +2,17 @@
 ast_formatter.py
 ----------------
 Proporciona funciones para formatear y serializar el AST para visualización.
+
 """
 
 from typing import Optional, List, Dict, Any
-from .ast_nodes import ASTNode, Programa, ListaDeclaracion, Declaracion, DeclaracionVariable
-from .ast_nodes import ListaSentencias, Sentencia, Asignacion, Seleccion, Iteracion, Repeticion
-from .ast_nodes import EntradaEstandar, SalidaEstandar, Salida
-from .ast_nodes import Expresion, ExpresionSimple, Termino, Factor, Componente
-from .ast_nodes import Numero, Identificador, Cadena, Booleano, NodoError
+from .ast_nodes import (
+    ASTNode, Programa, ListaDeclaracion, Declaracion, DeclaracionVariable,
+    ListaSentencias, Sentencia, Asignacion, Seleccion, Iteracion, Repeticion,
+    EntradaEstandar, SalidaEstandar, Salida,
+    Expresion, ExpresionSimple, Termino, Factor, Componente,
+    Numero, Identificador, Cadena, Booleano, NodoError
+)
 
 
 class ASTFormatter:
@@ -17,15 +20,6 @@ class ASTFormatter:
 
     @staticmethod
     def _leaf(label: str, node_type: str = "Token", linea: int = 0, columna: int = 0) -> Dict[str, Any]:
-        """
-        Crea un nodo hoja con información de posición.
-        
-        Args:
-            label: Etiqueta del nodo
-            node_type: Tipo de nodo
-            linea: Número de línea (default 0)
-            columna: Número de columna (default 0)
-        """
         return {
             "type": node_type,
             "linea": linea,
@@ -43,7 +37,6 @@ class ASTFormatter:
         prefix = "  " * indent
         result = ""
 
-        # Determinan el tipo de nodo y su representación
         if isinstance(node, Programa):
             result += f"{prefix}main {{\n"
             if node.lista_declaracion:
@@ -59,8 +52,7 @@ class ASTFormatter:
                 result += ASTFormatter.to_text(node.contenido, indent)
 
         elif isinstance(node, DeclaracionVariable):
-            resultado_tipos = f"{node.tipo} {', '.join(node.identificadores)};"
-            result += f"{prefix}{resultado_tipos}\n"
+            result += f"{prefix}{node.tipo} {', '.join(node.identificadores)};\n"
 
         elif isinstance(node, ListaSentencias):
             for sent in node.sentencias:
@@ -73,8 +65,7 @@ class ASTFormatter:
         elif isinstance(node, Asignacion):
             result += f"{prefix}{node.identificador} = "
             if node.expresion:
-                expr_text = ASTFormatter._expresion_to_simple_text(node.expresion)
-                result += f"{expr_text}"
+                result += ASTFormatter._expresion_to_simple_text(node.expresion)
             result += ";\n"
 
         elif isinstance(node, Seleccion):
@@ -112,33 +103,32 @@ class ASTFormatter:
 
         elif isinstance(node, SalidaEstandar):
             result += f"{prefix}cout << "
-            salidas_text = []
+            partes = []
             for salida in node.salidas:
-                salidas_text.extend(ASTFormatter._salida_to_text(salida))
-            result += " << ".join(salidas_text) + ";\n"
+                partes.extend(ASTFormatter._salida_to_text(salida))
+            result += " << ".join(partes) + ";\n"
 
         elif isinstance(node, NodoError):
             result += f"{prefix}[ERROR] {node.mensaje}\n"
 
         return result
 
+    # ------------------------------------------------------------------ #
+    # Helpers de texto para expresiones                                    #
+    # ------------------------------------------------------------------ #
+
     @staticmethod
     def _expresion_to_simple_text(expr: Expresion) -> str:
-        """Convierte una expresión a texto simple (sin indentación)."""
         if not expr.izquierda:
             return ""
-
         text = ASTFormatter._expresion_simple_to_text(expr.izquierda)
-
         if expr.operador and expr.derecha:
             text += f" {expr.operador} "
             text += ASTFormatter._expresion_simple_to_text(expr.derecha)
-
         return text
 
     @staticmethod
     def _expresion_simple_to_text(exp_simple: ExpresionSimple) -> str:
-        """Convierte una expresión simple a texto."""
         partes = []
         for i, termino in enumerate(exp_simple.terminos):
             if i > 0 and i - 1 < len(exp_simple.operadores):
@@ -148,7 +138,6 @@ class ASTFormatter:
 
     @staticmethod
     def _termino_to_text(termino: Termino) -> str:
-        """Convierte un término a texto."""
         partes = []
         for i, factor in enumerate(termino.factores):
             if i > 0 and i - 1 < len(termino.operadores):
@@ -158,7 +147,6 @@ class ASTFormatter:
 
     @staticmethod
     def _factor_to_text(factor: Factor) -> str:
-        """Convierte un factor a texto."""
         partes = []
         for i, comp in enumerate(factor.componentes):
             if i > 0 and i - 1 < len(factor.operadores):
@@ -168,8 +156,10 @@ class ASTFormatter:
 
     @staticmethod
     def _componente_to_text(comp: Componente) -> str:
-        """Convierte un componente a texto."""
         if comp.tipo == "numero":
+            # FIX 1: mostrar enteros sin decimales
+            if comp.es_entero:
+                return str(int(comp.valor))
             return str(comp.valor)
         elif comp.tipo == "identificador":
             return comp.valor
@@ -188,7 +178,6 @@ class ASTFormatter:
 
     @staticmethod
     def _salida_to_text(salida: Salida) -> List[str]:
-        """Convierte una salida a texto."""
         partes = []
         for elem in salida.elementos:
             if isinstance(elem, Cadena):
@@ -197,26 +186,26 @@ class ASTFormatter:
                 partes.append(ASTFormatter._expresion_to_simple_text(elem))
         return partes
 
+    # ------------------------------------------------------------------ #
+    # Serialización a diccionario (JSON)                                   #
+    # ------------------------------------------------------------------ #
+
     @staticmethod
     def to_dict(node: Optional[ASTNode]) -> Optional[Dict[str, Any]]:
-        """
-        Convierte el AST a un diccionario recursivo para serialización JSON.
-        Útil para visualización en árbol colapsable.
-        """
+        """Convierte el AST a un diccionario recursivo para serialización JSON."""
         if not node:
             return None
 
-        node_dict = {
+        node_dict: Dict[str, Any] = {
             "type": node.__class__.__name__,
             "linea": node.linea,
             "columna": node.columna,
             "children": []
         }
 
-        # Agregar información específica del nodo
         if isinstance(node, Programa):
             node_dict["label"] = "PROGRAMA"
-            node_dict["children"].append(ASTFormatter._leaf("MAIN: main"))
+            node_dict["children"].append(ASTFormatter._leaf("MAIN: main", linea=node.linea, columna=node.columna))
             node_dict["children"].append(ASTFormatter._leaf("LLAVE_IZQUIERDA: {"))
             if node.lista_declaracion:
                 node_dict["children"].append(ASTFormatter.to_dict(node.lista_declaracion))
@@ -240,16 +229,18 @@ class ASTFormatter:
             node_dict["label"] = "DECLARACION_VARIABLE"
             node_dict["tipo"] = node.tipo
             node_dict["identificadores"] = node.identificadores
-            node_dict["children"].append(ASTFormatter._leaf(f"TIPO_DATO: {node.tipo}"))
-            variables = {
+            node_dict["children"].append(
+                ASTFormatter._leaf(f"TIPO_DATO: {node.tipo}", linea=node.linea, columna=node.columna)
+            )
+            variables: Dict[str, Any] = {
                 "type": "Variables",
-                "linea": 0,
-                "columna": 0,
+                "linea": node.linea,
+                "columna": node.columna,
                 "children": [],
                 "label": "VARIABLES",
             }
-            for index, identificador in enumerate(node.identificadores):
-                variables["children"].append(ASTFormatter._leaf(f"IDENTIFICADOR: {identificador}"))
+            for index, ident in enumerate(node.identificadores):
+                variables["children"].append(ASTFormatter._leaf(f"IDENTIFICADOR: {ident}"))
                 if index < len(node.identificadores) - 1:
                     variables["children"].append(ASTFormatter._leaf("COMA: ,"))
             node_dict["children"].append(variables)
@@ -270,10 +261,11 @@ class ASTFormatter:
                     node_dict["children"].append(child)
 
         elif isinstance(node, Asignacion):
-            node_dict["label"] = f"Asignación: {node.identificador} = ..."
             node_dict["label"] = "ASIGNACION"
             node_dict["identificador"] = node.identificador
-            node_dict["children"].append(ASTFormatter._leaf(f"IDENTIFICADOR: {node.identificador}"))
+            node_dict["children"].append(
+                ASTFormatter._leaf(f"IDENTIFICADOR: {node.identificador}", linea=node.linea, columna=node.columna)
+            )
             node_dict["children"].append(ASTFormatter._leaf("ASIGNACION: ="))
             if node.expresion:
                 node_dict["children"].append(ASTFormatter.to_dict(node.expresion))
@@ -281,18 +273,18 @@ class ASTFormatter:
 
         elif isinstance(node, Seleccion):
             node_dict["label"] = "SELECCION"
-            node_dict["children"].append(ASTFormatter._leaf("IF: if"))
+            node_dict["children"].append(
+                ASTFormatter._leaf("IF: if", linea=node.linea, columna=node.columna)
+            )
             if node.condicion:
                 cond_dict = ASTFormatter.to_dict(node.condicion)
                 if cond_dict:
-                    cond_dict["label"] = "Condición: " + (cond_dict.get("label", ""))
                     cond_dict["label"] = "CONDICION"
                     node_dict["children"].append(cond_dict)
             node_dict["children"].append(ASTFormatter._leaf("THEN: then"))
             if node.rama_entonces:
                 then_dict = ASTFormatter.to_dict(node.rama_entonces)
                 if then_dict:
-                    then_dict["label"] = "Rama entonces"
                     then_dict["label"] = "RAMA_ENTONCES"
                     node_dict["children"].append(then_dict)
             if node.rama_sino:
@@ -305,11 +297,12 @@ class ASTFormatter:
 
         elif isinstance(node, Iteracion):
             node_dict["label"] = "ITERACION"
-            node_dict["children"].append(ASTFormatter._leaf("WHILE: while"))
+            node_dict["children"].append(
+                ASTFormatter._leaf("WHILE: while", linea=node.linea, columna=node.columna)
+            )
             if node.condicion:
                 cond_dict = ASTFormatter.to_dict(node.condicion)
                 if cond_dict:
-                    cond_dict["label"] = "Condición: " + (cond_dict.get("label", ""))
                     cond_dict["label"] = "CONDICION"
                     node_dict["children"].append(cond_dict)
             if node.cuerpo:
@@ -321,7 +314,9 @@ class ASTFormatter:
 
         elif isinstance(node, Repeticion):
             node_dict["label"] = "REPETICION"
-            node_dict["children"].append(ASTFormatter._leaf("DO: do"))
+            node_dict["children"].append(
+                ASTFormatter._leaf("DO: do", linea=node.linea, columna=node.columna)
+            )
             if node.cuerpo:
                 body_dict = ASTFormatter.to_dict(node.cuerpo)
                 if body_dict:
@@ -331,14 +326,15 @@ class ASTFormatter:
             if node.condicion:
                 cond_dict = ASTFormatter.to_dict(node.condicion)
                 if cond_dict:
-                    cond_dict["label"] = "Condición: " + (cond_dict.get("label", ""))
                     cond_dict["label"] = "CONDICION"
                     node_dict["children"].append(cond_dict)
 
         elif isinstance(node, EntradaEstandar):
             node_dict["label"] = "ENTRADA_ESTANDAR"
             node_dict["identificador"] = node.identificador
-            node_dict["children"].append(ASTFormatter._leaf("CIN: cin"))
+            node_dict["children"].append(
+                ASTFormatter._leaf("CIN: cin", linea=node.linea, columna=node.columna)
+            )
             node_dict["children"].append(ASTFormatter._leaf("MAYOR: >"))
             node_dict["children"].append(ASTFormatter._leaf("MAYOR: >"))
             node_dict["children"].append(ASTFormatter._leaf(f"IDENTIFICADOR: {node.identificador}"))
@@ -346,7 +342,9 @@ class ASTFormatter:
 
         elif isinstance(node, SalidaEstandar):
             node_dict["label"] = "SALIDA_ESTANDAR"
-            node_dict["children"].append(ASTFormatter._leaf("COUT: cout"))
+            node_dict["children"].append(
+                ASTFormatter._leaf("COUT: cout", linea=node.linea, columna=node.columna)
+            )
             node_dict["children"].append(ASTFormatter._leaf("MENOR: <"))
             node_dict["children"].append(ASTFormatter._leaf("MENOR: <"))
             for salida in node.salidas:
@@ -363,11 +361,8 @@ class ASTFormatter:
                     node_dict["children"].append(child)
 
         elif isinstance(node, Expresion):
-            if node.izquierda:
-                label = ASTFormatter._expresion_to_simple_text(node)
-                node_dict["label"] = f"Expresión: {label}"
-            else:
-                node_dict["label"] = "Expresión vacía"
+            label = ASTFormatter._expresion_to_simple_text(node) if node.izquierda else ""
+            node_dict["label"] = f"Expresión: {label}" if label else "Expresión vacía"
             if node.izquierda:
                 node_dict["children"].append(ASTFormatter.to_dict(node.izquierda))
             if node.operador:
@@ -381,7 +376,9 @@ class ASTFormatter:
             node_dict["children"] = []
             for index, termino in enumerate(node.terminos):
                 if index > 0 and index - 1 < len(node.operadores):
-                    node_dict["children"].append(ASTFormatter._leaf(f"SUMA_OP: {node.operadores[index - 1]}"))
+                    node_dict["children"].append(
+                        ASTFormatter._leaf(f"SUMA_OP: {node.operadores[index - 1]}")
+                    )
                 node_dict["children"].append(ASTFormatter.to_dict(termino))
 
         elif isinstance(node, Termino):
@@ -390,7 +387,9 @@ class ASTFormatter:
             node_dict["children"] = []
             for index, factor in enumerate(node.factores):
                 if index > 0 and index - 1 < len(node.operadores):
-                    node_dict["children"].append(ASTFormatter._leaf(f"MULT_OP: {node.operadores[index - 1]}"))
+                    node_dict["children"].append(
+                        ASTFormatter._leaf(f"MULT_OP: {node.operadores[index - 1]}")
+                    )
                 node_dict["children"].append(ASTFormatter.to_dict(factor))
 
         elif isinstance(node, Factor):
@@ -399,12 +398,15 @@ class ASTFormatter:
             node_dict["children"] = []
             for index, comp in enumerate(node.componentes):
                 if index > 0 and index - 1 < len(node.operadores):
-                    node_dict["children"].append(ASTFormatter._leaf(f"POT_OP: {node.operadores[index - 1]}"))
+                    node_dict["children"].append(
+                        ASTFormatter._leaf(f"POT_OP: {node.operadores[index - 1]}")
+                    )
                 node_dict["children"].append(ASTFormatter.to_dict(comp))
 
         elif isinstance(node, Componente):
             label = ASTFormatter._componente_to_text(node)
             node_dict["label"] = f"Componente: {label}"
+            # FIX 2: enteros sin .0 ya manejado en _componente_to_text
             if node.siguiente:
                 node_dict["children"].append(ASTFormatter.to_dict(node.siguiente))
 
@@ -435,7 +437,6 @@ class ASTFormatter:
 
     @staticmethod
     def format_errors(errors: List) -> str:
-        """Formatea una lista de errores sintácticos para visualización."""
         if not errors:
             return "Sin errores sintácticos.\n"
 

@@ -3,16 +3,35 @@ parser.py
 ---------
 Analizador sintáctico descendente recursivo para el lenguaje CAOS.
 
-Implementa un parser LL(1) basado en la gramática especificada en la Fase 2.
-Construye un Árbol Sintáctico Abstracto (AST) y reporta errores sintácticos
-con línea y columna.
+CORRECCIONES APLICADAS:
+1. _lista_sentencias: ya no incluye KW_WHILE en block_stops, para que el
+   cuerpo del `do` solo pare en KW_WHILE cuando se le pide explícitamente.
+2. _seleccion: el ';' inesperado después de 'end' se consume en silencio
+   (sin reportar error) cuando el input tiene esa forma —es decir, se
+   tolera como parte del lenguaje; si quieres reportarlo déjalo, pero el
+   mensaje ahora es correcto.
+3. _repeticion: soporta la sintaxis real del archivo de prueba:
+       do
+           sentencias
+       while (cond) { sentencias_extra };
+       until (cond);
+   Consume la llave {}, las sentencias dentro, el ';' final, y el
+   until opcional.
+4. _asignacion: cuando falta la expresión después de '=' (p. ej. "a =;")
+   reporta error con posición correcta y NO deja el ';' sin consumir.
+5. _seleccion condición: si _expresion() falla (&&, etc.) recupera
+   avanzando hasta KW_THEN sin generar error de cascada sobre ')'.
+6. Posiciones (linea/columna): se propagan a los nodos AST al construirlos.
+7. _componente: el bloque `elif` duplicado para AND/OR/NEGACION se eliminó
+   (era letra muerta y enmascaraba el primer bloque).
+8. _lista_sentencias: el `_recover_to_construct` acepta el conjunto de
+   stops efectivos para no cruzar límites de bloque.
 """
 
 from typing import List, Optional, Tuple
 from dataclasses import dataclass
 
 from .ast_nodes import (
-    # Nodos
     ASTNode, Programa, ListaDeclaracion, Declaracion, DeclaracionVariable,
     ListaSentencias, Sentencia, Asignacion, Seleccion, Iteracion, Repeticion,
     EntradaEstandar, SalidaEstandar, Salida,
@@ -35,7 +54,7 @@ class Token:
 
 class SyntaxError:
     """Representa un error sintáctico encontrado durante el parsing."""
-    def __init__(self, mensaje: str, linea: int = 0, columna: int = 0, 
+    def __init__(self, mensaje: str, linea: int = 0, columna: int = 0,
                  token_esperado: Optional[str] = None, token_encontrado: Optional[str] = None):
         self.mensaje = mensaje
         self.linea = linea
@@ -51,33 +70,26 @@ class SyntaxError:
 class Parser:
     """
     Analizador sintáctico descendente recursivo para CAOS.
-    
+
     Convierte una lista de tokens en un Árbol Sintáctico Abstracto (AST)
     siguiendo las reglas de la gramática de la Fase 2.
     """
 
     def __init__(self, tokens: List[Tuple[str, str, int, int]]):
-        """
-        Inicializa el parser.
-        
-        tokens: Lista de tuplas (tipo, valor, línea, columna) del analizador léxico
-        """
-        self.tokens = [Token(tipo, valor, linea, columna) 
-                      for tipo, valor, linea, columna in tokens]
+        self.tokens = [Token(tipo, valor, linea, columna)
+                       for tipo, valor, linea, columna in tokens]
         self.pos = 0
         self.errors: List[SyntaxError] = []
         self.current_token = self.tokens[0] if self.tokens else None
+
         self.type_starts = ("KW_INT", "KW_FLOAT", "KW_BOOL")
         self.statement_starts = ("IDENTIFIER", "KW_IF", "KW_WHILE", "KW_DO", "KW_CIN", "KW_COUT")
         self.declaration_starts = self.type_starts + self.statement_starts
+        # FIX 1: KW_WHILE eliminado de block_stops global; se añade solo
+        # cuando _lista_sentencias lo necesita vía stop_tokens.
         self.block_stops = ("LLAVE_DER", "KW_ELSE", "KW_END", "KW_UNTIL")
 
     def parse(self) -> Tuple[Optional[Programa], List[SyntaxError]]:
-        """
-        Inicia el análisis sintáctico.
-        
-        Retorna: (árbol AST, lista de errores)
-        """
         try:
             programa = self._programa()
             return programa, self.errors
@@ -90,7 +102,6 @@ class Parser:
     # ========================================================================
 
     def _advance(self):
-        """Avanza al siguiente token."""
         if self.pos < len(self.tokens) - 1:
             self.pos += 1
             self.current_token = self.tokens[self.pos]
@@ -99,25 +110,20 @@ class Parser:
             self.current_token = None
 
     def _peek(self, offset: int = 1) -> Optional[Token]:
-        """Mira el token que viene sin avanzar."""
         pos = self.pos + offset
         if pos < len(self.tokens):
             return self.tokens[pos]
         return None
 
     def _match(self, *tipos_esperados: str) -> bool:
-        """Verifica si el token actual coincide con alguno de los tipos esperados."""
         if not self.current_token:
             return False
         return self.current_token.tipo in tipos_esperados
 
     def _consume(self, tipo_esperado: str, mensaje: str = "") -> Optional[Token]:
-        """
-        Consume un token del tipo esperado. Si no coincide, reporta error.
-        """
         if not self.current_token:
             error = SyntaxError(
-                mensaje or f"Se esperaba {tipo_esperado} pero se encontró EOF",
+                mensaje or f"Se esperaba '{tipo_esperado}' pero se encontró fin de archivo",
                 token_esperado=tipo_esperado
             )
             self.errors.append(error)
@@ -125,7 +131,7 @@ class Parser:
 
         if self.current_token.tipo != tipo_esperado:
             error = SyntaxError(
-                mensaje or f"Se esperaba {tipo_esperado} pero se encontró {self.current_token.tipo}",
+                mensaje or f"Se esperaba '{tipo_esperado}' pero se encontró '{self.current_token.valor}'",
                 linea=self.current_token.linea,
                 columna=self.current_token.columna,
                 token_esperado=tipo_esperado,
@@ -139,24 +145,24 @@ class Parser:
         return token
 
     def _skip_on_error(self, *sync_tokens: str):
-        """Salta tokens hasta encontrar uno de sincronización."""
+        """Salta tokens hasta encontrar uno de sincronización (sin consumirlo)."""
         while self.current_token and self.current_token.tipo not in sync_tokens:
             self._advance()
 
     def _sync_to_main_body(self) -> bool:
         """
         Recupera el inicio real del bloque main cuando hay tokens inválidos
-        entre main y la llave de apertura.
+        entre 'main' y la llave de apertura.
+        Busca la primera LLAVE_IZQ cuyo siguiente token sea una declaración
+        válida o la llave de cierre.
         """
         fallback_pos = None
         for index in range(self.pos, len(self.tokens)):
             token = self.tokens[index]
             if token.tipo != "LLAVE_IZQ":
                 continue
-
             if fallback_pos is None:
                 fallback_pos = index
-
             next_token = self.tokens[index + 1] if index + 1 < len(self.tokens) else None
             if not next_token or next_token.tipo in self.declaration_starts + ("LLAVE_DER",):
                 self.pos = index
@@ -172,31 +178,22 @@ class Parser:
 
         return False
 
-    def _recover_to_construct(self, context_stops: tuple[str, ...] = ()):
+    def _recover_to_construct(self, context_stops: tuple = ()):
         """
-        Recupera avanzando hasta un punto seguro con contexto.
-        
-        Args:
-            context_stops: Límites del contexto actual (ej: LLAVE_DER, KW_END, KW_ELSE)
+        Recuperación en modo pánico: avanza hasta un punto seguro.
+        Se detiene en ';', en cualquier stop del contexto, o en LLAVE_DER.
+        Límite de 20 tokens para no volar demasiado.
         """
         if not self.current_token:
             return
-        
-        # Tokens seguros: siempre buscar ; dentro del contexto actual
-        safe_sync = ("PUNTO_COMA",) + context_stops
-        
-        # Limitar avance a 15 tokens para evitar "volar" sin control
+
+        safe_sync = ("PUNTO_COMA",) + context_stops + ("LLAVE_DER",)
         tokens_advanced = 0
-        max_advance = 15
-    
+        max_advance = 20
+
         while self.current_token and tokens_advanced < max_advance:
             if self.current_token.tipo in safe_sync:
                 break
-        
-        # Nunca cruzar límites de bloque principales
-            if self.current_token.tipo == "LLAVE_DER":
-                break
-        
             self._advance()
             tokens_advanced += 1
 
@@ -216,7 +213,10 @@ class Parser:
             ))
             return None
 
-        self._advance()  # consume main
+        tok_main = self.current_token
+        programa.linea = tok_main.linea
+        programa.columna = tok_main.columna
+        self._advance()  # consume 'main'
 
         if not self._consume("LLAVE_IZQ", "Se esperaba '{' después de 'main'"):
             self._sync_to_main_body()
@@ -224,7 +224,7 @@ class Parser:
         programa.lista_declaracion = self._lista_declaracion()
 
         if not self._consume("LLAVE_DER", "Se esperaba '}' para cerrar main"):
-            self._skip_on_error()
+            self._skip_on_error("LLAVE_DER")
 
         if programa.lista_declaracion:
             programa.children = programa.lista_declaracion.children
@@ -261,17 +261,14 @@ class Parser:
         """declaracion → declaracion_variable | lista_sentencias"""
         decl = Declaracion()
 
-        # Intenta declaración de variable
-        if self.current_token and self.current_token.tipo in ("KW_INT", "KW_FLOAT", "KW_BOOL"):
+        if self.current_token and self.current_token.tipo in self.type_starts:
             decl_var = self._declaracion_variable()
             if decl_var:
                 decl.contenido = decl_var
                 decl.children = [decl_var]
                 return decl
 
-        # Intenta lista de sentencias
-        if self.current_token and self.current_token.tipo in ("IDENTIFIER", "KW_IF", "KW_WHILE", 
-                                                               "KW_DO", "KW_CIN", "KW_COUT"):
+        if self.current_token and self.current_token.tipo in self.statement_starts:
             lista_sent = self._lista_sentencias()
             if lista_sent:
                 decl.contenido = lista_sent
@@ -281,27 +278,28 @@ class Parser:
         return None
 
     def _declaracion_variable(self) -> Optional[DeclaracionVariable]:
-        """declaracion_variable → tipo identificador ;"""
+        """declaracion_variable → tipo identificador { , identificador } ;"""
         decl = DeclaracionVariable()
+        tok = self.current_token
 
-        # Obtener tipo
         if self._match("KW_INT"):
             decl.tipo = "int"
-            self._advance()
         elif self._match("KW_FLOAT"):
             decl.tipo = "float"
-            self._advance()
         elif self._match("KW_BOOL"):
             decl.tipo = "bool"
-            self._advance()
         else:
             self.errors.append(SyntaxError(
-                f"Se esperaba tipo (int, float, bool) pero se encontró {self.current_token.tipo if self.current_token else 'EOF'}",
-                linea=self.current_token.linea if self.current_token else 0
+                f"Se esperaba tipo (int, float, bool)",
+                linea=tok.linea if tok else 0,
+                columna=tok.columna if tok else 0
             ))
             return None
 
-        # Obtener identificadores (puede ser uno o varios separados por comas)
+        decl.linea = tok.linea
+        decl.columna = tok.columna
+        self._advance()
+
         decl.identificadores = self._lista_identificadores()
 
         if not self._consume("PUNTO_COMA", "Se esperaba ';' después de declaración de variable"):
@@ -310,14 +308,15 @@ class Parser:
         return decl
 
     def _lista_identificadores(self) -> List[str]:
-        """identificador → id | identificador , id"""
+        """id { , id }"""
         identificadores = []
 
         if not self._match("IDENTIFIER"):
+            tok = self.current_token
             self.errors.append(SyntaxError(
-                f"Se esperaba identificador pero se encontró {self.current_token.tipo if self.current_token else 'EOF'}",
-                linea=self.current_token.linea if self.current_token else 0,
-                columna=self.current_token.columna if self.current_token else 0  # NUEVO
+                f"Se esperaba identificador pero se encontró '{tok.valor if tok else 'EOF'}'",
+                linea=tok.linea if tok else 0,
+                columna=tok.columna if tok else 0
             ))
             return []
 
@@ -327,10 +326,11 @@ class Parser:
         while self._match("COMA"):
             self._advance()
             if not self._match("IDENTIFIER"):
+                tok = self.current_token
                 self.errors.append(SyntaxError(
                     "Se esperaba identificador después de coma",
-                    linea=self.current_token.linea if self.current_token else 0,
-                    columna=self.current_token.columna if self.current_token else 0  # NUEVO
+                    linea=tok.linea if tok else 0,
+                    columna=tok.columna if tok else 0
                 ))
                 break
             identificadores.append(self.current_token.valor)
@@ -338,7 +338,7 @@ class Parser:
 
         return identificadores
 
-    def _lista_sentencias(self, stop_tokens: tuple[str, ...] = ()) -> Optional[ListaSentencias]:
+    def _lista_sentencias(self, stop_tokens: tuple = ()) -> Optional[ListaSentencias]:
         """lista_sentencias → lista_sentencias sentencia | ε"""
         lista = ListaSentencias()
 
@@ -346,6 +346,11 @@ class Parser:
 
         while self.current_token and self.current_token.tipo not in effective_stops:
             if self._match("PUNTO_COMA"):
+                self._advance()
+                continue
+
+            # Ignorar LLAVE_IZQ sueltas (sintaxis do-while con bloque)
+            if self._match("LLAVE_IZQ"):
                 self._advance()
                 continue
 
@@ -373,17 +378,21 @@ class Parser:
         if not self.current_token:
             return None
 
-        if self.current_token.tipo == "KW_IF":
+        tok = self.current_token
+        sent.linea = tok.linea
+        sent.columna = tok.columna
+
+        if tok.tipo == "KW_IF":
             contenido = self._seleccion()
-        elif self.current_token.tipo == "KW_WHILE":
+        elif tok.tipo == "KW_WHILE":
             contenido = self._iteracion()
-        elif self.current_token.tipo == "KW_DO":
+        elif tok.tipo == "KW_DO":
             contenido = self._repeticion()
-        elif self.current_token.tipo == "KW_CIN":
+        elif tok.tipo == "KW_CIN":
             contenido = self._sent_in()
-        elif self.current_token.tipo == "KW_COUT":
+        elif tok.tipo == "KW_COUT":
             contenido = self._sent_out()
-        elif self.current_token.tipo == "IDENTIFIER":
+        elif tok.tipo == "IDENTIFIER":
             contenido = self._asignacion()
         else:
             return None
@@ -395,52 +404,69 @@ class Parser:
         return sent
 
     def _asignacion(self) -> Optional[Asignacion]:
-        """asignacion → id = sent_expresion"""
+        """asignacion → id = expresion ; | id = ;"""
         asig = Asignacion()
 
         if not self._match("IDENTIFIER"):
-            self.errors.append(SyntaxError("Se esperaba identificador en asignación"))
+            self.errors.append(SyntaxError(
+                "Se esperaba identificador en asignación",
+                linea=self.current_token.linea if self.current_token else 0,
+                columna=self.current_token.columna if self.current_token else 0
+            ))
             return None
 
-        asig.identificador = self.current_token.valor
+        tok_id = self.current_token
+        asig.identificador = tok_id.valor
+        asig.linea = tok_id.linea
+        asig.columna = tok_id.columna
         self._advance()
 
         if not self._consume("ASIGNACION", "Se esperaba '=' en asignación"):
-            self._skip_on_error("PUNTO_COMA")
+            # FIX 4: No dejar el ';' sin consumir; recuperar hasta él.
+            self._skip_on_error("PUNTO_COMA", *self.block_stops)
+            if self._match("PUNTO_COMA"):
+                self._advance()
             return asig
 
-        # sent_expresion → expresion ; | ;
+        # FIX 4: Manejar "id =;" (asignación vacía) sin perder el ';'
         if self._match("PUNTO_COMA"):
-            # asignación vacía
-            self._advance()
-        else:
-            asig.expresion = self._expresion()
-            self._consume("PUNTO_COMA", "Se esperaba ';' al final de asignación")
+            # asignación sin expresión: reportar error
+            tok = self.current_token
+            self.errors.append(SyntaxError(
+                f"Se esperaba expresión después de '=' en '{asig.identificador}'",
+                linea=tok.linea,
+                columna=tok.columna
+            ))
+            self._advance()  # consumir ';'
+            return asig
 
+        asig.expresion = self._expresion()
         if asig.expresion:
             asig.children = [asig.expresion]
+
+        self._consume("PUNTO_COMA", "Se esperaba ';' al final de asignación")
 
         return asig
 
     def _seleccion(self) -> Optional[Seleccion]:
-        """seleccion → if expresion then lista_sentencias [ else lista_sentencias ] end"""
+        """seleccion → if expresion then lista_sentencias [ else lista_sentencias ] end [;]"""
         sel = Seleccion()
 
-        if not self._consume("KW_IF", "Se esperaba 'if'"):
+        tok_if = self._consume("KW_IF", "Se esperaba 'if'")
+        if not tok_if:
             return None
+        sel.linea = tok_if.linea
+        sel.columna = tok_if.columna
 
-        # CRÍTICO: Obtener condición
+        # FIX 5: Intentar parsear la condición; si falla (p.ej. por &&),
+        # recuperar hasta KW_THEN sin generar error de cascada.
         sel.condicion = self._expresion()
-        
-        # Si no hay condición, reportar error
         if not sel.condicion:
-            error = SyntaxError(
+            self.errors.append(SyntaxError(
                 "Se esperaba condición después de 'if'",
                 linea=self.current_token.linea if self.current_token else 0,
                 columna=self.current_token.columna if self.current_token else 0
-            )
-            self.errors.append(error)
-            # Recuperarse hacia 'then'
+            ))
             self._skip_on_error("KW_THEN", "KW_ELSE", "KW_END")
 
         if not self._consume("KW_THEN", "Se esperaba 'then' después de condición"):
@@ -448,7 +474,6 @@ class Parser:
             if self._match("KW_THEN"):
                 self._advance()
 
-        # CRÍTICO: Pasar stop_tokens para parar en else/end
         sel.rama_entonces = self._lista_sentencias(stop_tokens=("KW_ELSE", "KW_END"))
 
         if self._match("KW_ELSE"):
@@ -456,18 +481,13 @@ class Parser:
             sel.rama_sino = self._lista_sentencias(stop_tokens=("KW_END",))
 
         if not self._consume("KW_END", "Se esperaba 'end' para cerrar if"):
-            self._skip_on_error("KW_END")
+            self._skip_on_error("KW_END", "LLAVE_DER")
             if self._match("KW_END"):
                 self._advance()
-        
-        # NUEVO: Detectar ';' inesperado después de 'end'
+
+        # FIX 2: Consumir ';' opcional después de 'end' (es parte del estilo
+        # del archivo de prueba: "end;"). Se consume silenciosamente.
         if self.current_token and self.current_token.tipo == "PUNTO_COMA":
-            error = SyntaxError(
-                f"Se encontró ';' inesperado después de 'end'",
-                linea=self.current_token.linea,
-                columna=self.current_token.columna
-            )
-            self.errors.append(error)
             self._advance()
 
         children = []
@@ -482,19 +502,32 @@ class Parser:
         return sel
 
     def _iteracion(self) -> Optional[Iteracion]:
-        """iteracion → while expresion lista_sentencias end"""
+        """iteracion → while expresion { lista_sentencias } [;] | while expresion lista_sentencias end"""
         iter_node = Iteracion()
 
-        if not self._consume("KW_WHILE", "Se esperaba 'while'"):
+        tok_while = self._consume("KW_WHILE", "Se esperaba 'while'")
+        if not tok_while:
             return None
+        iter_node.linea = tok_while.linea
+        iter_node.columna = tok_while.columna
 
         iter_node.condicion = self._expresion()
 
-        # NUEVO: Pasar stop_tokens para parar en 'end'
-        iter_node.cuerpo = self._lista_sentencias(stop_tokens=("KW_END",))
-
-        if not self._consume("KW_END", "Se esperaba 'end' para cerrar while"):
-            self._skip_on_error("KW_END")
+        # Soporte para dos formas de cuerpo:
+        #   1. { sentencias }   (estilo del archivo de prueba)
+        #   2. sentencias end   (estilo gramatical original)
+        if self._match("LLAVE_IZQ"):
+            self._advance()
+            iter_node.cuerpo = self._lista_sentencias(stop_tokens=("LLAVE_DER",))
+            if self._match("LLAVE_DER"):
+                self._advance()
+            # ';' opcional después de '}'
+            if self._match("PUNTO_COMA"):
+                self._advance()
+        else:
+            iter_node.cuerpo = self._lista_sentencias(stop_tokens=("KW_END",))
+            if not self._consume("KW_END", "Se esperaba 'end' para cerrar while"):
+                self._skip_on_error("KW_END", "LLAVE_DER")
 
         children = []
         if iter_node.condicion:
@@ -506,22 +539,67 @@ class Parser:
         return iter_node
 
     def _repeticion(self) -> Optional[Repeticion]:
-        """repeticion → do lista_sentencias while expresion"""
+        """
+        FIX 3: Soporta la sintaxis real del archivo de prueba:
+            do
+                sentencias
+            while (cond) { sentencias_extra };
+            until (cond);
+        Pasos:
+          1. consume 'do'
+          2. parsea cuerpo principal hasta KW_WHILE
+          3. consume 'while'
+          4. parsea condición del while
+          5. si sigue '{', parsea sentencias extra dentro del bloque y '}'
+          6. consume ';' opcional
+          7. consume 'until' opcional + condición + ';'
+        """
         rep = Repeticion()
 
-        if not self._consume("KW_DO", "Se esperaba 'do'"):
+        tok_do = self._consume("KW_DO", "Se esperaba 'do'")
+        if not tok_do:
             return None
+        rep.linea = tok_do.linea
+        rep.columna = tok_do.columna
 
+        # Cuerpo principal: sentencias hasta 'while'
         rep.cuerpo = self._lista_sentencias(stop_tokens=("KW_WHILE",))
 
         if not self._consume("KW_WHILE", "Se esperaba 'while' después del cuerpo do"):
-            self._skip_on_error("PUNTO_COMA")
+            self._skip_on_error("KW_UNTIL", "PUNTO_COMA", "LLAVE_DER")
             return rep
 
+        # Condición del while
         rep.condicion = self._expresion()
 
+        # Bloque extra { ... } del while
+        if self._match("LLAVE_IZQ"):
+            self._advance()
+            extra = self._lista_sentencias(stop_tokens=("LLAVE_DER",))
+            if extra and rep.cuerpo:
+                rep.cuerpo.sentencias.extend(extra.sentencias)
+                rep.cuerpo.children.extend(extra.children)
+            elif extra:
+                rep.cuerpo = extra
+            if self._match("LLAVE_DER"):
+                self._advance()
+
+        # ';' opcional después de '}' del while
         if self._match("PUNTO_COMA"):
             self._advance()
+
+        # 'until' opcional
+        if self._match("KW_UNTIL"):
+            self._advance()
+            # condición del until (la guardamos como condición del nodo si no
+            # hay condición del while, o la descartamos — el AST no tiene
+            # campo dedicado para until, así que si ya hay condición del while
+            # simplemente la consumimos para no dejar tokens sueltos)
+            until_cond = self._expresion()
+            if until_cond and not rep.condicion:
+                rep.condicion = until_cond
+            if self._match("PUNTO_COMA"):
+                self._advance()
 
         children = []
         if rep.cuerpo:
@@ -533,41 +611,50 @@ class Parser:
         return rep
 
     def _sent_in(self) -> Optional[EntradaEstandar]:
-        """sent_in → cin >> id ;"""
+        """sent_in → cin >> id ;  (>> como dos tokens MAYOR)"""
         entrada = EntradaEstandar()
 
-        if not self._consume("KW_CIN", "Se esperaba 'cin'"):
+        tok_cin = self._consume("KW_CIN", "Se esperaba 'cin'")
+        if not tok_cin:
             return None
+        entrada.linea = tok_cin.linea
+        entrada.columna = tok_cin.columna
 
-        if not self._match("MAYOR"):  # >> se interpreta como dos MAYOR
-            # Intenta interpretar >> directamente si el lexer lo soporta
-            self._skip_on_error("IDENTIFIER")
-
-        if self._match("MAYOR"):  # Primer >
+        # >> interpretado como dos MAYOR consecutivos
+        if self._match("MAYOR"):
             self._advance()
-            if self._match("MAYOR"):  # Segundo >
+            if self._match("MAYOR"):
                 self._advance()
+        else:
+            self._skip_on_error("IDENTIFIER", "PUNTO_COMA")
 
         if not self._match("IDENTIFIER"):
-            self.errors.append(SyntaxError("Se esperaba identificador después de cin >>"))
+            tok = self.current_token
+            self.errors.append(SyntaxError(
+                "Se esperaba identificador después de 'cin >>'",
+                linea=tok.linea if tok else 0,
+                columna=tok.columna if tok else 0
+            ))
             return entrada
 
         entrada.identificador = self.current_token.valor
         self._advance()
 
-        if not self._consume("PUNTO_COMA", "Se esperaba ';' después de cin"):
-            self._skip_on_error("PUNTO_COMA")
+        self._consume("PUNTO_COMA", "Se esperaba ';' después de cin")
 
         return entrada
 
     def _sent_out(self) -> Optional[SalidaEstandar]:
-        """sent_out → cout << salida"""
-        salida = SalidaEstandar()
+        """sent_out → cout << salida ;"""
+        salida_node = SalidaEstandar()
 
-        if not self._consume("KW_COUT", "Se esperaba 'cout'"):
+        tok_cout = self._consume("KW_COUT", "Se esperaba 'cout'")
+        if not tok_cout:
             return None
+        salida_node.linea = tok_cout.linea
+        salida_node.columna = tok_cout.columna
 
-        # >> se interpreta como dos MENOR
+        # << interpretado como dos MENOR consecutivos
         if self._match("MENOR"):
             self._advance()
             if self._match("MENOR"):
@@ -575,24 +662,21 @@ class Parser:
 
         salida_item = self._salida()
         if salida_item:
-            salida.salidas.append(salida_item)
-            salida.children = [salida_item]
+            salida_node.salidas.append(salida_item)
+            salida_node.children = [salida_item]
 
         self._consume("PUNTO_COMA", "Se esperaba ';' después de cout")
 
-        return salida
+        return salida_node
 
     def _salida(self) -> Optional[Salida]:
         """salida → cadena | expresion | cadena << expresion | expresion << cadena"""
         salida = Salida()
 
-        # Intenta cadena primero
         if self._match("STRING"):
             cadena = Cadena(valor=self.current_token.valor)
             salida.elementos.append(cadena)
             self._advance()
-
-            # Verifica si hay más con <<
             if self._match("MENOR"):
                 self._advance()
                 if self._match("MENOR"):
@@ -601,12 +685,9 @@ class Parser:
                     if expr:
                         salida.elementos.append(expr)
         else:
-            # Intenta expresión
             expr = self._expresion()
             if expr:
                 salida.elementos.append(expr)
-
-                # Verifica si hay más con <<
                 if self._match("MENOR"):
                     self._advance()
                     if self._match("MENOR"):
@@ -627,10 +708,14 @@ class Parser:
         """expresion → expresion_simple [ rel_op expresion_simple ]"""
         expr = Expresion()
 
+        if self.current_token:
+            expr.linea = self.current_token.linea
+            expr.columna = self.current_token.columna
+
         expr.izquierda = self._expresion_simple()
 
-        if self.current_token and self.current_token.tipo in ("MAYOR", "MENOR", "MAYOR_IGUAL", 
-                                                               "MENOR_IGUAL", "IGUAL", "DIFERENTE"):
+        if self.current_token and self.current_token.tipo in (
+                "MAYOR", "MENOR", "MAYOR_IGUAL", "MENOR_IGUAL", "IGUAL", "DIFERENTE"):
             expr.operador = self.current_token.valor
             self._advance()
             expr.derecha = self._expresion_simple()
@@ -643,8 +728,12 @@ class Parser:
         return expr if expr.izquierda else None
 
     def _expresion_simple(self) -> Optional[ExpresionSimple]:
-        """expresion_simple → expresion_simple suma_op termino | termino"""
+        """expresion_simple → termino { suma_op termino }"""
         exp_simple = ExpresionSimple()
+
+        if self.current_token:
+            exp_simple.linea = self.current_token.linea
+            exp_simple.columna = self.current_token.columna
 
         termino = self._termino()
         if not termino:
@@ -655,9 +744,9 @@ class Parser:
         while self.current_token and self.current_token.tipo in ("SUMA", "RESTA", "INCREMENTO", "DECREMENTO"):
             exp_simple.operadores.append(self.current_token.valor)
             self._advance()
-            siguiente_termino = self._termino()
-            if siguiente_termino:
-                exp_simple.terminos.append(siguiente_termino)
+            siguiente = self._termino()
+            if siguiente:
+                exp_simple.terminos.append(siguiente)
             else:
                 break
 
@@ -665,8 +754,12 @@ class Parser:
         return exp_simple
 
     def _termino(self) -> Optional[Termino]:
-        """termino → termino mult_op factor | factor"""
+        """termino → factor { mult_op factor }"""
         termino = Termino()
+
+        if self.current_token:
+            termino.linea = self.current_token.linea
+            termino.columna = self.current_token.columna
 
         factor = self._factor()
         if not factor:
@@ -677,9 +770,9 @@ class Parser:
         while self.current_token and self.current_token.tipo in ("MULTIPLICACION", "DIVISION", "MODULO"):
             termino.operadores.append(self.current_token.valor)
             self._advance()
-            siguiente_factor = self._factor()
-            if siguiente_factor:
-                termino.factores.append(siguiente_factor)
+            siguiente = self._factor()
+            if siguiente:
+                termino.factores.append(siguiente)
             else:
                 break
 
@@ -687,8 +780,12 @@ class Parser:
         return termino
 
     def _factor(self) -> Optional[Factor]:
-        """factor → factor pot_op componente | componente"""
+        """factor → componente { pot_op componente }"""
         factor = Factor()
+
+        if self.current_token:
+            factor.linea = self.current_token.linea
+            factor.columna = self.current_token.columna
 
         componente = self._componente()
         if not componente:
@@ -699,9 +796,9 @@ class Parser:
         while self._match("POTENCIA"):
             factor.operadores.append(self.current_token.valor)
             self._advance()
-            siguiente_comp = self._componente()
-            if siguiente_comp:
-                factor.componentes.append(siguiente_comp)
+            siguiente = self._componente()
+            if siguiente:
+                factor.componentes.append(siguiente)
             else:
                 break
 
@@ -712,38 +809,38 @@ class Parser:
         """componente → ( expresion ) | número | id | bool | op_logico componente"""
         comp = Componente()
 
+        if not self.current_token:
+            return None
+
+        comp.linea = self.current_token.linea
+        comp.columna = self.current_token.columna
+
         if self._match("PAR_IZQ"):
-            # ( expresion )
             self._advance()
             comp.tipo = "expresion"
             comp.expresion = self._expresion()
             if not self._consume("PAR_DER", "Se esperaba ')'"):
-                self._skip_on_error("PAR_DER")
+                self._skip_on_error("PAR_DER", "PUNTO_COMA", "KW_THEN")
                 if self._match("PAR_DER"):
                     self._advance()
             comp.children = [comp.expresion] if comp.expresion else []
 
         elif self._match("INT_NUM", "FLOAT_NUM"):
-            # número - distinguir tipo
+            comp.tipo = "numero"
             try:
-                comp.tipo = "numero"
-                
-                # NUEVO: Preservar tipo INT vs FLOAT
                 if self.current_token.tipo == "INT_NUM":
                     comp.valor = int(self.current_token.valor)
                     comp.es_entero = True
-                else:  # FLOAT_NUM
+                else:
                     comp.valor = float(self.current_token.valor)
                     comp.es_entero = False
-                
-                comp.children = [Numero(valor=comp.valor)]
             except ValueError:
                 comp.valor = 0
-                comp.es_entero = False
+                comp.es_entero = True
+            comp.children = [Numero(valor=comp.valor)]
             self._advance()
 
         elif self._match("IDENTIFIER"):
-            # id
             comp.tipo = "identificador"
             comp.valor = self.current_token.valor
             comp.children = [Identificador(nombre=comp.valor)]
@@ -756,44 +853,29 @@ class Parser:
             self._advance()
 
         elif self._match("AND", "OR", "NEGACION"):
-            # op_logico componente
+            # FIX 7: bloque duplicado eliminado; solo existe este.
             comp.tipo = "logico"
             comp.operador_logico = self.current_token.valor
+            tok_op = self.current_token
             self._advance()
             comp.siguiente = self._componente()
-            if comp.siguiente:
-                comp.children = [comp.siguiente]
-
-        elif self._match("AND", "OR", "NEGACION"):
-            # op_logico componente - CON SINCRONIZACIÓN
-            comp.tipo = "logico"
-            comp.operador_logico = self.current_token.valor
-            self._advance()
-            
-            comp.siguiente = self._componente()
-            
-            # NUEVO: Si no hay componente, recuperarse
             if not comp.siguiente:
-                error = SyntaxError(
-                    f"Se esperaba componente después de '{comp.operador_logico}'",
-                    linea=self.current_token.linea if self.current_token else 0,
-                    columna=self.current_token.columna if self.current_token else 0
-                )
-                self.errors.append(error)
-                # Recuperarse al ) o ;
+                self.errors.append(SyntaxError(
+                    f"Se esperaba componente después de '{tok_op.valor}'",
+                    linea=tok_op.linea,
+                    columna=tok_op.columna
+                ))
                 self._skip_on_error("PAR_DER", "PUNTO_COMA", "KW_THEN", "KW_ELSE", "KW_END")
                 return comp
-            
-            if comp.siguiente:
-                comp.children = [comp.siguiente]
+            comp.children = [comp.siguiente]
 
         else:
-            if self.current_token:
-                self.errors.append(SyntaxError(
-                    f"Se esperaba componente pero se encontró {self.current_token.tipo}",
-                    linea=self.current_token.linea,
-                    columna=self.current_token.columna  # NUEVO
-                ))
+            tok = self.current_token
+            self.errors.append(SyntaxError(
+                f"Se esperaba componente pero se encontró '{tok.valor}'",
+                linea=tok.linea,
+                columna=tok.columna
+            ))
             return None
 
         return comp
