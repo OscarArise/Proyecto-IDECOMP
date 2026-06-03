@@ -175,7 +175,7 @@ class Parser:
         lista = ListaDeclaracion()
 
         while (self.current_token and 
-               self.current_token.tipo in ("KW_INT", "KW_FLOAT", "KW_REAL", "KW_BOOL", 
+               self.current_token.tipo in ("KW_INT", "KW_FLOAT", "KW_BOOL", 
                                           "IDENTIFIER", "KW_IF", "KW_WHILE", 
                                           "KW_DO", "KW_CIN", "KW_COUT")):
             decl = self._declaracion()
@@ -194,7 +194,7 @@ class Parser:
         decl = Declaracion()
 
         # Intenta declaración de variable
-        if self.current_token and self.current_token.tipo in ("KW_INT", "KW_FLOAT", "KW_REAL", "KW_BOOL"):
+        if self.current_token and self.current_token.tipo in ("KW_INT", "KW_FLOAT", "KW_BOOL"):
             decl_var = self._declaracion_variable()
             if decl_var:
                 decl.contenido = decl_var
@@ -223,9 +223,6 @@ class Parser:
         elif self._match("KW_FLOAT"):
             decl.tipo = "float"
             self._advance()
-        elif self._match("KW_REAL"):
-            decl.tipo = "real"
-            self._advance()
         elif self._match("KW_BOOL"):
             decl.tipo = "bool"
             self._advance()
@@ -240,7 +237,7 @@ class Parser:
         decl.identificadores = self._lista_identificadores()
 
         if not self._consume("PUNTO_COMA", "Se esperaba ';' después de declaración de variable"):
-            self._skip_on_error("PUNTO_COMA", "KW_INT", "KW_FLOAT", "KW_REAL", "KW_BOOL")
+            self._skip_on_error("PUNTO_COMA", "KW_INT", "KW_FLOAT", "KW_BOOL")
 
         return decl
 
@@ -414,7 +411,8 @@ class Parser:
 
         rep.condicion = self._expresion()
 
-        self._consume("PUNTO_COMA", "Se esperaba ';' después de do-while")
+        if self._match("PUNTO_COMA"):
+            self._advance()
 
         children = []
         if rep.cuerpo:
@@ -631,10 +629,9 @@ class Parser:
             comp.children = [Identificador(nombre=comp.valor)]
             self._advance()
 
-        elif self._match("KW_REAL"):  # Booleano (REAL podría ser true/false en el lexer)
-            # bool o palabras de booleano
+        elif self._match("KW_TRUE", "KW_FALSE"):
             comp.tipo = "booleano"
-            comp.valor = self.current_token.valor.lower() in ("true", "verdadero", "1")
+            comp.valor = self.current_token.tipo == "KW_TRUE"
             comp.children = [Booleano(valor=comp.valor)]
             self._advance()
 
