@@ -26,11 +26,18 @@ class ASTTreeViewer:
         self.parent = parent
         self.tree = None
         self.item_count = 0
+        self.current_ast_json = ""
         self._create_widgets()
     
     def _create_widgets(self):
         """Crea los widgets de la interfaz."""
         # Crear un marco para el árbol
+        toolbar = ttk.Frame(self.parent)
+        toolbar.pack(fill=tk.X, padx=5, pady=(5, 0))
+        ttk.Button(toolbar, text="Abrir en ventana", command=self.open_in_window).pack(side=tk.LEFT)
+        ttk.Button(toolbar, text="Expandir", command=self.expand_all).pack(side=tk.LEFT, padx=(6, 0))
+        ttk.Button(toolbar, text="Colapsar", command=self.collapse_all).pack(side=tk.LEFT, padx=(6, 0))
+
         tree_frame = ttk.Frame(self.parent)
         tree_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
@@ -69,8 +76,10 @@ class ASTTreeViewer:
         json_str: String JSON del AST
         """
         try:
+            self.current_ast_json = json_str
             ast_dict = json.loads(json_str)
             self.clear()
+            self.current_ast_json = json_str
             self.item_count = 0
             
             # Insertar el nodo raíz
@@ -138,6 +147,19 @@ class ASTTreeViewer:
         """Limpia el árbol."""
         if self.tree:
             self.tree.delete(*self.tree.get_children())
+        self.current_ast_json = ""
+    
+    def open_in_window(self):
+        """Abre el árbol actual en una ventana grande para revisión."""
+        top = tk.Toplevel(self.parent.winfo_toplevel())
+        top.title("Árbol Sintáctico")
+        top.geometry("1000x700")
+        top.minsize(800, 500)
+        viewer = ASTTreeViewer(top)
+        if self.current_ast_json:
+            viewer.load_ast_json(self.current_ast_json)
+        else:
+            viewer.tree.insert("", "end", text="Ejecuta el análisis sintáctico para cargar el árbol")
     
     def _on_double_click(self, event):
         """Maneja el doble clic para expandir/contraer nodos."""
