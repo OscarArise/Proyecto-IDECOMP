@@ -8,7 +8,7 @@ Estructura jerárquica de nodos basada en la gramática de la Fase 2.
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Tuple
 
 
 # Clase base para todos los nodos del AST
@@ -30,6 +30,10 @@ class ASTNode:
 class Programa(ASTNode):
     """Nodo raíz: main { lista_declaracion }"""
     lista_declaracion: Optional['ListaDeclaracion'] = None
+    llave_izq_linea: int = 0
+    llave_izq_columna: int = 0
+    llave_der_linea: int = 0
+    llave_der_columna: int = 0
     children: List[ASTNode] = field(default_factory=list)
 
 
@@ -86,6 +90,14 @@ class Asignacion(ASTNode):
 
 
 @dataclass
+class IncrementoDecremento(ASTNode):
+    """incremento_decremento -> id ++ ; | id -- ;"""
+    identificador: str = ""
+    operador: str = ""  # ++ | --
+    children: List[ASTNode] = field(default_factory=list)
+
+
+@dataclass
 class Seleccion(ASTNode):
     """seleccion → if expresion then lista_sentencias [ else lista_sentencias ] end"""
     condicion: Optional['Expresion'] = None
@@ -113,14 +125,14 @@ class Repeticion(ASTNode):
 
 @dataclass
 class EntradaEstandar(ASTNode):
-    """sent_in → cin >> id ;"""
+    """sent_in → cin id ;"""
     identificador: str = ""
     children: List[ASTNode] = field(default_factory=list)
 
 
 @dataclass
 class SalidaEstandar(ASTNode):
-    """sent_out → cout << salida"""
+    """sent_out → cout salida ;"""
     salidas: List['Salida'] = field(default_factory=list)
     children: List[ASTNode] = field(default_factory=list)
 
@@ -141,7 +153,12 @@ class Expresion(ASTNode):
     """expresion → expresion_simple [ rel_op expresion_simple ]"""
     izquierda: Optional['ExpresionSimple'] = None
     operador: Optional[str] = None  # rel_op: <, <=, >, >=, ==, !=
+    operador_linea: int = 0
+    operador_columna: int = 0
     derecha: Optional['ExpresionSimple'] = None
+    operadores_logicos: List[str] = field(default_factory=list)  # &&, ||
+    operadores_logicos_pos: List[Tuple[int, int]] = field(default_factory=list)
+    siguientes_logicos: List['Expresion'] = field(default_factory=list)
     children: List[ASTNode] = field(default_factory=list)
 
 
@@ -149,7 +166,8 @@ class Expresion(ASTNode):
 class ExpresionSimple(ASTNode):
     """expresion_simple → expresion_simple suma_op termino | termino"""
     terminos: List['Termino'] = field(default_factory=list)
-    operadores: List[str] = field(default_factory=list)  # +, -, ++, --
+    operadores: List[str] = field(default_factory=list)  # +, -
+    operadores_pos: List[Tuple[int, int]] = field(default_factory=list)
     children: List[ASTNode] = field(default_factory=list)
 
 
@@ -158,14 +176,16 @@ class Termino(ASTNode):
     """termino → termino mult_op factor | factor"""
     factores: List['Factor'] = field(default_factory=list)
     operadores: List[str] = field(default_factory=list)  # *, /, %
+    operadores_pos: List[Tuple[int, int]] = field(default_factory=list)
     children: List[ASTNode] = field(default_factory=list)
 
 
 @dataclass
 class Factor(ASTNode):
-    """factor → factor pot_op componente | componente"""
+    """factor -> componente [ pot_op factor ]"""
     componentes: List['Componente'] = field(default_factory=list)
     operadores: List[str] = field(default_factory=list)  # ^
+    operadores_pos: List[Tuple[int, int]] = field(default_factory=list)
     children: List[ASTNode] = field(default_factory=list)
 
 

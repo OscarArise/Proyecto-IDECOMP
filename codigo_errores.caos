@@ -1,0 +1,37 @@
+main {
+  int x y;
+  float a, b, c
+  
+  x = 10;
+  y = 20
+  z = x + y;
+  
+  if x > 15 then
+    y = y + 1;
+  else
+    y = y - 1;
+  end
+  
+  if (x == 10)
+    a = 5.5;
+  end
+  
+  while (x < 100)
+    x = x + 10;
+  
+  cin x
+  cout y;
+  
+  do
+    y = y * 2;
+  while (y < 50)
+  until (y >= 50);
+  
+  a = ;
+  
+  z = x ++ y;
+  
+  if (a > 5) then
+    x = 100
+  end
+}

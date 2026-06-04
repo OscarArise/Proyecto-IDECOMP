@@ -1,0 +1,40 @@
+main {
+  int x, y, z;
+  float a, b, c;
+  bool flag;
+  
+  x = 10;
+  y = 20;
+  z = x + y;
+  
+  a = 3.14;
+  b = 2.71;
+  c = a * b;
+  
+  flag = true;
+  
+  if (z > 15) then
+    y = y + 1;
+  else
+    y = y - 1;
+  end
+  
+  if (x == 10) then
+    a = 5.5;
+  end
+  
+  while (x < 100) {
+    x = x + 10;
+  }
+  
+  cin x;
+  
+  cout x;
+  cout z;
+  cout a;
+  
+  do
+    y = y * 2;
+  while (y < 50) { }
+  until (y >= 50);
+}

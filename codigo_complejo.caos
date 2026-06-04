@@ -1,0 +1,63 @@
+main {
+  int a, b, c;
+  float x;
+  
+  a = 100;
+  b = 200;
+  c = a + b;
+  
+  if (a > 50) then
+    if (b > 100) then
+      c = a + b;
+    else
+      c = a - b;
+    end
+  else
+    if (b < 100) then
+      c = 0;
+    else
+      c = 1;
+    end
+  end
+  
+  while (a < 1000) {
+    a = a + 10;
+    if (a > 500) then
+      a = a * 2;
+    end
+  }
+  
+  do
+    b = b + 5;
+    if (b > 100) then
+      b = b / 2;
+    end
+  while (b < 500) { }
+  until (b >= 500);
+  
+  x = 3.14159;
+  x = x * 2.0;
+  x = 10 + 5.5 - 2.2 * 3.3 / 2.0;
+  
+  x = (10 + 5) * (20 - 10) / (5 + 5);
+  
+  x = 2 ^ 3 ^ 2;
+  
+  if (a > 0 && b < 1000) then
+    c = 99;
+  end
+  
+  if (a == 100 || c != 0) then
+    c = c + 1;
+  end
+  
+  if (!(a > b)) then
+    c = 0;
+  end
+  
+  cin a;
+  cin b;
+  
+  cout c;
+  cout x;
+}
