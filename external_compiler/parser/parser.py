@@ -60,10 +60,14 @@ class Parser:
         self.current_token = self.tokens[0] if self.tokens else None
         self.last_consumed_token: Optional[Token] = None
 
-        self.type_starts = ("KW_INT", "KW_FLOAT", "KW_BOOL")
+        self.type_starts = ("KW_INT", "KW_FLOAT", "KW_REAL", "KW_BOOL")
         self.statement_starts = ("IDENTIFIER", "KW_IF", "KW_WHILE", "KW_DO", "KW_CIN", "KW_COUT")
         self.declaration_starts = self.type_starts + self.statement_starts
         self.block_stops = ("LLAVE_DER", "KW_ELSE", "KW_END")
+        self.expression_starts = (
+            "PAR_IZQ", "INT_NUM", "FLOAT_NUM", "IDENTIFIER",
+            "KW_TRUE", "KW_FALSE", "NEGACION",
+        )
 
     def parse(self) -> Tuple[Optional[Programa], List[SyntaxError]]:
         try:
@@ -166,15 +170,79 @@ class Parser:
         if not self.current_token:
             return
 
-        safe_sync = ("PUNTO_COMA",) + context_stops + ("LLAVE_DER",)
+        hard_stops = ("PUNTO_COMA",) + context_stops + ("LLAVE_DER",)
+        construct_starts = self.declaration_starts
         tokens_advanced = 0
         max_advance = 20
 
         while self.current_token and tokens_advanced < max_advance:
-            if self.current_token.tipo in safe_sync:
+            if self.current_token.tipo in hard_stops:
+                break
+            if tokens_advanced > 0 and self.current_token.tipo in construct_starts:
                 break
             self._advance()
             tokens_advanced += 1
+
+    def _consume_parenthesized_noise(self) -> bool:
+        """Descarta etiquetas inválidas como ``(while)``."""
+        if not self._match("PAR_IZQ"):
+            return False
+
+        next_token = self._peek()
+        if not next_token or not next_token.tipo.startswith("KW_"):
+            return False
+
+        self._advance()
+        while self.current_token and not self._match("PAR_DER", "PUNTO_COMA", "LLAVE_DER"):
+            self._advance()
+        if self._match("PAR_DER"):
+            self._advance()
+        return True
+
+    def _parse_condition(self, contexto: str) -> Optional[Expresion]:
+        """
+        Analiza una condición con paréntesis obligatorios, conservando la
+        expresión cuando falta alguno de los delimitadores.
+        """
+        if self._match("PAR_IZQ"):
+            self._advance()
+        else:
+            self._consume("PAR_IZQ", f"Se esperaba '(' después de '{contexto}'")
+
+        condicion = self._expresion()
+        if not condicion:
+            tok = self.current_token
+            self.errors.append(SyntaxError(
+                f"Se esperaba condición después de '{contexto}'",
+                linea=tok.linea if tok else 0,
+                columna=tok.columna if tok else 0,
+            ))
+            self._skip_on_error("PAR_DER", "KW_THEN", "LLAVE_IZQ", "PUNTO_COMA",
+                                "KW_ELSE", "KW_END", "KW_UNTIL", "LLAVE_DER")
+        elif self.current_token and self.current_token.tipo in self.expression_starts:
+            tok = self.current_token
+            mensaje = f"Se esperaba operador antes de '{tok.valor}'"
+            self.errors.append(SyntaxError(
+                mensaje,
+                linea=tok.linea,
+                columna=tok.columna,
+            ))
+            condicion.errores.append(NodoError(
+                linea=tok.linea,
+                columna=tok.columna,
+                mensaje=mensaje,
+                token_encontrado=(tok.tipo, tok.valor),
+                token_esperado="operador",
+            ))
+            self._skip_on_error("PAR_DER", "KW_THEN", "LLAVE_IZQ", "PUNTO_COMA",
+                                "KW_ELSE", "KW_END", "KW_UNTIL", "LLAVE_DER")
+
+        if self._match("PAR_DER"):
+            self._advance()
+        else:
+            self._consume("PAR_DER", "Se esperaba ')' después de condición")
+
+        return condicion
 
     def _report_unexpected_token(self, contexto: str = "esta parte del programa"):
         """Registra un token inesperado antes de entrar a recuperación."""
@@ -295,11 +363,13 @@ class Parser:
             decl.tipo = "int"
         elif self._match("KW_FLOAT"):
             decl.tipo = "float"
+        elif self._match("KW_REAL"):
+            decl.tipo = "real"
         elif self._match("KW_BOOL"):
             decl.tipo = "bool"
         else:
             self.errors.append(SyntaxError(
-                f"Se esperaba tipo (int, float, bool)",
+                f"Se esperaba tipo (int, float, real, bool)",
                 linea=tok.linea if tok else 0,
                 columna=tok.columna if tok else 0
             ))
@@ -312,7 +382,7 @@ class Parser:
         decl.identificadores = self._lista_identificadores()
 
         if not self._consume("PUNTO_COMA", "Se esperaba ';' después de declaración de variable"):
-            self._skip_on_error("PUNTO_COMA", "KW_INT", "KW_FLOAT", "KW_BOOL")
+            self._skip_on_error("PUNTO_COMA", "KW_INT", "KW_FLOAT", "KW_REAL", "KW_BOOL")
 
         return decl
 
@@ -389,6 +459,8 @@ class Parser:
 
             if self.current_token.tipo not in self.statement_starts:
                 self._report_unexpected_token("lista de sentencias")
+                if self._consume_parenthesized_noise():
+                    continue
                 self._recover_to_construct(effective_stops)
                 if self._match("PUNTO_COMA"):
                     self._advance()
@@ -532,27 +604,11 @@ class Parser:
         sel.linea = tok_if.linea
         sel.columna = tok_if.columna
 
-        # ✨ MEJORA: Requerir paréntesis de apertura
-        if not self._consume("PAR_IZQ", "Se esperaba '(' después de 'if'"):
-            self._skip_on_error("PAR_DER", "KW_THEN", "KW_ELSE", "KW_END")
-
-        sel.condicion = self._expresion()
-        if not sel.condicion:
-            self.errors.append(SyntaxError(
-                "Se esperaba condición después de 'if ('",
-                linea=self.current_token.linea if self.current_token else 0,
-                columna=self.current_token.columna if self.current_token else 0
-            ))
-            self._skip_on_error("PAR_DER", "KW_THEN", "KW_ELSE", "KW_END")
-
-        # ✨ MEJORA: Requerir paréntesis de cierre
-        if not self._consume("PAR_DER", "Se esperaba ')' después de condición"):
-            self._skip_on_error("PAR_DER", "KW_THEN", "KW_ELSE", "KW_END")
-            if self._match("PAR_DER"):
-                self._advance()
+        sel.condicion = self._parse_condition("if")
 
         if not self._consume("KW_THEN", "Se esperaba 'then' después de condición"):
-            self._skip_on_error("KW_THEN", "KW_ELSE", "KW_END")
+            if self.current_token and self.current_token.tipo not in self.statement_starts:
+                self._skip_on_error("KW_THEN", "KW_ELSE", "KW_END", *self.statement_starts)
             if self._match("KW_THEN"):
                 self._advance()
 
@@ -591,7 +647,7 @@ class Parser:
         iter_node.linea = tok_while.linea
         iter_node.columna = tok_while.columna
 
-        iter_node.condicion = self._expresion()
+        iter_node.condicion = self._parse_condition("while")
 
         # Soporte para dos formas de cuerpo:
         #   1. { sentencias }   (estilo del archivo de prueba)
@@ -636,6 +692,16 @@ class Parser:
         rep.linea = tok_do.linea
         rep.columna = tok_do.columna
 
+        # Un encabezado decorativo inválido como "do-while-until)" no debe
+        # apropiarse del siguiente do real.
+        if (self.current_token
+                and self.current_token.tipo not in self.statement_starts
+                and self.current_token.tipo != "KW_WHILE"):
+            self._report_unexpected_token("encabezado do-while-until")
+            while self.current_token and not self._match("KW_DO", "LLAVE_DER"):
+                self._advance()
+            return None
+
         # Cuerpo principal: sentencias hasta 'while'
         rep.cuerpo = self._lista_sentencias(stop_tokens=("KW_WHILE",))
 
@@ -643,18 +709,12 @@ class Parser:
             self._skip_on_error("KW_UNTIL", "PUNTO_COMA", "LLAVE_DER")
             return rep
 
-        # Condición del while
-        rep.condicion = self._expresion()
+        # Condición y bloque asociados al while interno.
+        rep.condicion = self._parse_condition("while")
 
-        # Bloque { sentencias } — es la forma canónica del proyecto
         if self._match("LLAVE_IZQ"):
             self._advance()
-            extra = self._lista_sentencias(stop_tokens=("LLAVE_DER",))
-            if extra and rep.cuerpo:
-                rep.cuerpo.sentencias.extend(extra.sentencias)
-                rep.cuerpo.children.extend(extra.children)
-            elif extra:
-                rep.cuerpo = extra
+            rep.cuerpo_while = self._lista_sentencias(stop_tokens=("LLAVE_DER",))
             if self._match("LLAVE_DER"):
                 self._advance()
         elif self._match("KW_END"):
@@ -665,18 +725,28 @@ class Parser:
         if self._match("PUNTO_COMA"):
             self._advance()
 
-        # until (cond); — terminador formal del do-while en este lenguaje
         if self._match("KW_UNTIL"):
             self._advance()
-            rep.until_condicion = self._expresion()
+            rep.until_condicion = self._parse_condition("until")
             if self._match("PUNTO_COMA"):
                 self._advance()
+        else:
+            tok = self.current_token
+            self.errors.append(SyntaxError(
+                "Se esperaba 'until' para cerrar do-while-until",
+                linea=tok.linea if tok else 0,
+                columna=tok.columna if tok else 0,
+                token_esperado="KW_UNTIL",
+                token_encontrado=tok.tipo if tok else None,
+            ))
 
         children = []
         if rep.cuerpo:
             children.extend(rep.cuerpo.children)
         if rep.condicion:
             children.append(rep.condicion)
+        if rep.cuerpo_while:
+            children.extend(rep.cuerpo_while.children)
         if rep.until_condicion:
             children.append(rep.until_condicion)
         rep.children = children
@@ -778,11 +848,26 @@ class Parser:
 
         if self.current_token and self.current_token.tipo in (
                 "MAYOR", "MENOR", "MAYOR_IGUAL", "MENOR_IGUAL", "IGUAL", "DIFERENTE"):
-            expr.operador = self.current_token.valor
-            expr.operador_linea = self.current_token.linea
-            expr.operador_columna = self.current_token.columna
+            tok_op = self.current_token
+            expr.operador = tok_op.valor
+            expr.operador_linea = tok_op.linea
+            expr.operador_columna = tok_op.columna
             self._advance()
-            expr.derecha = self._expresion_simple()
+            if self.current_token and self.current_token.tipo in self.expression_starts:
+                expr.derecha = self._expresion_simple()
+            else:
+                mensaje = f"Se esperaba operando después de '{tok_op.valor}'"
+                self.errors.append(SyntaxError(
+                    mensaje,
+                    linea=tok_op.linea,
+                    columna=tok_op.columna,
+                ))
+                expr.errores.append(NodoError(
+                    linea=tok_op.linea,
+                    columna=tok_op.columna,
+                    mensaje=mensaje,
+                    token_esperado="operando",
+                ))
 
         if expr.izquierda:
             expr.children = [expr.izquierda]
@@ -794,6 +879,22 @@ class Parser:
             expr.operadores_logicos.append(tok_op.valor)
             expr.operadores_logicos_pos.append((tok_op.linea, tok_op.columna))
             self._advance()
+
+            if not self.current_token or self.current_token.tipo not in self.expression_starts:
+                mensaje = f"Se esperaba operando después de '{tok_op.valor}'"
+                self.errors.append(SyntaxError(
+                    mensaje,
+                    linea=tok_op.linea,
+                    columna=tok_op.columna,
+                ))
+                expr.errores.append(NodoError(
+                    linea=tok_op.linea,
+                    columna=tok_op.columna,
+                    mensaje=mensaje,
+                    token_esperado="operando",
+                ))
+                self._skip_on_error("PAR_DER", "PUNTO_COMA", "KW_THEN", "KW_ELSE", "KW_END")
+                break
 
             siguiente = self._expresion()
             if not siguiente:

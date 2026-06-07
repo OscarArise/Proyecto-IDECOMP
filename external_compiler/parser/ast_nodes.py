@@ -116,10 +116,11 @@ class Iteracion(ASTNode):
 
 @dataclass
 class Repeticion(ASTNode):
-    """repeticion → do lista_sentencias while expresion { lista_sentencias } ; until expresion ;"""
-    cuerpo: Optional['ListaSentencias'] = None
-    condicion: Optional['Expresion'] = None          # condición del while interno
-    until_condicion: Optional['Expresion'] = None    # condición del until (terminador)
+    """repeticion → do cuerpo_do while condicion { cuerpo_while } ; until condicion ;"""
+    cuerpo: Optional['ListaSentencias'] = None        # cuerpo inicial del do
+    condicion: Optional['Expresion'] = None           # condición del while interno
+    cuerpo_while: Optional['ListaSentencias'] = None  # bloque asociado al while
+    until_condicion: Optional['Expresion'] = None     # condición del until (terminador)
     children: List[ASTNode] = field(default_factory=list)
 
 
@@ -159,6 +160,7 @@ class Expresion(ASTNode):
     operadores_logicos: List[str] = field(default_factory=list)  # &&, ||
     operadores_logicos_pos: List[Tuple[int, int]] = field(default_factory=list)
     siguientes_logicos: List['Expresion'] = field(default_factory=list)
+    errores: List['NodoError'] = field(default_factory=list)
     children: List[ASTNode] = field(default_factory=list)
 
 
