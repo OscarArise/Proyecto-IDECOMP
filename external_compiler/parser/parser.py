@@ -325,6 +325,9 @@ class Parser:
 
             decl = self._declaracion()
             if decl:
+                if not lista.linea and decl.linea:
+                    lista.linea = decl.linea
+                    lista.columna = decl.columna
                 lista.declaraciones.append(decl)
                 lista.children.append(decl)
             else:
@@ -468,6 +471,9 @@ class Parser:
 
             sent = self._sentencia()
             if sent:
+                if not lista.linea and sent.linea:
+                    lista.linea = sent.linea
+                    lista.columna = sent.columna
                 lista.sentencias.append(sent)
                 lista.children.append(sent)
             else:
@@ -804,9 +810,17 @@ class Parser:
     def _salida(self) -> Optional[Salida]:
         """salida → cadena | expresion | cadena << expresion | expresion << cadena"""
         salida = Salida()
+        if self.current_token:
+            salida.linea = self.current_token.linea
+            salida.columna = self.current_token.columna
 
         if self._match("STRING"):
-            cadena = Cadena(valor=self.current_token.valor)
+            tok_cadena = self.current_token
+            cadena = Cadena(
+                linea=tok_cadena.linea,
+                columna=tok_cadena.columna,
+                valor=tok_cadena.valor,
+            )
             salida.elementos.append(cadena)
             self._advance()
             if self._match("MENOR"):
@@ -825,7 +839,12 @@ class Parser:
                     if self._match("MENOR"):
                         self._advance()
                         if self._match("STRING"):
-                            cadena = Cadena(valor=self.current_token.valor)
+                            tok_cadena = self.current_token
+                            cadena = Cadena(
+                                linea=tok_cadena.linea,
+                                columna=tok_cadena.columna,
+                                valor=tok_cadena.valor,
+                            )
                             salida.elementos.append(cadena)
                             self._advance()
 
@@ -1024,19 +1043,19 @@ class Parser:
             except ValueError:
                 comp.valor = 0
                 comp.es_entero = True
-            comp.children = [Numero(valor=comp.valor)]
+            comp.children = [Numero(linea=comp.linea, columna=comp.columna, valor=comp.valor)]
             self._advance()
 
         elif self._match("IDENTIFIER"):
             comp.tipo = "identificador"
             comp.valor = self.current_token.valor
-            comp.children = [Identificador(nombre=comp.valor)]
+            comp.children = [Identificador(linea=comp.linea, columna=comp.columna, nombre=comp.valor)]
             self._advance()
 
         elif self._match("KW_TRUE", "KW_FALSE"):
             comp.tipo = "booleano"
             comp.valor = self.current_token.tipo == "KW_TRUE"
-            comp.children = [Booleano(valor=comp.valor)]
+            comp.children = [Booleano(linea=comp.linea, columna=comp.columna, valor=comp.valor)]
             self._advance()
 
         elif self._match("NEGACION"):

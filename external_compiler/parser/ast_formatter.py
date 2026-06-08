@@ -34,7 +34,7 @@ class ASTFormatter:
             return ""
         prefix = "  " * indent
         label = node_dict.get("label") or node_dict.get("type", "")
-        result = f"{prefix}{label}\n"
+        result = f"{prefix}{label} {ASTFormatter._location_text(node_dict)}\n"
         for child in node_dict.get("children", []):
             result += ASTFormatter._dict_to_text(child, indent + 1)
         return result
@@ -217,7 +217,9 @@ class ASTFormatter:
         """Convierte el AST a un diccionario recursivo para serialización JSON."""
         if not node:
             return None
-        return ASTFormatter._to_abstract_dict(node)
+        node_dict = ASTFormatter._to_abstract_dict(node)
+        ASTFormatter._inherit_missing_locations(node_dict)
+        return node_dict
 
         node_dict: Dict[str, Any] = {
             "type": node.__class__.__name__,
@@ -541,6 +543,35 @@ class ASTFormatter:
             "label": label,
             "children": [],
         }
+
+    @staticmethod
+    def _location_text(node_dict: Dict[str, Any]) -> str:
+        linea = node_dict.get("linea", 0)
+        columna = node_dict.get("columna", 0)
+        if linea and columna:
+            return f"[L{linea}:C{columna}]"
+        return "[sin ubicación]"
+
+    @staticmethod
+    def _inherit_missing_locations(node_dict: Optional[Dict[str, Any]]) -> tuple[int, int]:
+        """Completa ubicaciones sintéticas usando el primer descendiente válido."""
+        if not node_dict:
+            return (0, 0)
+
+        first_child_location = (0, 0)
+        for child in node_dict.get("children", []):
+            child_location = ASTFormatter._inherit_missing_locations(child)
+            if first_child_location == (0, 0) and all(child_location):
+                first_child_location = child_location
+
+        linea = node_dict.get("linea", 0)
+        columna = node_dict.get("columna", 0)
+        if (not linea or not columna) and all(first_child_location):
+            linea, columna = first_child_location
+            node_dict["linea"] = linea
+            node_dict["columna"] = columna
+
+        return (linea, columna)
 
     @staticmethod
     def _role(label: str, node: Optional[ASTNode]) -> Optional[Dict[str, Any]]:

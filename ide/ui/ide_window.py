@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import messagebox
 
 from core.compiler_runner import CompilerRunner
+from core.ast_text import ast_to_connected_text
 from core.file_manager import FileManager
 from core.state import AppState
 
@@ -501,23 +502,4 @@ class IDEWindow:
             self.panels.ast_tree_viewer.tree.insert("", "end", text=f"Error: {str(e)[:100]}")
 
     def _ast_to_connected_text(self, ast_dict: dict) -> str:
-        lines: list[str] = []
-
-        def label_for(node: dict) -> str:
-            label = node.get("label", node.get("type", "Nodo"))
-            if "valor" in node:
-                label = f"{label} ({node['valor']})"
-            elif "nombre" in node:
-                label = f"{label} ({node['nombre']})"
-            return str(label)
-
-        def walk(node: dict, prefix: str = "", is_last: bool = True, is_root: bool = True):
-            connector = "" if is_root else ("`-- " if is_last else "|-- ")
-            lines.append(f"{prefix}{connector}{label_for(node)}")
-            children = [child for child in node.get("children", []) if child is not None]
-            child_prefix = prefix if is_root else prefix + ("    " if is_last else "|   ")
-            for index, child in enumerate(children):
-                walk(child, child_prefix, index == len(children) - 1, False)
-
-        walk(ast_dict)
-        return "\n".join(lines) + "\n"
+        return ast_to_connected_text(ast_dict)
