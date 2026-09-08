@@ -3,186 +3,186 @@
 
 Representación de texto:
 --------------------------------------------------
-PROGRAMA
-  DECLARACIONES
-    DECLARACION_VARIABLE: int a, b, c
-    DECLARACION_VARIABLE: float x
-    BLOQUE
-      ASIGNACION: a
-        NUMERO: 100
-      ASIGNACION: b
-        NUMERO: 200
-      ASIGNACION: c
-        OPERACION: +
-          IDENTIFICADOR: a
-          IDENTIFICADOR: b
-      IF
-        CONDICION
-          OPERACION: >
-            IDENTIFICADOR: a
-            NUMERO: 50
-        ENTONCES
-          BLOQUE
-            IF
-              CONDICION
-                OPERACION: >
-                  IDENTIFICADOR: b
-                  NUMERO: 100
-              ENTONCES
-                BLOQUE
-                  ASIGNACION: c
-                    OPERACION: +
-                      IDENTIFICADOR: a
-                      IDENTIFICADOR: b
-              SINO
-                BLOQUE
-                  ASIGNACION: c
-                    OPERACION: -
-                      IDENTIFICADOR: a
-                      IDENTIFICADOR: b
-        SINO
-          BLOQUE
-            IF
-              CONDICION
-                OPERACION: <
-                  IDENTIFICADOR: b
-                  NUMERO: 100
-              ENTONCES
-                BLOQUE
-                  ASIGNACION: c
-                    NUMERO: 0
-              SINO
-                BLOQUE
-                  ASIGNACION: c
-                    NUMERO: 1
-      WHILE
-        CONDICION
-          OPERACION: <
-            IDENTIFICADOR: a
-            NUMERO: 1000
-        CUERPO
-          BLOQUE
-            ASIGNACION: a
-              OPERACION: +
-                IDENTIFICADOR: a
-                NUMERO: 10
-            IF
-              CONDICION
-                OPERACION: >
-                  IDENTIFICADOR: a
-                  NUMERO: 500
-              ENTONCES
-                BLOQUE
-                  ASIGNACION: a
-                    OPERACION: *
-                      IDENTIFICADOR: a
-                      NUMERO: 2
-      DO_WHILE_UNTIL
-        CUERPO
-          BLOQUE
-            ASIGNACION: b
-              OPERACION: +
-                IDENTIFICADOR: b
-                NUMERO: 5
-            IF
-              CONDICION
-                OPERACION: >
-                  IDENTIFICADOR: b
-                  NUMERO: 100
-              ENTONCES
-                BLOQUE
-                  ASIGNACION: b
-                    OPERACION: /
-                      IDENTIFICADOR: b
-                      NUMERO: 2
-        CONDICION_WHILE
-          OPERACION: <
-            IDENTIFICADOR: b
-            NUMERO: 500
-        CONDICION_UNTIL
-          OPERACION: >=
-            IDENTIFICADOR: b
-            NUMERO: 500
-      ASIGNACION: x
-        NUMERO: 3.14159
-      ASIGNACION: x
-        OPERACION: *
-          IDENTIFICADOR: x
-          NUMERO: 2.0
-      ASIGNACION: x
-        OPERACION: -
-          OPERACION: +
-            NUMERO: 10
-            NUMERO: 5.5
-          OPERACION: /
-            OPERACION: *
-              NUMERO: 2.2
-              NUMERO: 3.3
-            NUMERO: 2.0
-      ASIGNACION: x
-        OPERACION: /
-          OPERACION: *
-            OPERACION: +
-              NUMERO: 10
-              NUMERO: 5
-            OPERACION: -
-              NUMERO: 20
-              NUMERO: 10
-          OPERACION: +
-            NUMERO: 5
-            NUMERO: 5
-      ASIGNACION: x
-        OPERACION: ^
-          NUMERO: 2
-          OPERACION: ^
-            NUMERO: 3
-            NUMERO: 2
-      IF
-        CONDICION
-          OPERACION: &&
-            OPERACION: >
-              IDENTIFICADOR: a
-              NUMERO: 0
-            OPERACION: <
-              IDENTIFICADOR: b
-              NUMERO: 1000
-        ENTONCES
-          BLOQUE
-            ASIGNACION: c
-              NUMERO: 99
-      IF
-        CONDICION
-          OPERACION: ||
-            OPERACION: ==
-              IDENTIFICADOR: a
-              NUMERO: 100
-            OPERACION: !=
-              IDENTIFICADOR: c
-              NUMERO: 0
-        ENTONCES
-          BLOQUE
-            ASIGNACION: c
-              OPERACION: +
-                IDENTIFICADOR: c
-                NUMERO: 1
-      IF
-        CONDICION
-          OPERACION_UNARIA: !
-            OPERACION: >
-              IDENTIFICADOR: a
-              IDENTIFICADOR: b
-        ENTONCES
-          BLOQUE
-            ASIGNACION: c
-              NUMERO: 0
-      ENTRADA: cin a
-      ENTRADA: cin b
-      SALIDA: cout
-        SALIDA
-          IDENTIFICADOR: c
-      SALIDA: cout
-        SALIDA
-          IDENTIFICADOR: x
+PROGRAMA [L1:C1]
+  DECLARACIONES [L2:C3]
+    DECLARACION_VARIABLE: int a, b, c [L2:C3]
+    DECLARACION_VARIABLE: float x [L3:C3]
+    BLOQUE [L5:C3]
+      ASIGNACION: a [L5:C3]
+        NUMERO: 100 [L5:C7]
+      ASIGNACION: b [L6:C3]
+        NUMERO: 200 [L6:C7]
+      ASIGNACION: c [L7:C3]
+        OPERACION: + [L7:C9]
+          IDENTIFICADOR: a [L7:C7]
+          IDENTIFICADOR: b [L7:C11]
+      IF [L9:C3]
+        CONDICION [L9:C9]
+          OPERACION: > [L9:C9]
+            IDENTIFICADOR: a [L9:C7]
+            NUMERO: 50 [L9:C11]
+        ENTONCES [L10:C5]
+          BLOQUE [L10:C5]
+            IF [L10:C5]
+              CONDICION [L10:C11]
+                OPERACION: > [L10:C11]
+                  IDENTIFICADOR: b [L10:C9]
+                  NUMERO: 100 [L10:C13]
+              ENTONCES [L11:C7]
+                BLOQUE [L11:C7]
+                  ASIGNACION: c [L11:C7]
+                    OPERACION: + [L11:C13]
+                      IDENTIFICADOR: a [L11:C11]
+                      IDENTIFICADOR: b [L11:C15]
+              SINO [L13:C7]
+                BLOQUE [L13:C7]
+                  ASIGNACION: c [L13:C7]
+                    OPERACION: - [L13:C13]
+                      IDENTIFICADOR: a [L13:C11]
+                      IDENTIFICADOR: b [L13:C15]
+        SINO [L16:C5]
+          BLOQUE [L16:C5]
+            IF [L16:C5]
+              CONDICION [L16:C11]
+                OPERACION: < [L16:C11]
+                  IDENTIFICADOR: b [L16:C9]
+                  NUMERO: 100 [L16:C13]
+              ENTONCES [L17:C7]
+                BLOQUE [L17:C7]
+                  ASIGNACION: c [L17:C7]
+                    NUMERO: 0 [L17:C11]
+              SINO [L19:C7]
+                BLOQUE [L19:C7]
+                  ASIGNACION: c [L19:C7]
+                    NUMERO: 1 [L19:C11]
+      WHILE [L23:C3]
+        CONDICION [L23:C12]
+          OPERACION: < [L23:C12]
+            IDENTIFICADOR: a [L23:C10]
+            NUMERO: 1000 [L23:C14]
+        CUERPO [L24:C5]
+          BLOQUE [L24:C5]
+            ASIGNACION: a [L24:C5]
+              OPERACION: + [L24:C11]
+                IDENTIFICADOR: a [L24:C9]
+                NUMERO: 10 [L24:C13]
+            IF [L25:C5]
+              CONDICION [L25:C11]
+                OPERACION: > [L25:C11]
+                  IDENTIFICADOR: a [L25:C9]
+                  NUMERO: 500 [L25:C13]
+              ENTONCES [L26:C7]
+                BLOQUE [L26:C7]
+                  ASIGNACION: a [L26:C7]
+                    OPERACION: * [L26:C13]
+                      IDENTIFICADOR: a [L26:C11]
+                      NUMERO: 2 [L26:C15]
+      DO_WHILE_UNTIL [L30:C3]
+        CUERPO_DO [L31:C5]
+          BLOQUE [L31:C5]
+            ASIGNACION: b [L31:C5]
+              OPERACION: + [L31:C11]
+                IDENTIFICADOR: b [L31:C9]
+                NUMERO: 5 [L31:C13]
+            IF [L32:C5]
+              CONDICION [L32:C11]
+                OPERACION: > [L32:C11]
+                  IDENTIFICADOR: b [L32:C9]
+                  NUMERO: 100 [L32:C13]
+              ENTONCES [L33:C7]
+                BLOQUE [L33:C7]
+                  ASIGNACION: b [L33:C7]
+                    OPERACION: / [L33:C13]
+                      IDENTIFICADOR: b [L33:C11]
+                      NUMERO: 2 [L33:C15]
+        CONDICION_WHILE [L35:C12]
+          OPERACION: < [L35:C12]
+            IDENTIFICADOR: b [L35:C10]
+            NUMERO: 500 [L35:C14]
+        CONDICION_UNTIL [L36:C12]
+          OPERACION: >= [L36:C12]
+            IDENTIFICADOR: b [L36:C10]
+            NUMERO: 500 [L36:C15]
+      ASIGNACION: x [L38:C3]
+        NUMERO: 3.14159 [L38:C7]
+      ASIGNACION: x [L39:C3]
+        OPERACION: * [L39:C9]
+          IDENTIFICADOR: x [L39:C7]
+          NUMERO: 2.0 [L39:C11]
+      ASIGNACION: x [L40:C3]
+        OPERACION: - [L40:C16]
+          OPERACION: + [L40:C10]
+            NUMERO: 10 [L40:C7]
+            NUMERO: 5.5 [L40:C12]
+          OPERACION: / [L40:C28]
+            OPERACION: * [L40:C22]
+              NUMERO: 2.2 [L40:C18]
+              NUMERO: 3.3 [L40:C24]
+            NUMERO: 2.0 [L40:C30]
+      ASIGNACION: x [L42:C3]
+        OPERACION: / [L42:C28]
+          OPERACION: * [L42:C16]
+            OPERACION: + [L42:C11]
+              NUMERO: 10 [L42:C8]
+              NUMERO: 5 [L42:C13]
+            OPERACION: - [L42:C22]
+              NUMERO: 20 [L42:C19]
+              NUMERO: 10 [L42:C24]
+          OPERACION: + [L42:C33]
+            NUMERO: 5 [L42:C31]
+            NUMERO: 5 [L42:C35]
+      ASIGNACION: x [L44:C3]
+        OPERACION: ^ [L44:C9]
+          NUMERO: 2 [L44:C7]
+          OPERACION: ^ [L44:C13]
+            NUMERO: 3 [L44:C11]
+            NUMERO: 2 [L44:C15]
+      IF [L46:C3]
+        CONDICION [L46:C13]
+          OPERACION: && [L46:C13]
+            OPERACION: > [L46:C9]
+              IDENTIFICADOR: a [L46:C7]
+              NUMERO: 0 [L46:C11]
+            OPERACION: < [L46:C18]
+              IDENTIFICADOR: b [L46:C16]
+              NUMERO: 1000 [L46:C20]
+        ENTONCES [L47:C5]
+          BLOQUE [L47:C5]
+            ASIGNACION: c [L47:C5]
+              NUMERO: 99 [L47:C9]
+      IF [L50:C3]
+        CONDICION [L50:C16]
+          OPERACION: || [L50:C16]
+            OPERACION: == [L50:C9]
+              IDENTIFICADOR: a [L50:C7]
+              NUMERO: 100 [L50:C12]
+            OPERACION: != [L50:C21]
+              IDENTIFICADOR: c [L50:C19]
+              NUMERO: 0 [L50:C24]
+        ENTONCES [L51:C5]
+          BLOQUE [L51:C5]
+            ASIGNACION: c [L51:C5]
+              OPERACION: + [L51:C11]
+                IDENTIFICADOR: c [L51:C9]
+                NUMERO: 1 [L51:C13]
+      IF [L54:C3]
+        CONDICION [L54:C7]
+          OPERACION_UNARIA: ! [L54:C7]
+            OPERACION: > [L54:C11]
+              IDENTIFICADOR: a [L54:C9]
+              IDENTIFICADOR: b [L54:C13]
+        ENTONCES [L55:C5]
+          BLOQUE [L55:C5]
+            ASIGNACION: c [L55:C5]
+              NUMERO: 0 [L55:C9]
+      ENTRADA: cin a [L58:C3]
+      ENTRADA: cin b [L59:C3]
+      SALIDA: cout [L61:C3]
+        SALIDA [L61:C8]
+          IDENTIFICADOR: c [L61:C8]
+      SALIDA: cout [L62:C3]
+        SALIDA [L62:C8]
+          IDENTIFICADOR: x [L62:C8]
 
 Representación estructurada (para visualización):
 --------------------------------------------------
@@ -194,8 +194,8 @@ Representación estructurada (para visualización):
   "children": [
     {
       "type": "ListaDeclaracion",
-      "linea": 0,
-      "columna": 0,
+      "linea": 2,
+      "columna": 3,
       "label": "DECLARACIONES",
       "children": [
         {
@@ -224,8 +224,8 @@ Representación estructurada (para visualización):
         },
         {
           "type": "ListaSentencias",
-          "linea": 0,
-          "columna": 0,
+          "linea": 5,
+          "columna": 3,
           "label": "BLOQUE",
           "children": [
             {
@@ -340,14 +340,14 @@ Representación estructurada (para visualización):
                 },
                 {
                   "type": "SeccionAST",
-                  "linea": 0,
-                  "columna": 0,
+                  "linea": 10,
+                  "columna": 5,
                   "label": "ENTONCES",
                   "children": [
                     {
                       "type": "ListaSentencias",
-                      "linea": 0,
-                      "columna": 0,
+                      "linea": 10,
+                      "columna": 5,
                       "label": "BLOQUE",
                       "children": [
                         {
@@ -392,14 +392,14 @@ Representación estructurada (para visualización):
                             },
                             {
                               "type": "SeccionAST",
-                              "linea": 0,
-                              "columna": 0,
+                              "linea": 11,
+                              "columna": 7,
                               "label": "ENTONCES",
                               "children": [
                                 {
                                   "type": "ListaSentencias",
-                                  "linea": 0,
-                                  "columna": 0,
+                                  "linea": 11,
+                                  "columna": 7,
                                   "label": "BLOQUE",
                                   "children": [
                                     {
@@ -442,14 +442,14 @@ Representación estructurada (para visualización):
                             },
                             {
                               "type": "SeccionAST",
-                              "linea": 0,
-                              "columna": 0,
+                              "linea": 13,
+                              "columna": 7,
                               "label": "SINO",
                               "children": [
                                 {
                                   "type": "ListaSentencias",
-                                  "linea": 0,
-                                  "columna": 0,
+                                  "linea": 13,
+                                  "columna": 7,
                                   "label": "BLOQUE",
                                   "children": [
                                     {
@@ -498,14 +498,14 @@ Representación estructurada (para visualización):
                 },
                 {
                   "type": "SeccionAST",
-                  "linea": 0,
-                  "columna": 0,
+                  "linea": 16,
+                  "columna": 5,
                   "label": "SINO",
                   "children": [
                     {
                       "type": "ListaSentencias",
-                      "linea": 0,
-                      "columna": 0,
+                      "linea": 16,
+                      "columna": 5,
                       "label": "BLOQUE",
                       "children": [
                         {
@@ -550,14 +550,14 @@ Representación estructurada (para visualización):
                             },
                             {
                               "type": "SeccionAST",
-                              "linea": 0,
-                              "columna": 0,
+                              "linea": 17,
+                              "columna": 7,
                               "label": "ENTONCES",
                               "children": [
                                 {
                                   "type": "ListaSentencias",
-                                  "linea": 0,
-                                  "columna": 0,
+                                  "linea": 17,
+                                  "columna": 7,
                                   "label": "BLOQUE",
                                   "children": [
                                     {
@@ -584,14 +584,14 @@ Representación estructurada (para visualización):
                             },
                             {
                               "type": "SeccionAST",
-                              "linea": 0,
-                              "columna": 0,
+                              "linea": 19,
+                              "columna": 7,
                               "label": "SINO",
                               "children": [
                                 {
                                   "type": "ListaSentencias",
-                                  "linea": 0,
-                                  "columna": 0,
+                                  "linea": 19,
+                                  "columna": 7,
                                   "label": "BLOQUE",
                                   "children": [
                                     {
@@ -666,14 +666,14 @@ Representación estructurada (para visualización):
                 },
                 {
                   "type": "SeccionAST",
-                  "linea": 0,
-                  "columna": 0,
+                  "linea": 24,
+                  "columna": 5,
                   "label": "CUERPO",
                   "children": [
                     {
                       "type": "ListaSentencias",
-                      "linea": 0,
-                      "columna": 0,
+                      "linea": 24,
+                      "columna": 5,
                       "label": "BLOQUE",
                       "children": [
                         {
@@ -753,14 +753,14 @@ Representación estructurada (para visualización):
                             },
                             {
                               "type": "SeccionAST",
-                              "linea": 0,
-                              "columna": 0,
+                              "linea": 26,
+                              "columna": 7,
                               "label": "ENTONCES",
                               "children": [
                                 {
                                   "type": "ListaSentencias",
-                                  "linea": 0,
-                                  "columna": 0,
+                                  "linea": 26,
+                                  "columna": 7,
                                   "label": "BLOQUE",
                                   "children": [
                                     {
@@ -818,14 +818,14 @@ Representación estructurada (para visualización):
               "children": [
                 {
                   "type": "SeccionAST",
-                  "linea": 0,
-                  "columna": 0,
-                  "label": "CUERPO",
+                  "linea": 31,
+                  "columna": 5,
+                  "label": "CUERPO_DO",
                   "children": [
                     {
                       "type": "ListaSentencias",
-                      "linea": 0,
-                      "columna": 0,
+                      "linea": 31,
+                      "columna": 5,
                       "label": "BLOQUE",
                       "children": [
                         {
@@ -905,14 +905,14 @@ Representación estructurada (para visualización):
                             },
                             {
                               "type": "SeccionAST",
-                              "linea": 0,
-                              "columna": 0,
+                              "linea": 33,
+                              "columna": 7,
                               "label": "ENTONCES",
                               "children": [
                                 {
                                   "type": "ListaSentencias",
-                                  "linea": 0,
-                                  "columna": 0,
+                                  "linea": 33,
+                                  "columna": 7,
                                   "label": "BLOQUE",
                                   "children": [
                                     {
@@ -1412,14 +1412,14 @@ Representación estructurada (para visualización):
                 },
                 {
                   "type": "SeccionAST",
-                  "linea": 0,
-                  "columna": 0,
+                  "linea": 47,
+                  "columna": 5,
                   "label": "ENTONCES",
                   "children": [
                     {
                       "type": "ListaSentencias",
-                      "linea": 0,
-                      "columna": 0,
+                      "linea": 47,
+                      "columna": 5,
                       "label": "BLOQUE",
                       "children": [
                         {
@@ -1523,14 +1523,14 @@ Representación estructurada (para visualización):
                 },
                 {
                   "type": "SeccionAST",
-                  "linea": 0,
-                  "columna": 0,
+                  "linea": 51,
+                  "columna": 5,
                   "label": "ENTONCES",
                   "children": [
                     {
                       "type": "ListaSentencias",
-                      "linea": 0,
-                      "columna": 0,
+                      "linea": 51,
+                      "columna": 5,
                       "label": "BLOQUE",
                       "children": [
                         {
@@ -1624,14 +1624,14 @@ Representación estructurada (para visualización):
                 },
                 {
                   "type": "SeccionAST",
-                  "linea": 0,
-                  "columna": 0,
+                  "linea": 55,
+                  "columna": 5,
                   "label": "ENTONCES",
                   "children": [
                     {
                       "type": "ListaSentencias",
-                      "linea": 0,
-                      "columna": 0,
+                      "linea": 55,
+                      "columna": 5,
                       "label": "BLOQUE",
                       "children": [
                         {
@@ -1682,8 +1682,8 @@ Representación estructurada (para visualización):
               "children": [
                 {
                   "type": "Salida",
-                  "linea": 0,
-                  "columna": 0,
+                  "linea": 61,
+                  "columna": 8,
                   "label": "SALIDA",
                   "children": [
                     {
@@ -1706,8 +1706,8 @@ Representación estructurada (para visualización):
               "children": [
                 {
                   "type": "Salida",
-                  "linea": 0,
-                  "columna": 0,
+                  "linea": 62,
+                  "columna": 8,
                   "label": "SALIDA",
                   "children": [
                     {

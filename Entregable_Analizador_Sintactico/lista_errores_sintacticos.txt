@@ -1,0 +1,19 @@
+LISTA DE ERRORES SINTACTICOS DETECTADOS
+=======================================
+
+Archivo de prueba con errores: codigo_errores.caos
+
+1. Linea 7, columna 3:
+   Se esperaba ',' pero se encontro 'suma'.
+
+2. Linea 7, columna 9:
+   Se esperaba ';' despues de declaracion de variable.
+
+3. Linea 14, columna 27:
+   Se esperaba ')' para cerrar la expresion.
+
+4. Linea 23, columna 13:
+   Se esperaba un operando despues de '&&'.
+
+Nota: sustituir o complementar esta lista con la salida final de errors.txt
+si el archivo de prueba con errores cambia antes de la entrega.
