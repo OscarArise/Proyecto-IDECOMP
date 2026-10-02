@@ -20,3 +20,13 @@ env/
 # Sistema operativo
 Thumbs.db
 .DS_Store
+
+# Salidas del compilador generadas al ejecutar desde la raiz
+/tokens.txt
+/syntax.txt
+/symbols.txt
+/semantic.txt
+/intermediate.txt
+/errors.txt
+/exec.txt
+/*_tmp.caos
