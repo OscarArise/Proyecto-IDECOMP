@@ -149,7 +149,7 @@ class DFALexer:
             ch = source[pos]
 
             # Ignorar espacios en blanco (self-loop INICIO)
-            if ch in (" ", "\t", "\r"):
+            if ch in (" ", "\t", "\r", "\ufeff"):
                 pos += 1
                 columna += 1
                 continue

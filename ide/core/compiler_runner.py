@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -10,7 +9,7 @@ from typing import Optional
 # Rutas base (relativas al directorio del IDE)
 
 # Directorio que contiene main.py / ide_window.py, etc.
-_IDE_DIR = Path(__file__).resolve().parent.parent          # …/ide/
+_IDE_DIR = Path(__file__).resolve().parent.parent  # …/ide/
 
 # Compilador stub (fuera del directorio ide/)
 _COMPILER_STUB = _IDE_DIR.parent / "external_compiler" / "compiler_stub.py"
@@ -28,36 +27,36 @@ _PYTHON = sys.executable
 # para saber en qué widget escribir.
 
 OUTPUT_FILE_MAP: dict[str, str] = {
-    "tokens.txt":       "lexico",
-    "syntax.txt":       "sintactico",
-    "semantic.txt":     "semantico",
+    "tokens.txt": "lexico",
+    "syntax.txt": "sintactico",
+    "semantic.txt": "semantico",
     "intermediate.txt": "intermedio",
-    "symbols.txt":      "simbolos",
-    "exec.txt":         "ejecucion",
+    "symbols.txt": "simbolos",
+    "exec.txt": "ejecucion",
 }
 
 # Prefijos reconocidos dentro de errors.txt para clasificar por fase
 # (el compilador stub puede incluir líneas como "[LEXICO] Error: ...")
 _PHASE_KEYWORDS: dict[str, str] = {
-    "lexico":     "err_lexico",
-    "lex":        "err_lexico",
+    "lexico": "err_lexico",
+    "lex": "err_lexico",
     "sintactico": "err_sintactico",
-    "syntax":     "err_sintactico",
-    "syn":        "err_sintactico",
-    "semantico":  "err_semantico",
-    "semantic":   "err_semantico",
-    "sem":        "err_semantico",
+    "syntax": "err_sintactico",
+    "syn": "err_sintactico",
+    "semantico": "err_semantico",
+    "semantic": "err_semantico",
+    "sem": "err_semantico",
     "intermedio": "intermedio",
-    "ejecucion":  "ejecucion",
-    "exec":       "ejecucion",
-    "runtime":    "ejecucion",
+    "ejecucion": "ejecucion",
+    "exec": "ejecucion",
+    "runtime": "ejecucion",
 }
 
 # Resultado estructurado
 
+
 @dataclass
 class CompilerResult:
-    
     success: bool
     returncode: int
     stdout: str
@@ -65,7 +64,6 @@ class CompilerResult:
     outputs: dict[str, str] = field(default_factory=dict)
     errors_by_phase: dict[str, str] = field(default_factory=dict)
     failed_phase: Optional[str] = None
-
 
 
 # CompilerRunner
@@ -91,13 +89,11 @@ class CompilerRunner:
         self.compiler_path = Path(compiler_path)
         self.outputs_dir = Path(outputs_dir)
         self.timeout = timeout
-        self.outputs_dir.mkdir(parents=True, exist_ok=True)  
+        self.outputs_dir.mkdir(parents=True, exist_ok=True)
 
         # Asegurar que el directorio de salida exista antes de lanzar
         # el compilador (éste escribe tokens.txt, errors.txt, etc. aquí).
         self.outputs_dir.mkdir(parents=True, exist_ok=True)
-
-
 
     def run(self, source_file: str, phase: str = "all") -> CompilerResult:
         """
@@ -121,9 +117,8 @@ class CompilerRunner:
             failed_phase=failed_phase,
         )
 
-    
     # Construir el comando
- 
+
     def _build_command(self, source_file: str, phase: str) -> list[str]:
         """
         Construye la lista de argumentos para subprocess.
@@ -137,8 +132,7 @@ class CompilerRunner:
             cmd += ["--phase", phase]
         return cmd
 
-
-    #Ejecutar con subprocess
+    # Ejecutar con subprocess
 
     def _execute(self, cmd: list[str]) -> subprocess.CompletedProcess:
         """
@@ -153,7 +147,7 @@ class CompilerRunner:
                 encoding="utf-8",
                 errors="replace",
                 timeout=self.timeout,
-                cwd=str(self.outputs_dir),   # el compilador escribe en outputs/
+                cwd=str(self.outputs_dir),  # el compilador escribe en outputs/
             )
             return result
         except subprocess.TimeoutExpired:
@@ -162,7 +156,7 @@ class CompilerRunner:
                 returncode=-1,
                 stdout="",
                 stderr="[CompilerRunner] El compilador superó el tiempo límite de "
-                       f"{self.timeout} segundos.",
+                f"{self.timeout} segundos.",
             )
         except FileNotFoundError:
             return subprocess.CompletedProcess(
@@ -170,7 +164,7 @@ class CompilerRunner:
                 returncode=-2,
                 stdout="",
                 stderr=f"[CompilerRunner] No se encontró el compilador en:\n"
-                       f"  {self.compiler_path}",
+                f"  {self.compiler_path}",
             )
         except Exception as exc:  # noqa: BLE001
             return subprocess.CompletedProcess(
@@ -180,9 +174,7 @@ class CompilerRunner:
                 stderr=f"[CompilerRunner] Error inesperado al lanzar el compilador:\n{exc}",
             )
 
- 
-    #Leer archivos de salida
-  
+    # Leer archivos de salida
 
     def _read_output_files(self) -> dict[str, str]:
         """
@@ -197,7 +189,7 @@ class CompilerRunner:
             outputs[panel_key] = self._safe_read(path)
         return outputs
 
-    #Parsear errors.txt y clasificar por fase
+    # Parsear errors.txt y clasificar por fase
 
     def _parse_errors(self) -> dict[str, str]:
         """
@@ -219,7 +211,7 @@ class CompilerRunner:
 
         # Agrupar líneas por fase
         buckets: dict[str, list[str]] = {}
-        current_key: str = "err_lexico"   # fallback si la línea no tiene prefijo
+        current_key: str = "err_lexico"  # fallback si la línea no tiene prefijo
 
         for line in raw.splitlines():
             stripped = line.strip()
@@ -250,9 +242,7 @@ class CompilerRunner:
                 return panel_key
         return None
 
-    
-    #Detectar fase con error
-    
+    # Detectar fase con error
 
     def _detect_failed_phase(
         self,
@@ -286,8 +276,6 @@ class CompilerRunner:
             return "desconocido"
 
         return None
-
-   
 
     @staticmethod
     def _safe_read(path: Path) -> str:

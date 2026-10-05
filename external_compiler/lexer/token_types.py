@@ -29,6 +29,7 @@ class TokenType(Enum):
     KW_SWITCH  = auto()
     KW_CASE    = auto()
     KW_INT     = auto()
+    KW_BOOL    = auto()
     KW_FLOAT   = auto()
     KW_MAIN    = auto()
     KW_CIN     = auto()
@@ -40,6 +41,8 @@ class TokenType(Enum):
     KW_REAL    = auto()
     KW_THEN    = auto()
     KW_UNTIL   = auto()
+    KW_TRUE    = auto()
+    KW_FALSE   = auto()
 
     # ------------------------------------------------------------------
     # Operadores aritméticos

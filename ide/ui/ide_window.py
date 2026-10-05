@@ -1,16 +1,17 @@
 import os
 import tkinter as tk
-from tkinter import font, messagebox
+from tkinter import messagebox
 
 from core.compiler_runner import CompilerRunner
+from core.ast_text import ast_to_connected_text
 from core.file_manager import FileManager
 from core.state import AppState
+
+# Lexico
+from ui.highlighter import SyntaxHighlighter
 from ui.menu import Menu
 from ui.panels import Panels
 from ui.toolbar import Toolbar
-
-#Lexico
-from ui.highlighter import SyntaxHighlighter
 
 
 class IDEWindow:
@@ -92,8 +93,8 @@ class IDEWindow:
         self.line_numbers.pack(side=tk.LEFT, fill=tk.Y)
 
         # Scrollbar vertical
-        scrollbar = tk.Scrollbar(frame)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.scrollbar = tk.Scrollbar(frame)
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         # Editor principal
         self.text_area = tk.Text(
@@ -101,10 +102,10 @@ class IDEWindow:
             wrap="none",
             width=80,
             height=20,
-            yscrollcommand=scrollbar.set,
+            yscrollcommand=self._on_yscroll,
         )
         self.text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.config(command=self.text_area.yview)
+        self.scrollbar.config(command=self.text_area.yview)
         self.highlighter = SyntaxHighlighter(self.text_area)
 
     # Barra de estado (fila inferior)
@@ -152,10 +153,15 @@ class IDEWindow:
         """Bindings propios del área de texto."""
         self.text_area.bind("<<Modified>>", self._on_text_modified)
         self.text_area.bind("<KeyRelease>", self._on_key_release_highlight)
-        self.text_area.bind("<MouseWheel>", self._update_line_numbers)
         self.text_area.bind("<ButtonRelease-1>", self._update_cursor_position)
         self._update_line_numbers()
         self._update_cursor_position()
+
+    def _on_yscroll(self, first: float, last: float) -> None:
+        """Intercepta el scroll vertical del editor.
+        Actualiza la scrollbar y sincroniza el canvas de números de línea."""
+        self.scrollbar.set(first, last)
+        self._update_line_numbers()
 
     def _on_text_modified(self, event=None):
         """Se dispara via <<Modified>> cuando el contenido del editor cambia.
@@ -194,8 +200,8 @@ class IDEWindow:
                 y = dline[1]
                 self.line_numbers.create_text(18, y, anchor="nw", text=str(line))
 
-        #Redibujar las lineas de error si existen
-        if hasattr(self, '_last_errors_content') and self._last_errors_content:
+        # Redibujar las lineas de error si existen
+        if hasattr(self, "_last_errors_content") and self._last_errors_content:
             self.highlighter.mark_error_lines(
                 self._last_errors_content, self.line_numbers
             )
@@ -221,7 +227,9 @@ class IDEWindow:
         self._suppress_modified = True
         self.text_area.delete("1.0", tk.END)
         self.text_area.insert(tk.END, content)
-        self.text_area.edit_modified(False)  # Descartar el <<Modified>> generado al cargar
+        self.text_area.edit_modified(
+            False
+        )  # Descartar el <<Modified>> generado al cargar
         self._suppress_modified = False
         self._update_line_numbers()
         self._update_cursor_position()
@@ -323,7 +331,7 @@ class IDEWindow:
             text=f"\u23f3 Ejecutando fase: {phase.capitalize()}...", fg="#7f8c8d"
         )
         self.root.update_idletasks()  # Refrescar UI antes de bloquear
-        #Limpiar marcas anteriores
+        # Limpiar marcas anteriores
         self.highlighter.clear_error_marks()
         self.line_numbers.delete("error_line")
 
@@ -336,7 +344,6 @@ class IDEWindow:
         # Volcar salidas en paneles de resultados
         panel_map = {
             "lexico": self.panels.tab_lexico,
-            "sintactico": self.panels.tab_sintactico,
             "semantico": self.panels.tab_semantico,
             "intermedio": self.panels.tab_intermedio,
             "simbolos": self.panels.tab_simbolos,
@@ -346,6 +353,16 @@ class IDEWindow:
             content = result.outputs.get(key, "")
             if content.strip():
                 self.panels.write(widget, content)
+        
+        # Caso especial para sintáctico: cargar en árbol colapsable
+        if result.outputs.get("sintactico", "").strip():
+            self.panels.write(
+                self.panels.tab_sintactico_analisis,
+                result.outputs["sintactico"],
+            )
+
+        if result.outputs.get("sintactico", "").strip() and self.panels.ast_tree_viewer:
+            self._load_ast_to_tree(result.outputs["sintactico"])
 
         # Volcar errores en paneles de error
         error_panel_map = {
@@ -360,13 +377,13 @@ class IDEWindow:
 
         # stderr del proceso (error interno del compilador)
 
-        #Marcar errores en el editor
+        # Marcar errores en el editor
         errors_content = result.errors_by_phase.get("err_lexico", "")
         self._last_errors_content = errors_content
         self.highlighter.mark_errors(errors_content)
         self.highlighter.mark_error_lines(errors_content, self.line_numbers)
 
-        #stderr del proceso (error interno del compilador)
+        # stderr del proceso (error interno del compilador)
         if result.stderr.strip():
             self.panels.write(
                 self.panels.tab_err_lexico,
@@ -393,7 +410,6 @@ class IDEWindow:
     # Mapa fase → (notebook_attr, tab_widget_attr)
     _PHASE_TAB = {
         "lexico": ("results_notebook", "tab_lexico"),
-        "sintactico": ("results_notebook", "tab_sintactico"),
         "semantico": ("results_notebook", "tab_semantico"),
         "intermedio": ("results_notebook", "tab_intermedio"),
         "ejecutar": ("bottom_notebook", "tab_ejecucion"),
@@ -411,6 +427,18 @@ class IDEWindow:
         Selecciona la pestaña de resultado (éxito) o de error (fallo)
         correspondiente a la fase que acaba de ejecutarse.
         """
+        # Caso especial para sintáctico con árbol
+        if phase == "sintactico" and success:
+            try:
+                notebook = self.panels.results_notebook
+                # Buscar la pestaña "Sintactico" por su nombre
+                for tab_id in notebook.tabs():
+                    if "Sintactico" in notebook.tab(tab_id, 'text'):
+                        notebook.select(tab_id)
+                        return
+            except Exception as e:
+                print(f"Error al seleccionar pestaña sintáctica: {e}")
+        
         if success:
             entry = self._PHASE_TAB.get(phase)
         else:
@@ -430,3 +458,48 @@ class IDEWindow:
                     notebook.select(frame)
                 except Exception:
                     pass  # Silenciar si el frame no es seleccionable
+
+    def _load_ast_to_tree(self, syntax_output: str):
+        """
+        Extrae el JSON del AST de la salida de análisis sintáctico
+        y lo carga en el visualizador de árbol colapsable.
+        """
+        try:
+            import json
+            
+            # Buscar la sección JSON en la salida
+            if not syntax_output or not syntax_output.strip():
+                self.panels.ast_tree_viewer.clear()
+                self.panels.ast_tree_viewer.tree.insert("", "end", text="Salida vacía del compilador")
+                return
+            
+            # Buscar el primer { que inicia un JSON válido
+            marker = "estructurada"
+            marker_idx = syntax_output.find(marker)
+            search_start = marker_idx if marker_idx >= 0 else 0
+            brace_idx = syntax_output.find('{', search_start)
+            if brace_idx < 0:
+                self.panels.ast_tree_viewer.clear()
+                self.panels.ast_tree_viewer.tree.insert("", "end", text="No se encontró JSON en la salida")
+                return
+            
+            # Extraer desde el primer { hasta el final
+            json_str = syntax_output[brace_idx:]
+            
+            # Intentar parsear y cargar en el árbol
+            ast_dict, _ = json.JSONDecoder().raw_decode(json_str)
+            self.panels.ast_tree_viewer.load_ast_json(json.dumps(ast_dict))
+            self.panels.write(
+                self.panels.tab_sintactico_conectado,
+                self._ast_to_connected_text(ast_dict),
+            )
+            
+        except json.JSONDecodeError as e:
+            self.panels.ast_tree_viewer.clear()
+            self.panels.ast_tree_viewer.tree.insert("", "end", text=f"Error JSON: {str(e)[:100]}")
+        except Exception as e:
+            self.panels.ast_tree_viewer.clear()
+            self.panels.ast_tree_viewer.tree.insert("", "end", text=f"Error: {str(e)[:100]}")
+
+    def _ast_to_connected_text(self, ast_dict: dict) -> str:
+        return ast_to_connected_text(ast_dict)

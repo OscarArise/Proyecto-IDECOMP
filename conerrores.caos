@@ -1,0 +1,21 @@
+main {
+    int x, y, z;
+    float a, b, c;
+
+    x = 23
+    y = 2 + ;
+    z = y + 7;
+
+    if 2 > then
+        y = a + 3;
+    else
+        b = 5.0;
+    
+
+    do
+        y = (y + 1) * 2 + 1;
+    while y == ;
+
+    cin x;
+    cout << ;
+}

@@ -1,0 +1,10 @@
+main {
+    int x, y;
+    float resultado;
+    
+    cin >> x;
+    cin >> y;
+    
+    resultado = x + y;
+    cout << "La suma es: " << resultado;
+}

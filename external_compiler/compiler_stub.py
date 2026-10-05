@@ -161,13 +161,60 @@ def _format_tokens(tokens: list[tuple]) -> str:
 
 
 def _run_sintactico(source: str, tokens: list, errors: list) -> str:
-    """Stub: retorna una representación textual plana del árbol."""
-    return (
-        "Árbol Sintáctico (stub)\n"
-        "=======================\n"
-        f"  Tokens procesados: {len(tokens)}\n"
-        "  [Implementación real pendiente]\n"
-    )
+    """
+    Analizador sintáctico real basado en parser descendente recursivo.
+    
+    Procesa los tokens generados por el analizador léxico y construye
+    un Árbol Sintáctico Abstracto (AST) según la gramática de la Fase 2.
+    """
+    import sys
+    import os
+    import json
+    
+    # Asegurar que el directorio external_compiler esté en el path
+    _ec_dir = os.path.dirname(os.path.abspath(__file__))
+    if _ec_dir not in sys.path:
+        sys.path.insert(0, _ec_dir)
+
+    from parser.parser import Parser
+    from parser.ast_formatter import ASTFormatter
+
+    # Crear el parser con los tokens
+    parser = Parser(tokens)
+    
+    # Realizar el análisis sintáctico
+    ast, syntax_errors = parser.parse()
+    
+    # Propagar errores sintácticos al listado general
+    for error in syntax_errors:
+        errors.append(f"[SINTACTICO] {str(error)}")
+    
+    # Generar salida formateada
+    result = "Árbol Sintáctico Abstracto (AST)\n"
+    result += "=" * 50 + "\n\n"
+    
+    if ast:
+        # Incluir representación textual del AST
+        result += "Representación de texto:\n"
+        result += "-" * 50 + "\n"
+        result += ASTFormatter.to_text(ast)
+        result += "\n"
+        
+        # Incluir representación como diccionario (JSON-ready) para la visualización gráfica
+        result += "Representación estructurada (para visualización):\n"
+        result += "-" * 50 + "\n"
+        ast_dict = ASTFormatter.to_dict(ast)
+        result += json.dumps(ast_dict, indent=2, ensure_ascii=False)
+    else:
+        result += "No se pudo construir el AST debido a errores sintácticos.\n"
+    
+    # Agregar reporte de errores al final
+    if syntax_errors:
+        result += "\n" + ASTFormatter.format_errors(syntax_errors)
+    else:
+        result += "\nSin errores sintácticos.\n"
+    
+    return result
 
 
 def _run_semantico(source: str, tokens: list, errors: list) -> tuple[str, str]:

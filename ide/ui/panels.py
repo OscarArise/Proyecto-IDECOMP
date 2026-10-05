@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from .ast_tree_viewer import ASTTreeViewer
 
 class Panels:
     #Organizacion de paneles del ide
@@ -63,7 +64,15 @@ class Panels:
 
         #Pestañas de resultados
         self.tab_lexico = self._make_result_tab("Lexico")
-        self.tab_sintactico = self._make_result_tab("Sintactico")
+        
+        # Pestaña de árbol sintáctico (con visualizador colapsable)
+        self.tab_sintactico_frame = tk.Frame(self.results_notebook, bg="#1e1e1e")
+        self.results_notebook.add(self.tab_sintactico_frame, text="Sintactico")
+        self.ast_tree_viewer = ASTTreeViewer(self.tab_sintactico_frame)
+        self.tab_sintactico = None  # No se usa Text widget para esta pestaña
+        
+        self.tab_sintactico_conectado = self._make_result_tab("Arbol Conectado")
+        self.tab_sintactico_analisis = self._make_result_tab("Analisis Sintactico")
         self.tab_semantico = self._make_result_tab("Semantico")
         self.tab_intermedio = self._make_result_tab("Intermedio")
         self.tab_simbolos = self._make_result_tab("Simbolos")
@@ -112,7 +121,8 @@ class Panels:
 
     #limpiar un panel
     def clear(self, widget):
-
+        if widget is None:
+            return
         widget.config(state = "normal")
         widget.delete(1.0, tk.END)
         widget.config(state = "disabled")
@@ -121,12 +131,15 @@ class Panels:
     def clear_all(self):
 
         for widget in [
-            self.tab_lexico, self.tab_sintactico, self.tab_semantico,
+            self.tab_lexico, self.tab_sintactico_conectado,
+            self.tab_sintactico_analisis, self.tab_semantico,
             self.tab_intermedio, self.tab_simbolos,
             self.tab_err_lexico, self.tab_err_sintactico,
             self.tab_err_semantico, self.tab_ejecucion
         ]:
             self.clear(widget)
+        if self.ast_tree_viewer:
+            self.ast_tree_viewer.clear()
 
     def get_tab_frame(self, text_widget: tk.Text) -> tk.Frame | None:
         """
