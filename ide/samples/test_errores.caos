@@ -6,7 +6,7 @@ main {
     y = 3.14;
     
     if x > 0 then
-        cout << "Positivo";
+        cout "Positivo";
     
     resultado = x + y;
 }

@@ -57,10 +57,16 @@ class Declaracion(ASTNode):
 
 @dataclass
 class DeclaracionVariable(ASTNode):
-    """declaracion_variable → tipo identificador ;"""
-    tipo: str = ""  # "int" | "float" | "bool"
-    identificadores: List[str] = field(default_factory=list)
+    """declaracion_variable → tipo identificador { , identificador } ;"""
+    tipo: str = ""         # tipo normalizado: "int" | "float" | "bool"
+    tipo_lexema: str = ""  # lexema tal como se escribió ("real" es alias de "float")
+    identificadores: List['Identificador'] = field(default_factory=list)
     children: List[ASTNode] = field(default_factory=list)
+
+    @property
+    def nombres(self) -> List[str]:
+        """Lexemas de los identificadores declarados, en orden."""
+        return [ident.nombre for ident in self.identificadores]
 
 
 # ============================================================================
@@ -126,8 +132,13 @@ class Repeticion(ASTNode):
 
 @dataclass
 class EntradaEstandar(ASTNode):
-    """sent_in → cin id ;"""
+    """sent_in → cin id ;
+
+    linea/columna apuntan a 'cin'; identificador_linea/columna, al id leído.
+    """
     identificador: str = ""
+    identificador_linea: int = 0
+    identificador_columna: int = 0
     children: List[ASTNode] = field(default_factory=list)
 
 
@@ -211,6 +222,7 @@ class Componente(ASTNode):
 class Numero(ASTNode):
     """Literal numérico: número entero o flotante"""
     valor: float = 0.0
+    es_entero: bool = True  # distingue int de float para la verificación de tipos
     children: List[ASTNode] = field(default_factory=list)
 
 

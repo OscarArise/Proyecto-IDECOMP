@@ -375,8 +375,6 @@ class IDEWindow:
             if content.strip():
                 self.panels.write(widget, content)
 
-        # stderr del proceso (error interno del compilador)
-
         # Marcar errores en el editor
         errors_content = result.errors_by_phase.get("err_lexico", "")
         self._last_errors_content = errors_content

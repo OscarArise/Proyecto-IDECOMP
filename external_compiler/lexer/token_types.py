@@ -38,7 +38,7 @@ class TokenType(Enum):
     KW_RETURN  = auto()
     KW_BREAK   = auto()
     KW_DEFAULT = auto()
-    KW_REAL    = auto()
+    KW_REAL    = auto()  # 'real': el parser lo trata como alias de KW_FLOAT
     KW_THEN    = auto()
     KW_UNTIL   = auto()
     KW_TRUE    = auto()
@@ -85,15 +85,13 @@ class TokenType(Enum):
     PUNTO_COMA = auto()  # ;
 
     # ------------------------------------------------------------------
-    # Tokens reservados para implementación futura
+    # Literales de texto
     # ------------------------------------------------------------------
-    # TODO: aquí se agregarán los tipos STRING y CHAR
-    STRING = auto()   # "cadena de texto"
-    CHAR   = auto()   # 'c'
+    STRING = auto()   # "cadena de texto" — solo válida dentro de cout
+    CHAR   = auto()   # 'c' — el DFA lo emite, pero ninguna producción lo acepta:
+                      #       siempre termina en error sintáctico
 
-    # TODO: aquí se agregarán los tipos de tokens para comentarios
-    #   COMMENT_LINE  = auto()   # // comentario de línea
-    #   COMMENT_BLOCK = auto()   # /* comentario de bloque */
+    # Los comentarios // y /* */ los consume el DFA sin emitir token.
 
     # ------------------------------------------------------------------
     # Tokens especiales

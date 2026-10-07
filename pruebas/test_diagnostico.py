@@ -6,10 +6,11 @@ Script de diagnóstico para verificar la salida del compilador sintáctico.
 import sys
 import os
 
-# Asegurar que el directorio external_compiler esté en el path
+# Asegurar que la raíz del proyecto y external_compiler estén en el path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 compiler_dir = os.path.join(project_root, "external_compiler")
 sys.path.insert(0, compiler_dir)
+sys.path.insert(0, project_root)
 
 # Crear un archivo de prueba
 test_code = """main {

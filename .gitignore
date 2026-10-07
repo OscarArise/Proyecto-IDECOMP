@@ -31,3 +31,13 @@ Thumbs.db
 /errors.txt
 /exec.txt
 /*_tmp.caos
+/test_temp.caos
+
+# Salidas del compilador generadas al ejecutar desde external_compiler/
+external_compiler/tokens.txt
+external_compiler/syntax.txt
+external_compiler/symbols.txt
+external_compiler/semantic.txt
+external_compiler/intermediate.txt
+external_compiler/errors.txt
+external_compiler/exec.txt
