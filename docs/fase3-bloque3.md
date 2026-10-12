@@ -148,3 +148,17 @@ para entregar.
   toca `compiler_stub.py` ni `highlighter.py`. Si hace falta, se avisa antes.
 - Los archivos de `ide/outputs/` no se suben (ya están en `.gitignore`); las
   copias para la entrega van en `entrega/`.
+
+---
+
+## 5. Estado al 12 de octubre (noche)
+
+| Tarea | Estado |
+| --- | --- |
+| B3.1 Semántico conectado al compilador | Hecho. `TestSemantica.txt` sale con código 3, 6 errores y tabla. `test_integracion.py` (8 pruebas). |
+| B3.2 Visualización en el IDE | Hecho: pestañas Arbol Anotado y Comparacion, texto de Semantico sin JSON, errores de las tres fases marcados en el editor, stderr fuera de Errores Lexicos. Probado con el IDE real en Linux sin pantalla (Xvfb + Tk 8.6). |
+| B3.3 Resaltado `[l:c]` | Hecho (`highlighter.py`). |
+| B3.4 Pruebas en Windows | **Pendiente.** Repetir la tabla de la sección 2 en el IDE de Windows con F5, F6 y F7. |
+| B3.5 Entregables | Salidas generadas en `entrega/`. Falta: matrículas en `integrantes.txt` y capturas definitivas tomadas en Windows (`entrega/capturas_borrador/` son de prueba). |
+| B3.6 PDF | Borrador generado (`entrega/Fase3_Analisis_Semantico.pdf`). Para regenerarlo con las capturas de Windows: poner los PNG con los mismos nombres en `entrega/capturas/` y ejecutar `python generar_pdf.py --capturas capturas` (requiere `pip install reportlab pillow`). Completar las matrículas en `INTEGRANTES`/portada. |
+| B3.7 Cierre | Pendiente: PR a `master`, etiqueta `fase3-entrega`, entrega en el Aula Virtual. |
