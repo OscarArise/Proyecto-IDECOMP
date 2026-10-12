@@ -24,7 +24,7 @@ Argumentos:
                           Valores válidos:
                               lexico       → Solo análisis léxico
                               sintactico   → Léxico + análisis sintáctico
-                              semantico    → + análisis semántico
+                              semantico    → + análisis semántico (real: tabla de símbolos, tipos, errores E1-E7)
                               intermedio   → + generación de código intermedio
                               ejecutar     → Pipeline completo + ejecución
                           Si se omite --phase, se ejecuta el pipeline completo.

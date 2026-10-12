@@ -47,6 +47,8 @@ def main():
     phases_to_run = PHASES[: PHASES.index(target_phase) + 1]
 
     errors: list[str] = []
+    tokens: list = []
+    ast = None
 
     # Limpiar archivos anteriores
     for fname in OUTPUT_FILES.values():
@@ -63,7 +65,7 @@ def main():
 
     # Fase 2: Sintáctico
     if "sintactico" in phases_to_run:
-        ast_text = _run_sintactico(source_code, tokens, errors)
+        ast_text, ast = _run_sintactico(source_code, tokens, errors)
         _write(OUTPUT_FILES["sintactico"], ast_text)
 
     if errors:
@@ -72,7 +74,7 @@ def main():
 
     # Fase 3: Semántico
     if "semantico" in phases_to_run:
-        symbol_table, semantic_info = _run_semantico(source_code, tokens, errors)
+        symbol_table, semantic_info = _run_semantico(ast, errors)
         _write(OUTPUT_FILES["semantico"], semantic_info)
         _write(OUTPUT_FILES["simbolos"], symbol_table)
 
@@ -104,7 +106,7 @@ def main():
 
 
 # Implementación de cada fase
-# Léxico y sintáctico están completos; semántico, intermedio y ejecución
+# Léxico, sintáctico y semántico están completos; intermedio y ejecución
 # siguen siendo stubs.
 
 def _run_lexico(source: str, errors: list) -> list[tuple]:
@@ -159,12 +161,14 @@ def _format_tokens(tokens: list[tuple]) -> str:
     return header + sep + rows
 
 
-def _run_sintactico(source: str, tokens: list, errors: list) -> str:
+def _run_sintactico(source: str, tokens: list, errors: list) -> tuple[str, object]:
     """
     Analizador sintáctico real basado en parser descendente recursivo.
     
     Procesa los tokens generados por el analizador léxico y construye
     un Árbol Sintáctico Abstracto (AST) según la gramática de la Fase 2.
+
+    Retorna (texto_de_syntax.txt, ast). El AST se entrega a la fase semántica.
     """
     import sys
     import os
@@ -213,29 +217,31 @@ def _run_sintactico(source: str, tokens: list, errors: list) -> str:
     else:
         result += "\nSin errores sintácticos.\n"
     
-    return result
+    return result, ast
 
 
-def _run_semantico(source: str, tokens: list, errors: list) -> tuple[str, str]:
+def _run_semantico(ast, errors: list) -> tuple[str, str]:
     """
-    Stub: retorna (tabla_de_simbolos, info_semantica).
+    Análisis semántico real (Fase 3).
 
-    El Bloque 3 lo reemplaza por la llamada a `semantic.analyze`.
+    Recibe el AST del sintáctico, lo convierte a su forma binaria y llama a
+    `semantic.analizar`, que trabaja sobre una copia anotada y deja el original
+    intacto. Retorna (symbols.txt, semantic.txt) y agrega los errores
+    semánticos con el prefijo [SEMANTICO] a `errors`.
     """
-    idents = {v for t, v, *_ in tokens if t == "IDENTIFIER"}
-    symbol_table = (
-        "Tabla de Símbolos (stub)\n"
-        "========================\n"
-        + "\n".join(f"  {name}" for name in sorted(idents))
-        + "\n"
-    )
-    semantic_info = (
-        "Análisis Semántico (stub)\n"
-        "=========================\n"
-        f"  Identificadores encontrados: {len(idents)}\n"
-        "  [Implementación real pendiente]\n"
-    )
-    return symbol_table, semantic_info
+    import os
+
+    _ec_dir = os.path.dirname(os.path.abspath(__file__))
+    if _ec_dir not in sys.path:
+        sys.path.insert(0, _ec_dir)
+
+    from parser.ast_formatter import ASTFormatter
+    from semantic import analizar
+    from semantic.formateador import semantic_txt, symbols_txt
+
+    resultado = analizar(ASTFormatter.to_binary(ast))
+    errors.extend(f"[SEMANTICO] {e}" for e in resultado.errores)
+    return symbols_txt(resultado.tabla), semantic_txt(resultado)
 
 
 def _run_intermedio(errors: list) -> str:
