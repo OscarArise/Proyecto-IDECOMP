@@ -201,14 +201,12 @@ class Parser:
 
     def _parse_condition(self, contexto: str) -> Optional[Expresion]:
         """
-        Analiza una condición con paréntesis obligatorios, conservando la
-        expresión cuando falta alguno de los delimitadores.
-        """
-        if self._match("PAR_IZQ"):
-            self._advance()
-        else:
-            self._consume("PAR_IZQ", f"Se esperaba '(' después de '{contexto}'")
+        Analiza la condición de 'if', 'while' y 'until'.
 
+        Los paréntesis son opcionales: '( expresion )' ya es una alternativa de
+        'componente', así que 'if (2 > 3) then' e 'if 2 > 3 then' producen el
+        mismo AST sin necesidad de tocar la gramática.
+        """
         condicion = self._expresion()
         if not condicion:
             tok = self.current_token
@@ -219,30 +217,35 @@ class Parser:
             ))
             self._skip_on_error("PAR_DER", "KW_THEN", "LLAVE_IZQ", "PUNTO_COMA",
                                 "KW_ELSE", "KW_END", "KW_UNTIL", "LLAVE_DER")
-        elif self.current_token and self.current_token.tipo in self.expression_starts:
-            tok = self.current_token
-            mensaje = f"Se esperaba operador antes de '{tok.valor}'"
-            self.errors.append(SyntaxError(
-                mensaje,
-                linea=tok.linea,
-                columna=tok.columna,
-            ))
-            condicion.errores.append(NodoError(
-                linea=tok.linea,
-                columna=tok.columna,
-                mensaje=mensaje,
-                token_encontrado=(tok.tipo, tok.valor),
-                token_esperado="operador",
-            ))
-            self._skip_on_error("PAR_DER", "KW_THEN", "LLAVE_IZQ", "PUNTO_COMA",
-                                "KW_ELSE", "KW_END", "KW_UNTIL", "LLAVE_DER")
-
-        if self._match("PAR_DER"):
-            self._advance()
-        else:
-            self._consume("PAR_DER", "Se esperaba ')' después de condición")
 
         return condicion
+
+    def _check_missing_operator(self, expr: Optional[Expresion]):
+        """
+        Dentro de un paréntesis, dos operandos seguidos significan que falta el
+        operador que los une. Se reporta y se descarta el resto del paréntesis.
+        """
+        if not expr or not self.current_token:
+            return
+        if self.current_token.tipo not in self.expression_starts:
+            return
+
+        tok = self.current_token
+        mensaje = f"Se esperaba operador antes de '{tok.valor}'"
+        self.errors.append(SyntaxError(
+            mensaje,
+            linea=tok.linea,
+            columna=tok.columna,
+        ))
+        expr.errores.append(NodoError(
+            linea=tok.linea,
+            columna=tok.columna,
+            mensaje=mensaje,
+            token_encontrado=(tok.tipo, tok.valor),
+            token_esperado="operador",
+        ))
+        self._skip_on_error("PAR_DER", "KW_THEN", "LLAVE_IZQ", "PUNTO_COMA",
+                            "KW_ELSE", "KW_END", "KW_UNTIL", "LLAVE_DER")
 
     def _report_unexpected_token(self, contexto: str = "esta parte del programa"):
         """Registra un token inesperado antes de entrar a recuperación."""
@@ -362,12 +365,14 @@ class Parser:
         decl = DeclaracionVariable()
         tok = self.current_token
 
+        # 'real' es alias de 'float': el léxico lo reconoce desde la Fase 1, pero
+        # el lenguaje solo tiene tres tipos (int, float, bool).
         if self._match("KW_INT"):
             decl.tipo = "int"
         elif self._match("KW_FLOAT"):
             decl.tipo = "float"
         elif self._match("KW_REAL"):
-            decl.tipo = "real"
+            decl.tipo = "float"
         elif self._match("KW_BOOL"):
             decl.tipo = "bool"
         else:
@@ -378,25 +383,28 @@ class Parser:
             ))
             return None
 
+        decl.tipo_lexema = tok.valor
         decl.linea = tok.linea
         decl.columna = tok.columna
         self._advance()
 
         decl.identificadores = self._lista_identificadores()
+        decl.children = list(decl.identificadores)
 
         if not self._consume("PUNTO_COMA", "Se esperaba ';' después de declaración de variable"):
             self._skip_on_error("PUNTO_COMA", "KW_INT", "KW_FLOAT", "KW_REAL", "KW_BOOL")
 
         return decl
 
-    def _lista_identificadores(self) -> List[str]:
+    def _lista_identificadores(self) -> List[Identificador]:
         """id { , id }
-        
-        MEJORA: Detecta cuando faltan comas entre identificadores.
-        Antes: "esperaba ';'" cuando falta ','
-        Ahora: "esperaba ','" cuando hay dos IDENTIFIER seguidos
+
+        Cada identificador conserva su línea y columna: la tabla de símbolos y
+        los errores semánticos las necesitan.
+
+        Dos IDENTIFIER seguidos se reportan como coma faltante, no como ';'.
         """
-        identificadores = []
+        identificadores: List[Identificador] = []
 
         if not self._match("IDENTIFIER"):
             tok = self.current_token
@@ -407,7 +415,7 @@ class Parser:
             ))
             return []
 
-        identificadores.append(self.current_token.valor)
+        identificadores.append(self._identificador_actual())
         self._advance()
 
         # Loop: { , id }
@@ -423,10 +431,10 @@ class Parser:
                         columna=tok.columna if tok else 0
                     ))
                     break
-                identificadores.append(self.current_token.valor)
+                identificadores.append(self._identificador_actual())
                 self._advance()
             elif self._match("IDENTIFIER"):
-                # ✨ MEJORA: Detectar dos IDENTIFIER seguidos sin coma
+                # Dos IDENTIFIER seguidos: falta la coma
                 tok = self.current_token
                 self.errors.append(SyntaxError(
                     f"Se esperaba ',' pero se encontró '{tok.valor}'",
@@ -436,13 +444,18 @@ class Parser:
                     token_encontrado="IDENTIFIER"
                 ))
                 # Consumir el identificador para continuar
-                identificadores.append(self.current_token.valor)
+                identificadores.append(self._identificador_actual())
                 self._advance()
             else:
                 # Fin de la lista de identificadores
                 break
 
         return identificadores
+
+    def _identificador_actual(self) -> Identificador:
+        """Nodo Identificador con la posición del token IDENTIFIER actual."""
+        tok = self.current_token
+        return Identificador(linea=tok.linea, columna=tok.columna, nombre=tok.valor)
 
     def _lista_sentencias(self, stop_tokens: tuple = ()) -> Optional[ListaSentencias]:
         """lista_sentencias → lista_sentencias sentencia | ε"""
@@ -596,11 +609,9 @@ class Parser:
         return asig
 
     def _seleccion(self) -> Optional[Seleccion]:
-        """seleccion → if ( expresion ) then lista_sentencias [ else lista_sentencias ] end [;]
-        
-        MEJORA: Ahora requiere paréntesis alrededor de la condición.
-        Antes: if expresion then ... (permitía sin parén)
-        Ahora: if (expresion) then ... (requiere parén)
+        """seleccion → if expresion then lista_sentencias [ else lista_sentencias ] end [;]
+
+        Los paréntesis de la condición son opcionales.
         """
         sel = Seleccion()
 
@@ -683,11 +694,12 @@ class Parser:
     def _repeticion(self) -> Optional[Repeticion]:
         """
         Gramática propia del proyecto:
-            repeticion → do lista_sentencias while ( expresion ) { lista_sentencias } ; until ( expresion ) ;
+            repeticion → do lista_sentencias while expresion cuerpo_while until expresion ;
 
-        Ambas formas de cuerpo son válidas:
-            while (cond) { sentencias }   ← con bloque
-            while (cond) end              ← con end (compatibilidad)
+        Las tres formas de cuerpo_while son válidas:
+            while cond { sentencias }     ← con bloque
+            while cond sentencias end     ← con end (estilo del archivo oficial)
+            while cond end                ← cuerpo vacío
         until es el terminador formal del do-while.
         """
         rep = Repeticion()
@@ -724,8 +736,15 @@ class Parser:
             if self._match("LLAVE_DER"):
                 self._advance()
         elif self._match("KW_END"):
-            # Forma alternativa con 'end' (compatibilidad)
+            # Cuerpo vacío cerrado con 'end'
             self._advance()
+        else:
+            # Forma 'while cond <sentencias> end'
+            rep.cuerpo_while = self._lista_sentencias(stop_tokens=("KW_UNTIL",))
+            if not self._consume("KW_END", "Se esperaba 'end' para cerrar el while del do"):
+                self._skip_on_error("KW_END", "KW_UNTIL", "LLAVE_DER")
+                if self._match("KW_END"):
+                    self._advance()
 
         # ';' opcional después del bloque
         if self._match("PUNTO_COMA"):
@@ -782,6 +801,8 @@ class Parser:
             return entrada
 
         entrada.identificador = self.current_token.valor
+        entrada.identificador_linea = self.current_token.linea
+        entrada.identificador_columna = self.current_token.columna
         self._advance()
 
         self._consume("PUNTO_COMA", "Se esperaba ';' después de cin")
@@ -808,48 +829,54 @@ class Parser:
         return salida_node
 
     def _salida(self) -> Optional[Salida]:
-        """salida → cadena | expresion | cadena << expresion | expresion << cadena"""
+        """salida → cadena | expresion | cadena << expresion | expresion << cadena
+
+        Las cuatro formas son el mismo patrón: un elemento seguido de cero o más
+        elementos separados por '<<'. El '<<' no es un operador del lenguaje,
+        solo el separador de esta producción.
+        """
         salida = Salida()
         if self.current_token:
             salida.linea = self.current_token.linea
             salida.columna = self.current_token.columna
 
+        elemento = self._elemento_salida()
+        if not elemento:
+            return None
+        salida.elementos.append(elemento)
+
+        while self._es_separador_salida():
+            self._advance()  # primer '<'
+            self._advance()  # segundo '<'
+            elemento = self._elemento_salida()
+            if not elemento:
+                break
+            salida.elementos.append(elemento)
+
+        salida.children = salida.elementos
+        return salida
+
+    def _elemento_salida(self) -> Optional[ASTNode]:
+        """Un elemento de 'salida': una cadena literal o una expresión."""
         if self._match("STRING"):
             tok_cadena = self.current_token
-            cadena = Cadena(
+            self._advance()
+            return Cadena(
                 linea=tok_cadena.linea,
                 columna=tok_cadena.columna,
                 valor=tok_cadena.valor,
             )
-            salida.elementos.append(cadena)
-            self._advance()
-            if self._match("MENOR"):
-                self._advance()
-                if self._match("MENOR"):
-                    self._advance()
-                    expr = self._expresion()
-                    if expr:
-                        salida.elementos.append(expr)
-        else:
-            expr = self._expresion()
-            if expr:
-                salida.elementos.append(expr)
-                if self._match("MENOR"):
-                    self._advance()
-                    if self._match("MENOR"):
-                        self._advance()
-                        if self._match("STRING"):
-                            tok_cadena = self.current_token
-                            cadena = Cadena(
-                                linea=tok_cadena.linea,
-                                columna=tok_cadena.columna,
-                                valor=tok_cadena.valor,
-                            )
-                            salida.elementos.append(cadena)
-                            self._advance()
+        return self._expresion()
 
-        salida.children = salida.elementos
-        return salida if salida.elementos else None
+    def _es_separador_salida(self) -> bool:
+        """
+        El '<<' de 'salida' llega del léxico como dos MENOR seguidos, porque el
+        DFA no tiene un token propio para él.
+        """
+        if not self._match("MENOR"):
+            return False
+        siguiente = self._peek()
+        return bool(siguiente and siguiente.tipo == "MENOR")
 
     # ========================================================================
     # EXPRESIONES (PRECEDENCIA)
@@ -865,8 +892,11 @@ class Parser:
 
         expr.izquierda = self._expresion_simple()
 
-        if self.current_token and self.current_token.tipo in (
-                "MAYOR", "MENOR", "MAYOR_IGUAL", "MENOR_IGUAL", "IGUAL", "DIFERENTE"):
+        # El '<<' de 'salida' son dos MENOR seguidos: no es un operador relacional.
+        if (self.current_token
+                and self.current_token.tipo in (
+                    "MAYOR", "MENOR", "MAYOR_IGUAL", "MENOR_IGUAL", "IGUAL", "DIFERENTE")
+                and not self._es_separador_salida()):
             tok_op = self.current_token
             expr.operador = tok_op.valor
             expr.operador_linea = tok_op.linea
@@ -1025,6 +1055,7 @@ class Parser:
             self._advance()
             comp.tipo = "expresion"
             comp.expresion = self._expresion()
+            self._check_missing_operator(comp.expresion)
             if not self._consume("PAR_DER", "Se esperaba ')'"):
                 self._skip_on_error("PAR_DER", "PUNTO_COMA", "KW_THEN")
                 if self._match("PAR_DER"):
@@ -1043,7 +1074,12 @@ class Parser:
             except ValueError:
                 comp.valor = 0
                 comp.es_entero = True
-            comp.children = [Numero(linea=comp.linea, columna=comp.columna, valor=comp.valor)]
+            comp.children = [Numero(
+                linea=comp.linea,
+                columna=comp.columna,
+                valor=comp.valor,
+                es_entero=comp.es_entero,
+            )]
             self._advance()
 
         elif self._match("IDENTIFIER"):

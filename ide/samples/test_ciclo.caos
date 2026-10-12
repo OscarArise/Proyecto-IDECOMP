@@ -10,5 +10,5 @@ main {
         contador = contador + 1;
     end
     
-    cout << "La suma es: " << suma;
+    cout "La suma es: " << suma;
 }

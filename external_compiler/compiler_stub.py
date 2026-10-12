@@ -23,7 +23,7 @@ OUTPUT_FILES = {
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Compilador stub del IDE CAOS"
+        description="Compilador del IDE CAOS"
     )
     parser.add_argument(
         "source",
@@ -56,7 +56,7 @@ def main():
     if "lexico" in phases_to_run:
         tokens = _run_lexico(source_code, errors)
         _write(OUTPUT_FILES["lexico"], _format_tokens(tokens))
-        _write(OUTPUT_FILES["errors"], "\n".join(errors) + ("\n" if errors else ""))
+        _write_errors(errors)
 
     if errors:
         sys.exit(1)
@@ -67,7 +67,7 @@ def main():
         _write(OUTPUT_FILES["sintactico"], ast_text)
 
     if errors:
-        _write(OUTPUT_FILES["errors"], "\n".join(errors))
+        _write_errors(errors)
         sys.exit(2)
 
     # Fase 3: Semántico
@@ -77,7 +77,7 @@ def main():
         _write(OUTPUT_FILES["simbolos"], symbol_table)
 
     if errors:
-        _write(OUTPUT_FILES["errors"], "\n".join(errors))
+        _write_errors(errors)
         sys.exit(3)
 
     # Fase 4: Código Intermedio
@@ -86,7 +86,7 @@ def main():
         _write(OUTPUT_FILES["intermedio"], intermediate)
 
     if errors:
-        _write(OUTPUT_FILES["errors"], "\n".join(errors))
+        _write_errors(errors)
         sys.exit(4)
 
     # Fase 5: Ejecución
@@ -95,7 +95,7 @@ def main():
         _write(OUTPUT_FILES["ejecutar"], exec_output)
 
     if errors:
-        _write(OUTPUT_FILES["errors"], "\n".join(errors))
+        _write_errors(errors)
         sys.exit(5)
 
     # Sin errores
@@ -103,8 +103,9 @@ def main():
     sys.exit(0)
 
 
-# Implementaciones stub de cada fase
-# (serán reemplazadas por el compilador real)
+# Implementación de cada fase
+# Léxico y sintáctico están completos; semántico, intermedio y ejecución
+# siguen siendo stubs.
 
 def _run_lexico(source: str, errors: list) -> list[tuple]:
     """
@@ -117,10 +118,8 @@ def _run_lexico(source: str, errors: list) -> list[tuple]:
     con el resto del pipeline del compilador.
 
     Los tokens de tipo ERROR se excluyen de la lista de tokens válidos y
-    sus mensajes se propagan al listado de `errors`.
-
-    TODO: cuando se implemente el reporte a errors.txt con línea/columna,
-          los mensajes de errors[] de aquí deben escribirse en ese archivo.
+    sus mensajes se propagan al listado de `errors`, que `_write_errors`
+    vuelca en errors.txt con línea y columna.
     """
     import sys
     import os
@@ -220,8 +219,10 @@ def _run_sintactico(source: str, tokens: list, errors: list) -> str:
 def _run_semantico(source: str, tokens: list, errors: list) -> tuple[str, str]:
     """
     Stub: retorna (tabla_de_simbolos, info_semantica).
+
+    El Bloque 3 lo reemplaza por la llamada a `semantic.analyze`.
     """
-    idents = {v for t, v, *_ in tokens if t == "IDENT"}
+    idents = {v for t, v, *_ in tokens if t == "IDENTIFIER"}
     symbol_table = (
         "Tabla de Símbolos (stub)\n"
         "========================\n"
@@ -257,6 +258,12 @@ def _run_ejecutar(errors: list) -> str:
 
 def _write(filename: str, content: str):
     Path(filename).write_text(content, encoding="utf-8")
+
+
+def _write_errors(errors: list[str]):
+    """Escribe errors.txt con una línea por error y salto de línea final."""
+    contenido = "\n".join(errors) + "\n" if errors else ""
+    _write(OUTPUT_FILES["errors"], contenido)
 
 
 if __name__ == "__main__":
