@@ -73,7 +73,7 @@ class Panels:
         
         self.tab_sintactico_conectado = self._make_result_tab("Arbol Conectado")
         self.tab_sintactico_analisis = self._make_result_tab("Analisis Sintactico")
-        self.tab_semantico = self._make_result_tab("Semantico")
+        self.tab_semantico = self._make_result_tab("Semantico", wrap="none")
 
         # Fase 3: árbol con anotaciones semánticas
         self.tab_anotado_frame = tk.Frame(self.results_notebook, bg="#1e1e1e")
@@ -91,7 +91,7 @@ class Panels:
         self._build_comparison_tab()
 
         self.tab_intermedio = self._make_result_tab("Intermedio")
-        self.tab_simbolos = self._make_result_tab("Simbolos")
+        self.tab_simbolos = self._make_result_tab("Simbolos", wrap="none")
 
     #Pestaña "Comparacion": AST original (izquierda) y AST anotado (derecha)
     def _build_comparison_tab(self):
@@ -157,16 +157,22 @@ class Panels:
         self.tab_ejecucion = self._make_result_tab("Ejecucion", notebook = self.bottom_notebook)
 
     #Ventana de solo lectura
-    def _make_result_tab(self, title, notebook = None):
+    def _make_result_tab(self, title, notebook = None, wrap = "char"):
         if notebook is None:
             notebook = self.results_notebook
 
         frame = tk.Frame(notebook, bg="#1e1e1e")
         notebook.add(frame, text=title)
 
-        text_widget = tk.Text(frame, state="disabled", bg="#1e1e1e", fg="#d4d4d4", font=("Courier New", 10), relief=tk.FLAT, insertbackground="white")
+        text_widget = tk.Text(frame, state="disabled", bg="#1e1e1e", fg="#d4d4d4", font=("Courier New", 10), relief=tk.FLAT, insertbackground="white", wrap=wrap)
         scrollbar = tk.Scrollbar(frame, command=text_widget.yview)
         text_widget.config(yscrollcommand=scrollbar.set)
+
+        #Sin ajuste de linea (tablas y arboles en texto): desplazamiento horizontal
+        if wrap == "none":
+            hscroll = tk.Scrollbar(frame, orient=tk.HORIZONTAL, command=text_widget.xview)
+            text_widget.config(xscrollcommand=hscroll.set)
+            hscroll.pack(side=tk.BOTTOM, fill=tk.X)
 
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         text_widget.pack(fill=tk.BOTH, expand=True)
