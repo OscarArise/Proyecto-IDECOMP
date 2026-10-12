@@ -1,0 +1,7 @@
+Compiladores II - Fase 3: Análisis Semántico
+Equipo: Proyecto-IDECOMP (compilador e IDE del lenguaje CAOS)
+
+Integrantes (nombre completo y matrícula):
+
+1. Oscar Manuel García Rodríguez  -  Matrícula: __________
+2. Carlos Franco Acosta           -  Matrícula: __________

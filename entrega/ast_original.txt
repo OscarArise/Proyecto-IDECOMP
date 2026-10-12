@@ -1,0 +1,1601 @@
+Árbol Sintáctico Abstracto (AST)
+==================================================
+
+Representación de texto:
+--------------------------------------------------
+PROGRAMA [L1:C1]
+  DECLARACIONES [L2:C5]
+    DECLARACION_VARIABLE: int x, y, z [L2:C5]
+    DECLARACION_VARIABLE: float a, b, c [L3:C5]
+    BLOQUE [L4:C5]
+      ASIGNACION: suma [L4:C5]
+        NUMERO: 45 [L4:C12]
+      ASIGNACION: x [L5:C5]
+        NUMERO: 32.32 [L5:C9]
+      ASIGNACION: x [L6:C5]
+        NUMERO: 23 [L6:C9]
+      ASIGNACION: y [L7:C5]
+        OPERACION: - [L7:C15]
+          OPERACION: + [L7:C11]
+            NUMERO: 2 [L7:C9]
+            NUMERO: 3 [L7:C13]
+          NUMERO: 1 [L7:C17]
+      ASIGNACION: z [L8:C5]
+        OPERACION: + [L8:C11]
+          IDENTIFICADOR: y [L8:C9]
+          NUMERO: 7 [L8:C13]
+      ASIGNACION: y [L9:C5]
+        OPERACION: + [L9:C11]
+          IDENTIFICADOR: y [L9:C9]
+          NUMERO: 1 [L9:C13]
+      ASIGNACION: a [L10:C5]
+        OPERACION: - [L10:C22]
+          OPERACION: + [L10:C19]
+            OPERACION: - [L10:C13]
+              OPERACION: + [L10:C11]
+                NUMERO: 24.0 [L10:C7]
+                NUMERO: 4 [L10:C12]
+              OPERACION: * [L10:C17]
+                OPERACION: / [L10:C15]
+                  NUMERO: 1 [L10:C14]
+                  NUMERO: 3 [L10:C16]
+                NUMERO: 2 [L10:C18]
+            NUMERO: 34 [L10:C20]
+          NUMERO: 1 [L10:C23]
+      ASIGNACION: x [L11:C5]
+        OPERACION: * [L11:C12]
+          OPERACION: - [L11:C9]
+            NUMERO: 5 [L11:C8]
+            NUMERO: 3 [L11:C10]
+          OPERACION: / [L11:C15]
+            NUMERO: 8 [L11:C14]
+            NUMERO: 2 [L11:C16]
+      ASIGNACION: y [L12:C5]
+        OPERACION: - [L12:C16]
+          OPERACION: - [L12:C10]
+            OPERACION: + [L12:C8]
+              NUMERO: 5 [L12:C7]
+              NUMERO: 3 [L12:C9]
+            OPERACION: / [L12:C14]
+              OPERACION: * [L12:C12]
+                NUMERO: 2 [L12:C11]
+                NUMERO: 4 [L12:C13]
+              NUMERO: 7 [L12:C15]
+          NUMERO: 9 [L12:C17]
+      ASIGNACION: z [L13:C5]
+        OPERACION: + [L13:C15]
+          OPERACION: / [L13:C11]
+            NUMERO: 8 [L13:C9]
+            NUMERO: 2 [L13:C13]
+          OPERACION: * [L13:C20]
+            NUMERO: 15 [L13:C17]
+            NUMERO: 4 [L13:C22]
+      ASIGNACION: y [L14:C5]
+        NUMERO: 14.54 [L14:C9]
+      IF [L15:C5]
+        CONDICION [L15:C9]
+          OPERACION: > [L15:C9]
+            NUMERO: 2 [L15:C8]
+            NUMERO: 3 [L15:C10]
+        ENTONCES [L16:C9]
+          BLOQUE [L16:C9]
+            ASIGNACION: y [L16:C9]
+              OPERACION: + [L16:C15]
+                IDENTIFICADOR: a [L16:C13]
+                NUMERO: 3 [L16:C17]
+        SINO [L18:C9]
+          BLOQUE [L18:C9]
+            IF [L18:C9]
+              CONDICION [L18:C16]
+                OPERACION: && [L18:C16]
+                  OPERACION: > [L18:C13]
+                    NUMERO: 4 [L18:C12]
+                    NUMERO: 2 [L18:C14]
+                  BOOLEANO: true [L18:C19]
+              ENTONCES [L19:C13]
+                BLOQUE [L19:C13]
+                  ASIGNACION: b [L19:C13]
+                    NUMERO: 3.2 [L19:C17]
+              SINO [L21:C13]
+                BLOQUE [L21:C13]
+                  ASIGNACION: b [L21:C13]
+                    NUMERO: 5.0 [L21:C17]
+            ASIGNACION: y [L23:C9]
+              OPERACION: + [L23:C15]
+                IDENTIFICADOR: y [L23:C13]
+                NUMERO: 1 [L23:C17]
+      INCREMENTO: a [L25:C5]
+      DECREMENTO: c [L26:C5]
+      ASIGNACION: x [L27:C5]
+        OPERACION: + [L27:C11]
+          NUMERO: 3 [L27:C9]
+          NUMERO: 4 [L27:C13]
+      DO_WHILE_UNTIL [L28:C5]
+        CUERPO_DO [L29:C9]
+          BLOQUE [L29:C9]
+            ASIGNACION: y [L29:C9]
+              OPERACION: + [L29:C25]
+                OPERACION: * [L29:C21]
+                  OPERACION: + [L29:C16]
+                    IDENTIFICADOR: y [L29:C14]
+                    NUMERO: 1 [L29:C18]
+                  NUMERO: 2 [L29:C23]
+                NUMERO: 1 [L29:C27]
+        CONDICION_WHILE [L30:C17]
+          OPERACION: > [L30:C17]
+            IDENTIFICADOR: x [L30:C15]
+            NUMERO: 7 [L30:C19]
+        CUERPO_WHILE [L31:C13]
+          BLOQUE [L31:C13]
+            ASIGNACION: x [L31:C13]
+              OPERACION: + [L31:C19]
+                NUMERO: 6 [L31:C17]
+                OPERACION: / [L31:C31]
+                  OPERACION: * [L31:C27]
+                    OPERACION: / [L31:C23]
+                      NUMERO: 8 [L31:C21]
+                      NUMERO: 9 [L31:C25]
+                    NUMERO: 8 [L31:C29]
+                  NUMERO: 3 [L31:C33]
+            ENTRADA: cin x [L32:C13]
+            ASIGNACION: mas [L33:C13]
+              OPERACION: / [L33:C22]
+                NUMERO: 36 [L33:C19]
+                NUMERO: 7 [L33:C24]
+        CONDICION_UNTIL [L35:C13]
+          OPERACION: == [L35:C13]
+            IDENTIFICADOR: y [L35:C11]
+            NUMERO: 5 [L35:C16]
+      WHILE [L36:C5]
+        CONDICION [L36:C13]
+          OPERACION: == [L36:C13]
+            IDENTIFICADOR: y [L36:C11]
+            NUMERO: 0 [L36:C16]
+        CUERPO [L37:C9]
+          BLOQUE [L37:C9]
+            ENTRADA: cin mas [L37:C9]
+            SALIDA: cout [L38:C9]
+              SALIDA [L38:C14]
+                IDENTIFICADOR: x [L38:C14]
+
+Representación estructurada (para visualización):
+--------------------------------------------------
+{
+  "type": "Programa",
+  "linea": 1,
+  "columna": 1,
+  "label": "PROGRAMA",
+  "children": [
+    {
+      "type": "ListaDeclaracion",
+      "linea": 2,
+      "columna": 5,
+      "label": "DECLARACIONES",
+      "children": [
+        {
+          "type": "DeclaracionVariable",
+          "linea": 2,
+          "columna": 5,
+          "label": "DECLARACION_VARIABLE: int x, y, z",
+          "children": [],
+          "tipo": "int",
+          "tipo_lexema": "int",
+          "identificadores": [
+            {
+              "nombre": "x",
+              "linea": 2,
+              "columna": 9
+            },
+            {
+              "nombre": "y",
+              "linea": 2,
+              "columna": 12
+            },
+            {
+              "nombre": "z",
+              "linea": 2,
+              "columna": 15
+            }
+          ]
+        },
+        {
+          "type": "DeclaracionVariable",
+          "linea": 3,
+          "columna": 5,
+          "label": "DECLARACION_VARIABLE: float a, b, c",
+          "children": [],
+          "tipo": "float",
+          "tipo_lexema": "float",
+          "identificadores": [
+            {
+              "nombre": "a",
+              "linea": 3,
+              "columna": 11
+            },
+            {
+              "nombre": "b",
+              "linea": 3,
+              "columna": 14
+            },
+            {
+              "nombre": "c",
+              "linea": 3,
+              "columna": 17
+            }
+          ]
+        },
+        {
+          "type": "ListaSentencias",
+          "linea": 4,
+          "columna": 5,
+          "label": "BLOQUE",
+          "children": [
+            {
+              "type": "Asignacion",
+              "linea": 4,
+              "columna": 5,
+              "label": "ASIGNACION: suma",
+              "children": [
+                {
+                  "type": "Literal",
+                  "linea": 4,
+                  "columna": 12,
+                  "label": "NUMERO: 45",
+                  "children": [],
+                  "tipo_literal": "entero",
+                  "es_entero": true,
+                  "valor": 45
+                }
+              ],
+              "identificador": "suma"
+            },
+            {
+              "type": "Asignacion",
+              "linea": 5,
+              "columna": 5,
+              "label": "ASIGNACION: x",
+              "children": [
+                {
+                  "type": "Literal",
+                  "linea": 5,
+                  "columna": 9,
+                  "label": "NUMERO: 32.32",
+                  "children": [],
+                  "tipo_literal": "flotante",
+                  "es_entero": false,
+                  "valor": 32.32
+                }
+              ],
+              "identificador": "x"
+            },
+            {
+              "type": "Asignacion",
+              "linea": 6,
+              "columna": 5,
+              "label": "ASIGNACION: x",
+              "children": [
+                {
+                  "type": "Literal",
+                  "linea": 6,
+                  "columna": 9,
+                  "label": "NUMERO: 23",
+                  "children": [],
+                  "tipo_literal": "entero",
+                  "es_entero": true,
+                  "valor": 23
+                }
+              ],
+              "identificador": "x"
+            },
+            {
+              "type": "Asignacion",
+              "linea": 7,
+              "columna": 5,
+              "label": "ASIGNACION: y",
+              "children": [
+                {
+                  "type": "OperacionBinaria",
+                  "linea": 7,
+                  "columna": 15,
+                  "label": "OPERACION: -",
+                  "operador": "-",
+                  "children": [
+                    {
+                      "type": "OperacionBinaria",
+                      "linea": 7,
+                      "columna": 11,
+                      "label": "OPERACION: +",
+                      "operador": "+",
+                      "children": [
+                        {
+                          "type": "Literal",
+                          "linea": 7,
+                          "columna": 9,
+                          "label": "NUMERO: 2",
+                          "children": [],
+                          "tipo_literal": "entero",
+                          "es_entero": true,
+                          "valor": 2
+                        },
+                        {
+                          "type": "Literal",
+                          "linea": 7,
+                          "columna": 13,
+                          "label": "NUMERO: 3",
+                          "children": [],
+                          "tipo_literal": "entero",
+                          "es_entero": true,
+                          "valor": 3
+                        }
+                      ]
+                    },
+                    {
+                      "type": "Literal",
+                      "linea": 7,
+                      "columna": 17,
+                      "label": "NUMERO: 1",
+                      "children": [],
+                      "tipo_literal": "entero",
+                      "es_entero": true,
+                      "valor": 1
+                    }
+                  ]
+                }
+              ],
+              "identificador": "y"
+            },
+            {
+              "type": "Asignacion",
+              "linea": 8,
+              "columna": 5,
+              "label": "ASIGNACION: z",
+              "children": [
+                {
+                  "type": "OperacionBinaria",
+                  "linea": 8,
+                  "columna": 11,
+                  "label": "OPERACION: +",
+                  "operador": "+",
+                  "children": [
+                    {
+                      "type": "Identificador",
+                      "linea": 8,
+                      "columna": 9,
+                      "label": "IDENTIFICADOR: y",
+                      "children": [],
+                      "nombre": "y"
+                    },
+                    {
+                      "type": "Literal",
+                      "linea": 8,
+                      "columna": 13,
+                      "label": "NUMERO: 7",
+                      "children": [],
+                      "tipo_literal": "entero",
+                      "es_entero": true,
+                      "valor": 7
+                    }
+                  ]
+                }
+              ],
+              "identificador": "z"
+            },
+            {
+              "type": "Asignacion",
+              "linea": 9,
+              "columna": 5,
+              "label": "ASIGNACION: y",
+              "children": [
+                {
+                  "type": "OperacionBinaria",
+                  "linea": 9,
+                  "columna": 11,
+                  "label": "OPERACION: +",
+                  "operador": "+",
+                  "children": [
+                    {
+                      "type": "Identificador",
+                      "linea": 9,
+                      "columna": 9,
+                      "label": "IDENTIFICADOR: y",
+                      "children": [],
+                      "nombre": "y"
+                    },
+                    {
+                      "type": "Literal",
+                      "linea": 9,
+                      "columna": 13,
+                      "label": "NUMERO: 1",
+                      "children": [],
+                      "tipo_literal": "entero",
+                      "es_entero": true,
+                      "valor": 1
+                    }
+                  ]
+                }
+              ],
+              "identificador": "y"
+            },
+            {
+              "type": "Asignacion",
+              "linea": 10,
+              "columna": 5,
+              "label": "ASIGNACION: a",
+              "children": [
+                {
+                  "type": "OperacionBinaria",
+                  "linea": 10,
+                  "columna": 22,
+                  "label": "OPERACION: -",
+                  "operador": "-",
+                  "children": [
+                    {
+                      "type": "OperacionBinaria",
+                      "linea": 10,
+                      "columna": 19,
+                      "label": "OPERACION: +",
+                      "operador": "+",
+                      "children": [
+                        {
+                          "type": "OperacionBinaria",
+                          "linea": 10,
+                          "columna": 13,
+                          "label": "OPERACION: -",
+                          "operador": "-",
+                          "children": [
+                            {
+                              "type": "OperacionBinaria",
+                              "linea": 10,
+                              "columna": 11,
+                              "label": "OPERACION: +",
+                              "operador": "+",
+                              "children": [
+                                {
+                                  "type": "Literal",
+                                  "linea": 10,
+                                  "columna": 7,
+                                  "label": "NUMERO: 24.0",
+                                  "children": [],
+                                  "tipo_literal": "flotante",
+                                  "es_entero": false,
+                                  "valor": 24.0
+                                },
+                                {
+                                  "type": "Literal",
+                                  "linea": 10,
+                                  "columna": 12,
+                                  "label": "NUMERO: 4",
+                                  "children": [],
+                                  "tipo_literal": "entero",
+                                  "es_entero": true,
+                                  "valor": 4
+                                }
+                              ]
+                            },
+                            {
+                              "type": "OperacionBinaria",
+                              "linea": 10,
+                              "columna": 17,
+                              "label": "OPERACION: *",
+                              "operador": "*",
+                              "children": [
+                                {
+                                  "type": "OperacionBinaria",
+                                  "linea": 10,
+                                  "columna": 15,
+                                  "label": "OPERACION: /",
+                                  "operador": "/",
+                                  "children": [
+                                    {
+                                      "type": "Literal",
+                                      "linea": 10,
+                                      "columna": 14,
+                                      "label": "NUMERO: 1",
+                                      "children": [],
+                                      "tipo_literal": "entero",
+                                      "es_entero": true,
+                                      "valor": 1
+                                    },
+                                    {
+                                      "type": "Literal",
+                                      "linea": 10,
+                                      "columna": 16,
+                                      "label": "NUMERO: 3",
+                                      "children": [],
+                                      "tipo_literal": "entero",
+                                      "es_entero": true,
+                                      "valor": 3
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "Literal",
+                                  "linea": 10,
+                                  "columna": 18,
+                                  "label": "NUMERO: 2",
+                                  "children": [],
+                                  "tipo_literal": "entero",
+                                  "es_entero": true,
+                                  "valor": 2
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "Literal",
+                          "linea": 10,
+                          "columna": 20,
+                          "label": "NUMERO: 34",
+                          "children": [],
+                          "tipo_literal": "entero",
+                          "es_entero": true,
+                          "valor": 34
+                        }
+                      ]
+                    },
+                    {
+                      "type": "Literal",
+                      "linea": 10,
+                      "columna": 23,
+                      "label": "NUMERO: 1",
+                      "children": [],
+                      "tipo_literal": "entero",
+                      "es_entero": true,
+                      "valor": 1
+                    }
+                  ]
+                }
+              ],
+              "identificador": "a"
+            },
+            {
+              "type": "Asignacion",
+              "linea": 11,
+              "columna": 5,
+              "label": "ASIGNACION: x",
+              "children": [
+                {
+                  "type": "OperacionBinaria",
+                  "linea": 11,
+                  "columna": 12,
+                  "label": "OPERACION: *",
+                  "operador": "*",
+                  "children": [
+                    {
+                      "type": "OperacionBinaria",
+                      "linea": 11,
+                      "columna": 9,
+                      "label": "OPERACION: -",
+                      "operador": "-",
+                      "children": [
+                        {
+                          "type": "Literal",
+                          "linea": 11,
+                          "columna": 8,
+                          "label": "NUMERO: 5",
+                          "children": [],
+                          "tipo_literal": "entero",
+                          "es_entero": true,
+                          "valor": 5
+                        },
+                        {
+                          "type": "Literal",
+                          "linea": 11,
+                          "columna": 10,
+                          "label": "NUMERO: 3",
+                          "children": [],
+                          "tipo_literal": "entero",
+                          "es_entero": true,
+                          "valor": 3
+                        }
+                      ]
+                    },
+                    {
+                      "type": "OperacionBinaria",
+                      "linea": 11,
+                      "columna": 15,
+                      "label": "OPERACION: /",
+                      "operador": "/",
+                      "children": [
+                        {
+                          "type": "Literal",
+                          "linea": 11,
+                          "columna": 14,
+                          "label": "NUMERO: 8",
+                          "children": [],
+                          "tipo_literal": "entero",
+                          "es_entero": true,
+                          "valor": 8
+                        },
+                        {
+                          "type": "Literal",
+                          "linea": 11,
+                          "columna": 16,
+                          "label": "NUMERO: 2",
+                          "children": [],
+                          "tipo_literal": "entero",
+                          "es_entero": true,
+                          "valor": 2
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "identificador": "x"
+            },
+            {
+              "type": "Asignacion",
+              "linea": 12,
+              "columna": 5,
+              "label": "ASIGNACION: y",
+              "children": [
+                {
+                  "type": "OperacionBinaria",
+                  "linea": 12,
+                  "columna": 16,
+                  "label": "OPERACION: -",
+                  "operador": "-",
+                  "children": [
+                    {
+                      "type": "OperacionBinaria",
+                      "linea": 12,
+                      "columna": 10,
+                      "label": "OPERACION: -",
+                      "operador": "-",
+                      "children": [
+                        {
+                          "type": "OperacionBinaria",
+                          "linea": 12,
+                          "columna": 8,
+                          "label": "OPERACION: +",
+                          "operador": "+",
+                          "children": [
+                            {
+                              "type": "Literal",
+                              "linea": 12,
+                              "columna": 7,
+                              "label": "NUMERO: 5",
+                              "children": [],
+                              "tipo_literal": "entero",
+                              "es_entero": true,
+                              "valor": 5
+                            },
+                            {
+                              "type": "Literal",
+                              "linea": 12,
+                              "columna": 9,
+                              "label": "NUMERO: 3",
+                              "children": [],
+                              "tipo_literal": "entero",
+                              "es_entero": true,
+                              "valor": 3
+                            }
+                          ]
+                        },
+                        {
+                          "type": "OperacionBinaria",
+                          "linea": 12,
+                          "columna": 14,
+                          "label": "OPERACION: /",
+                          "operador": "/",
+                          "children": [
+                            {
+                              "type": "OperacionBinaria",
+                              "linea": 12,
+                              "columna": 12,
+                              "label": "OPERACION: *",
+                              "operador": "*",
+                              "children": [
+                                {
+                                  "type": "Literal",
+                                  "linea": 12,
+                                  "columna": 11,
+                                  "label": "NUMERO: 2",
+                                  "children": [],
+                                  "tipo_literal": "entero",
+                                  "es_entero": true,
+                                  "valor": 2
+                                },
+                                {
+                                  "type": "Literal",
+                                  "linea": 12,
+                                  "columna": 13,
+                                  "label": "NUMERO: 4",
+                                  "children": [],
+                                  "tipo_literal": "entero",
+                                  "es_entero": true,
+                                  "valor": 4
+                                }
+                              ]
+                            },
+                            {
+                              "type": "Literal",
+                              "linea": 12,
+                              "columna": 15,
+                              "label": "NUMERO: 7",
+                              "children": [],
+                              "tipo_literal": "entero",
+                              "es_entero": true,
+                              "valor": 7
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "Literal",
+                      "linea": 12,
+                      "columna": 17,
+                      "label": "NUMERO: 9",
+                      "children": [],
+                      "tipo_literal": "entero",
+                      "es_entero": true,
+                      "valor": 9
+                    }
+                  ]
+                }
+              ],
+              "identificador": "y"
+            },
+            {
+              "type": "Asignacion",
+              "linea": 13,
+              "columna": 5,
+              "label": "ASIGNACION: z",
+              "children": [
+                {
+                  "type": "OperacionBinaria",
+                  "linea": 13,
+                  "columna": 15,
+                  "label": "OPERACION: +",
+                  "operador": "+",
+                  "children": [
+                    {
+                      "type": "OperacionBinaria",
+                      "linea": 13,
+                      "columna": 11,
+                      "label": "OPERACION: /",
+                      "operador": "/",
+                      "children": [
+                        {
+                          "type": "Literal",
+                          "linea": 13,
+                          "columna": 9,
+                          "label": "NUMERO: 8",
+                          "children": [],
+                          "tipo_literal": "entero",
+                          "es_entero": true,
+                          "valor": 8
+                        },
+                        {
+                          "type": "Literal",
+                          "linea": 13,
+                          "columna": 13,
+                          "label": "NUMERO: 2",
+                          "children": [],
+                          "tipo_literal": "entero",
+                          "es_entero": true,
+                          "valor": 2
+                        }
+                      ]
+                    },
+                    {
+                      "type": "OperacionBinaria",
+                      "linea": 13,
+                      "columna": 20,
+                      "label": "OPERACION: *",
+                      "operador": "*",
+                      "children": [
+                        {
+                          "type": "Literal",
+                          "linea": 13,
+                          "columna": 17,
+                          "label": "NUMERO: 15",
+                          "children": [],
+                          "tipo_literal": "entero",
+                          "es_entero": true,
+                          "valor": 15
+                        },
+                        {
+                          "type": "Literal",
+                          "linea": 13,
+                          "columna": 22,
+                          "label": "NUMERO: 4",
+                          "children": [],
+                          "tipo_literal": "entero",
+                          "es_entero": true,
+                          "valor": 4
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "identificador": "z"
+            },
+            {
+              "type": "Asignacion",
+              "linea": 14,
+              "columna": 5,
+              "label": "ASIGNACION: y",
+              "children": [
+                {
+                  "type": "Literal",
+                  "linea": 14,
+                  "columna": 9,
+                  "label": "NUMERO: 14.54",
+                  "children": [],
+                  "tipo_literal": "flotante",
+                  "es_entero": false,
+                  "valor": 14.54
+                }
+              ],
+              "identificador": "y"
+            },
+            {
+              "type": "Seleccion",
+              "linea": 15,
+              "columna": 5,
+              "label": "IF",
+              "children": [
+                {
+                  "type": "SeccionAST",
+                  "linea": 15,
+                  "columna": 9,
+                  "label": "CONDICION",
+                  "children": [
+                    {
+                      "type": "OperacionBinaria",
+                      "linea": 15,
+                      "columna": 9,
+                      "label": "OPERACION: >",
+                      "operador": ">",
+                      "children": [
+                        {
+                          "type": "Literal",
+                          "linea": 15,
+                          "columna": 8,
+                          "label": "NUMERO: 2",
+                          "children": [],
+                          "tipo_literal": "entero",
+                          "es_entero": true,
+                          "valor": 2
+                        },
+                        {
+                          "type": "Literal",
+                          "linea": 15,
+                          "columna": 10,
+                          "label": "NUMERO: 3",
+                          "children": [],
+                          "tipo_literal": "entero",
+                          "es_entero": true,
+                          "valor": 3
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "SeccionAST",
+                  "linea": 16,
+                  "columna": 9,
+                  "label": "ENTONCES",
+                  "children": [
+                    {
+                      "type": "ListaSentencias",
+                      "linea": 16,
+                      "columna": 9,
+                      "label": "BLOQUE",
+                      "children": [
+                        {
+                          "type": "Asignacion",
+                          "linea": 16,
+                          "columna": 9,
+                          "label": "ASIGNACION: y",
+                          "children": [
+                            {
+                              "type": "OperacionBinaria",
+                              "linea": 16,
+                              "columna": 15,
+                              "label": "OPERACION: +",
+                              "operador": "+",
+                              "children": [
+                                {
+                                  "type": "Identificador",
+                                  "linea": 16,
+                                  "columna": 13,
+                                  "label": "IDENTIFICADOR: a",
+                                  "children": [],
+                                  "nombre": "a"
+                                },
+                                {
+                                  "type": "Literal",
+                                  "linea": 16,
+                                  "columna": 17,
+                                  "label": "NUMERO: 3",
+                                  "children": [],
+                                  "tipo_literal": "entero",
+                                  "es_entero": true,
+                                  "valor": 3
+                                }
+                              ]
+                            }
+                          ],
+                          "identificador": "y"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "SeccionAST",
+                  "linea": 18,
+                  "columna": 9,
+                  "label": "SINO",
+                  "children": [
+                    {
+                      "type": "ListaSentencias",
+                      "linea": 18,
+                      "columna": 9,
+                      "label": "BLOQUE",
+                      "children": [
+                        {
+                          "type": "Seleccion",
+                          "linea": 18,
+                          "columna": 9,
+                          "label": "IF",
+                          "children": [
+                            {
+                              "type": "SeccionAST",
+                              "linea": 18,
+                              "columna": 16,
+                              "label": "CONDICION",
+                              "children": [
+                                {
+                                  "type": "OperacionBinaria",
+                                  "linea": 18,
+                                  "columna": 16,
+                                  "label": "OPERACION: &&",
+                                  "operador": "&&",
+                                  "children": [
+                                    {
+                                      "type": "OperacionBinaria",
+                                      "linea": 18,
+                                      "columna": 13,
+                                      "label": "OPERACION: >",
+                                      "operador": ">",
+                                      "children": [
+                                        {
+                                          "type": "Literal",
+                                          "linea": 18,
+                                          "columna": 12,
+                                          "label": "NUMERO: 4",
+                                          "children": [],
+                                          "tipo_literal": "entero",
+                                          "es_entero": true,
+                                          "valor": 4
+                                        },
+                                        {
+                                          "type": "Literal",
+                                          "linea": 18,
+                                          "columna": 14,
+                                          "label": "NUMERO: 2",
+                                          "children": [],
+                                          "tipo_literal": "entero",
+                                          "es_entero": true,
+                                          "valor": 2
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "Literal",
+                                      "linea": 18,
+                                      "columna": 19,
+                                      "label": "BOOLEANO: true",
+                                      "children": [],
+                                      "tipo_literal": "booleano",
+                                      "valor": true
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "SeccionAST",
+                              "linea": 19,
+                              "columna": 13,
+                              "label": "ENTONCES",
+                              "children": [
+                                {
+                                  "type": "ListaSentencias",
+                                  "linea": 19,
+                                  "columna": 13,
+                                  "label": "BLOQUE",
+                                  "children": [
+                                    {
+                                      "type": "Asignacion",
+                                      "linea": 19,
+                                      "columna": 13,
+                                      "label": "ASIGNACION: b",
+                                      "children": [
+                                        {
+                                          "type": "Literal",
+                                          "linea": 19,
+                                          "columna": 17,
+                                          "label": "NUMERO: 3.2",
+                                          "children": [],
+                                          "tipo_literal": "flotante",
+                                          "es_entero": false,
+                                          "valor": 3.2
+                                        }
+                                      ],
+                                      "identificador": "b"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "SeccionAST",
+                              "linea": 21,
+                              "columna": 13,
+                              "label": "SINO",
+                              "children": [
+                                {
+                                  "type": "ListaSentencias",
+                                  "linea": 21,
+                                  "columna": 13,
+                                  "label": "BLOQUE",
+                                  "children": [
+                                    {
+                                      "type": "Asignacion",
+                                      "linea": 21,
+                                      "columna": 13,
+                                      "label": "ASIGNACION: b",
+                                      "children": [
+                                        {
+                                          "type": "Literal",
+                                          "linea": 21,
+                                          "columna": 17,
+                                          "label": "NUMERO: 5.0",
+                                          "children": [],
+                                          "tipo_literal": "flotante",
+                                          "es_entero": false,
+                                          "valor": 5.0
+                                        }
+                                      ],
+                                      "identificador": "b"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "Asignacion",
+                          "linea": 23,
+                          "columna": 9,
+                          "label": "ASIGNACION: y",
+                          "children": [
+                            {
+                              "type": "OperacionBinaria",
+                              "linea": 23,
+                              "columna": 15,
+                              "label": "OPERACION: +",
+                              "operador": "+",
+                              "children": [
+                                {
+                                  "type": "Identificador",
+                                  "linea": 23,
+                                  "columna": 13,
+                                  "label": "IDENTIFICADOR: y",
+                                  "children": [],
+                                  "nombre": "y"
+                                },
+                                {
+                                  "type": "Literal",
+                                  "linea": 23,
+                                  "columna": 17,
+                                  "label": "NUMERO: 1",
+                                  "children": [],
+                                  "tipo_literal": "entero",
+                                  "es_entero": true,
+                                  "valor": 1
+                                }
+                              ]
+                            }
+                          ],
+                          "identificador": "y"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "IncrementoDecremento",
+              "linea": 25,
+              "columna": 5,
+              "label": "INCREMENTO: a",
+              "children": [],
+              "identificador": "a",
+              "operador": "++"
+            },
+            {
+              "type": "IncrementoDecremento",
+              "linea": 26,
+              "columna": 5,
+              "label": "DECREMENTO: c",
+              "children": [],
+              "identificador": "c",
+              "operador": "--"
+            },
+            {
+              "type": "Asignacion",
+              "linea": 27,
+              "columna": 5,
+              "label": "ASIGNACION: x",
+              "children": [
+                {
+                  "type": "OperacionBinaria",
+                  "linea": 27,
+                  "columna": 11,
+                  "label": "OPERACION: +",
+                  "operador": "+",
+                  "children": [
+                    {
+                      "type": "Literal",
+                      "linea": 27,
+                      "columna": 9,
+                      "label": "NUMERO: 3",
+                      "children": [],
+                      "tipo_literal": "entero",
+                      "es_entero": true,
+                      "valor": 3
+                    },
+                    {
+                      "type": "Literal",
+                      "linea": 27,
+                      "columna": 13,
+                      "label": "NUMERO: 4",
+                      "children": [],
+                      "tipo_literal": "entero",
+                      "es_entero": true,
+                      "valor": 4
+                    }
+                  ]
+                }
+              ],
+              "identificador": "x"
+            },
+            {
+              "type": "Repeticion",
+              "linea": 28,
+              "columna": 5,
+              "label": "DO_WHILE_UNTIL",
+              "children": [
+                {
+                  "type": "SeccionAST",
+                  "linea": 29,
+                  "columna": 9,
+                  "label": "CUERPO_DO",
+                  "children": [
+                    {
+                      "type": "ListaSentencias",
+                      "linea": 29,
+                      "columna": 9,
+                      "label": "BLOQUE",
+                      "children": [
+                        {
+                          "type": "Asignacion",
+                          "linea": 29,
+                          "columna": 9,
+                          "label": "ASIGNACION: y",
+                          "children": [
+                            {
+                              "type": "OperacionBinaria",
+                              "linea": 29,
+                              "columna": 25,
+                              "label": "OPERACION: +",
+                              "operador": "+",
+                              "children": [
+                                {
+                                  "type": "OperacionBinaria",
+                                  "linea": 29,
+                                  "columna": 21,
+                                  "label": "OPERACION: *",
+                                  "operador": "*",
+                                  "children": [
+                                    {
+                                      "type": "OperacionBinaria",
+                                      "linea": 29,
+                                      "columna": 16,
+                                      "label": "OPERACION: +",
+                                      "operador": "+",
+                                      "children": [
+                                        {
+                                          "type": "Identificador",
+                                          "linea": 29,
+                                          "columna": 14,
+                                          "label": "IDENTIFICADOR: y",
+                                          "children": [],
+                                          "nombre": "y"
+                                        },
+                                        {
+                                          "type": "Literal",
+                                          "linea": 29,
+                                          "columna": 18,
+                                          "label": "NUMERO: 1",
+                                          "children": [],
+                                          "tipo_literal": "entero",
+                                          "es_entero": true,
+                                          "valor": 1
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "Literal",
+                                      "linea": 29,
+                                      "columna": 23,
+                                      "label": "NUMERO: 2",
+                                      "children": [],
+                                      "tipo_literal": "entero",
+                                      "es_entero": true,
+                                      "valor": 2
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "Literal",
+                                  "linea": 29,
+                                  "columna": 27,
+                                  "label": "NUMERO: 1",
+                                  "children": [],
+                                  "tipo_literal": "entero",
+                                  "es_entero": true,
+                                  "valor": 1
+                                }
+                              ]
+                            }
+                          ],
+                          "identificador": "y"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "SeccionAST",
+                  "linea": 30,
+                  "columna": 17,
+                  "label": "CONDICION_WHILE",
+                  "children": [
+                    {
+                      "type": "OperacionBinaria",
+                      "linea": 30,
+                      "columna": 17,
+                      "label": "OPERACION: >",
+                      "operador": ">",
+                      "children": [
+                        {
+                          "type": "Identificador",
+                          "linea": 30,
+                          "columna": 15,
+                          "label": "IDENTIFICADOR: x",
+                          "children": [],
+                          "nombre": "x"
+                        },
+                        {
+                          "type": "Literal",
+                          "linea": 30,
+                          "columna": 19,
+                          "label": "NUMERO: 7",
+                          "children": [],
+                          "tipo_literal": "entero",
+                          "es_entero": true,
+                          "valor": 7
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "SeccionAST",
+                  "linea": 31,
+                  "columna": 13,
+                  "label": "CUERPO_WHILE",
+                  "children": [
+                    {
+                      "type": "ListaSentencias",
+                      "linea": 31,
+                      "columna": 13,
+                      "label": "BLOQUE",
+                      "children": [
+                        {
+                          "type": "Asignacion",
+                          "linea": 31,
+                          "columna": 13,
+                          "label": "ASIGNACION: x",
+                          "children": [
+                            {
+                              "type": "OperacionBinaria",
+                              "linea": 31,
+                              "columna": 19,
+                              "label": "OPERACION: +",
+                              "operador": "+",
+                              "children": [
+                                {
+                                  "type": "Literal",
+                                  "linea": 31,
+                                  "columna": 17,
+                                  "label": "NUMERO: 6",
+                                  "children": [],
+                                  "tipo_literal": "entero",
+                                  "es_entero": true,
+                                  "valor": 6
+                                },
+                                {
+                                  "type": "OperacionBinaria",
+                                  "linea": 31,
+                                  "columna": 31,
+                                  "label": "OPERACION: /",
+                                  "operador": "/",
+                                  "children": [
+                                    {
+                                      "type": "OperacionBinaria",
+                                      "linea": 31,
+                                      "columna": 27,
+                                      "label": "OPERACION: *",
+                                      "operador": "*",
+                                      "children": [
+                                        {
+                                          "type": "OperacionBinaria",
+                                          "linea": 31,
+                                          "columna": 23,
+                                          "label": "OPERACION: /",
+                                          "operador": "/",
+                                          "children": [
+                                            {
+                                              "type": "Literal",
+                                              "linea": 31,
+                                              "columna": 21,
+                                              "label": "NUMERO: 8",
+                                              "children": [],
+                                              "tipo_literal": "entero",
+                                              "es_entero": true,
+                                              "valor": 8
+                                            },
+                                            {
+                                              "type": "Literal",
+                                              "linea": 31,
+                                              "columna": 25,
+                                              "label": "NUMERO: 9",
+                                              "children": [],
+                                              "tipo_literal": "entero",
+                                              "es_entero": true,
+                                              "valor": 9
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "Literal",
+                                          "linea": 31,
+                                          "columna": 29,
+                                          "label": "NUMERO: 8",
+                                          "children": [],
+                                          "tipo_literal": "entero",
+                                          "es_entero": true,
+                                          "valor": 8
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "Literal",
+                                      "linea": 31,
+                                      "columna": 33,
+                                      "label": "NUMERO: 3",
+                                      "children": [],
+                                      "tipo_literal": "entero",
+                                      "es_entero": true,
+                                      "valor": 3
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "identificador": "x"
+                        },
+                        {
+                          "type": "EntradaEstandar",
+                          "linea": 32,
+                          "columna": 13,
+                          "label": "ENTRADA: cin x",
+                          "children": [],
+                          "identificador": "x",
+                          "identificador_linea": 32,
+                          "identificador_columna": 17
+                        },
+                        {
+                          "type": "Asignacion",
+                          "linea": 33,
+                          "columna": 13,
+                          "label": "ASIGNACION: mas",
+                          "children": [
+                            {
+                              "type": "OperacionBinaria",
+                              "linea": 33,
+                              "columna": 22,
+                              "label": "OPERACION: /",
+                              "operador": "/",
+                              "children": [
+                                {
+                                  "type": "Literal",
+                                  "linea": 33,
+                                  "columna": 19,
+                                  "label": "NUMERO: 36",
+                                  "children": [],
+                                  "tipo_literal": "entero",
+                                  "es_entero": true,
+                                  "valor": 36
+                                },
+                                {
+                                  "type": "Literal",
+                                  "linea": 33,
+                                  "columna": 24,
+                                  "label": "NUMERO: 7",
+                                  "children": [],
+                                  "tipo_literal": "entero",
+                                  "es_entero": true,
+                                  "valor": 7
+                                }
+                              ]
+                            }
+                          ],
+                          "identificador": "mas"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "SeccionAST",
+                  "linea": 35,
+                  "columna": 13,
+                  "label": "CONDICION_UNTIL",
+                  "children": [
+                    {
+                      "type": "OperacionBinaria",
+                      "linea": 35,
+                      "columna": 13,
+                      "label": "OPERACION: ==",
+                      "operador": "==",
+                      "children": [
+                        {
+                          "type": "Identificador",
+                          "linea": 35,
+                          "columna": 11,
+                          "label": "IDENTIFICADOR: y",
+                          "children": [],
+                          "nombre": "y"
+                        },
+                        {
+                          "type": "Literal",
+                          "linea": 35,
+                          "columna": 16,
+                          "label": "NUMERO: 5",
+                          "children": [],
+                          "tipo_literal": "entero",
+                          "es_entero": true,
+                          "valor": 5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "Iteracion",
+              "linea": 36,
+              "columna": 5,
+              "label": "WHILE",
+              "children": [
+                {
+                  "type": "SeccionAST",
+                  "linea": 36,
+                  "columna": 13,
+                  "label": "CONDICION",
+                  "children": [
+                    {
+                      "type": "OperacionBinaria",
+                      "linea": 36,
+                      "columna": 13,
+                      "label": "OPERACION: ==",
+                      "operador": "==",
+                      "children": [
+                        {
+                          "type": "Identificador",
+                          "linea": 36,
+                          "columna": 11,
+                          "label": "IDENTIFICADOR: y",
+                          "children": [],
+                          "nombre": "y"
+                        },
+                        {
+                          "type": "Literal",
+                          "linea": 36,
+                          "columna": 16,
+                          "label": "NUMERO: 0",
+                          "children": [],
+                          "tipo_literal": "entero",
+                          "es_entero": true,
+                          "valor": 0
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "SeccionAST",
+                  "linea": 37,
+                  "columna": 9,
+                  "label": "CUERPO",
+                  "children": [
+                    {
+                      "type": "ListaSentencias",
+                      "linea": 37,
+                      "columna": 9,
+                      "label": "BLOQUE",
+                      "children": [
+                        {
+                          "type": "EntradaEstandar",
+                          "linea": 37,
+                          "columna": 9,
+                          "label": "ENTRADA: cin mas",
+                          "children": [],
+                          "identificador": "mas",
+                          "identificador_linea": 37,
+                          "identificador_columna": 13
+                        },
+                        {
+                          "type": "SalidaEstandar",
+                          "linea": 38,
+                          "columna": 9,
+                          "label": "SALIDA: cout",
+                          "children": [
+                            {
+                              "type": "Salida",
+                              "linea": 38,
+                              "columna": 14,
+                              "label": "SALIDA",
+                              "children": [
+                                {
+                                  "type": "Identificador",
+                                  "linea": 38,
+                                  "columna": 14,
+                                  "label": "IDENTIFICADOR: x",
+                                  "children": [],
+                                  "nombre": "x"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+Sin errores sintácticos.

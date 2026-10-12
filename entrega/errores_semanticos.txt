@@ -1,0 +1,6 @@
+[SEMANTICO] [4:5] Error semántico E1: 'suma' no está declarada
+[SEMANTICO] [5:5] Error semántico E4: No se puede asignar un valor float a 'x', que es int (la conversión float → int no está permitida)
+[SEMANTICO] [14:5] Error semántico E4: No se puede asignar un valor float a 'y', que es int (la conversión float → int no está permitida)
+[SEMANTICO] [16:9] Error semántico E4: No se puede asignar un valor float a 'y', que es int (la conversión float → int no está permitida)
+[SEMANTICO] [33:13] Error semántico E1: 'mas' no está declarada
+[SEMANTICO] [37:13] Error semántico E1: 'mas' no está declarada
