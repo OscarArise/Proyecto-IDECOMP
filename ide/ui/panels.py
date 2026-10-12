@@ -74,8 +74,73 @@ class Panels:
         self.tab_sintactico_conectado = self._make_result_tab("Arbol Conectado")
         self.tab_sintactico_analisis = self._make_result_tab("Analisis Sintactico")
         self.tab_semantico = self._make_result_tab("Semantico")
+
+        # Fase 3: árbol con anotaciones semánticas
+        self.tab_anotado_frame = tk.Frame(self.results_notebook, bg="#1e1e1e")
+        self.results_notebook.add(self.tab_anotado_frame, text="Arbol Anotado")
+        self.annotated_tree_viewer = ASTTreeViewer(
+            self.tab_anotado_frame,
+            title="Árbol con anotaciones semánticas",
+            subtitle="tipos, valores y conversiones",
+            semantic=True,
+        )
+
+        # Fase 3: AST original frente al AST anotado
+        self.tab_comparacion_frame = tk.Frame(self.results_notebook, bg="#1e1e1e")
+        self.results_notebook.add(self.tab_comparacion_frame, text="Comparacion")
+        self._build_comparison_tab()
+
         self.tab_intermedio = self._make_result_tab("Intermedio")
         self.tab_simbolos = self._make_result_tab("Simbolos")
+
+    #Pestaña "Comparacion": AST original (izquierda) y AST anotado (derecha)
+    def _build_comparison_tab(self):
+        bar = tk.Frame(self.tab_comparacion_frame, bg="#15171c")
+        bar.pack(fill=tk.X)
+        tk.Button(
+            bar, text="Comparar en ventana grande", command=self.open_comparison_window,
+            bg="#232833", fg="#f5f7fb", activebackground="#303848",
+            activeforeground="#ffffff", relief=tk.FLAT, bd=0, padx=12, pady=5,
+            cursor="hand2", font=("Segoe UI", 9, "bold"),
+        ).pack(side=tk.LEFT, padx=10, pady=(8, 0))
+        tk.Label(
+            bar, text="AST original  →  AST con anotaciones semánticas",
+            bg="#15171c", fg="#8f98aa", font=("Segoe UI", 9),
+        ).pack(side=tk.LEFT, padx=10, pady=(8, 0))
+
+        self.compare_original_viewer, self.compare_annotated_viewer = (
+            self._build_comparison_viewers(self.tab_comparacion_frame)
+        )
+
+    def _build_comparison_viewers(self, parent):
+        #Dos visores lado a lado: AST original (izq.) y AST anotado (der.)
+        pane = tk.PanedWindow(parent, orient=tk.HORIZONTAL,
+                              sashrelief=tk.RAISED, bg="#1e1e1e")
+        pane.pack(fill=tk.BOTH, expand=True)
+
+        left = tk.Frame(pane, bg="#15171c")
+        right = tk.Frame(pane, bg="#15171c")
+        pane.add(left, minsize=150)
+        pane.add(right, minsize=150)
+
+        original = ASTTreeViewer(
+            left, title="AST original", semantic=False, compact=True
+        )
+        anotado = ASTTreeViewer(
+            right, title="AST con anotaciones", semantic=True, compact=True
+        )
+        return original, anotado
+
+    def open_comparison_window(self):
+        #Abre la comparación en una ventana grande (más espacio para ver las anotaciones)
+        top = tk.Toplevel(self.root.winfo_toplevel())
+        top.title("Comparación: AST original  →  AST con anotaciones semánticas")
+        top.geometry("1400x800")
+        original, anotado = self._build_comparison_viewers(top)
+        if self.compare_original_viewer.current_ast_json:
+            original.load_ast_json(self.compare_original_viewer.current_ast_json)
+        if self.compare_annotated_viewer.current_ast_json:
+            anotado.load_ast_json(self.compare_annotated_viewer.current_ast_json)
 
     #Panel inferior "Errores y ejecucion"
     def _build_bottom_panel(self):
@@ -138,8 +203,14 @@ class Panels:
             self.tab_err_semantico, self.tab_ejecucion
         ]:
             self.clear(widget)
-        if self.ast_tree_viewer:
-            self.ast_tree_viewer.clear()
+        for viewer in (
+            self.ast_tree_viewer,
+            self.annotated_tree_viewer,
+            self.compare_original_viewer,
+            self.compare_annotated_viewer,
+        ):
+            if viewer:
+                viewer.clear()
 
     def get_tab_frame(self, text_widget: tk.Text) -> tk.Frame | None:
         """

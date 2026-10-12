@@ -17,13 +17,30 @@ class ASTTreeViewer:
     Utiliza Tkinter Treeview para permitir expandir/contraer nodos.
     """
     
-    def __init__(self, parent: tk.Widget):
+    def __init__(
+        self,
+        parent: tk.Widget,
+        title: str = "Árbol Sintáctico",
+        subtitle: str = "producciones y tokens",
+        semantic: bool = False,
+        compact: bool = False,
+    ):
         """
         Inicializa el visualizador de árbol AST.
         
-        parent: Widget padre (marco o ventana)
+        parent:   Widget padre (marco o ventana)
+        title:    Título que se muestra sobre el árbol
+        subtitle: Texto secundario del encabezado
+        semantic: True para el árbol con anotaciones semánticas (Fase 3):
+                  resalta errores, conversiones e identificadores declarados
+        compact:  True para usarlo en la comparación lado a lado (sin leyenda
+                  ni botón "Abrir en ventana")
         """
         self.parent = parent
+        self.title = title
+        self.subtitle = subtitle
+        self.semantic = semantic
+        self.compact = compact
         self.tree = None
         self.item_count = 0
         self.current_ast_json = ""
@@ -41,22 +58,31 @@ class ASTTreeViewer:
 
         header = tk.Frame(self.parent, bg="#15171c")
         header.pack(fill=tk.X, padx=10, pady=(10, 4))
-        tk.Label(header, text="Árbol Sintáctico", bg="#15171c", fg="#f5f7fb",
+        tk.Label(header, text=self.title, bg="#15171c", fg="#f5f7fb",
                  font=("Segoe UI", 12, "bold"), anchor="w").pack(side=tk.LEFT)
-        tk.Label(header, text="producciones y tokens", bg="#15171c", fg="#8f98aa",
-                 font=("Segoe UI", 9), anchor="w", padx=10).pack(side=tk.LEFT)
+        if not self.compact:
+            tk.Label(header, text=self.subtitle, bg="#15171c", fg="#8f98aa",
+                     font=("Segoe UI", 9), anchor="w", padx=10).pack(side=tk.LEFT)
 
         toolbar = tk.Frame(self.parent, bg="#15171c")
         toolbar.pack(fill=tk.X, padx=10, pady=(0, 8))
-        self._make_button(toolbar, "Abrir en ventana", self.open_in_window).pack(side=tk.LEFT)
-        self._make_button(toolbar, "Expandir", self.expand_all).pack(side=tk.LEFT, padx=(6, 0))
+        if not self.compact:
+            self._make_button(toolbar, "Abrir en ventana", self.open_in_window).pack(side=tk.LEFT)
+        first_gap = 0 if self.compact else 6
+        self._make_button(toolbar, "Expandir", self.expand_all).pack(side=tk.LEFT, padx=(first_gap, 0))
         self._make_button(toolbar, "Colapsar", self.collapse_all).pack(side=tk.LEFT, padx=(6, 0))
 
-        legend = tk.Frame(toolbar, bg="#15171c")
-        legend.pack(side=tk.RIGHT)
-        self._make_legend(legend, "Producción", "#8ab4f8")
-        self._make_legend(legend, "Token", "#c8d0df")
-        self._make_legend(legend, "Control", "#f7c873")
+        if not self.compact:
+            legend = tk.Frame(toolbar, bg="#15171c")
+            legend.pack(side=tk.RIGHT)
+            if self.semantic:
+                self._make_legend(legend, "Error semántico", "#ff8a8a")
+                self._make_legend(legend, "Conversión", "#ffb86c")
+                self._make_legend(legend, "Declarado", "#b7e4a8")
+            else:
+                self._make_legend(legend, "Producción", "#8ab4f8")
+                self._make_legend(legend, "Token", "#c8d0df")
+                self._make_legend(legend, "Control", "#f7c873")
 
         tree_frame = tk.Frame(self.parent, bg="#2b303a", bd=1, relief=tk.SOLID)
         tree_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
@@ -78,7 +104,7 @@ class ASTTreeViewer:
         
         # Configurar columnas
         self.tree.column("#0", width=620, minwidth=320, stretch=True)
-        self.tree.heading("#0", text="Árbol Sintáctico")
+        self.tree.heading("#0", text=self.title)
         
         # Grid layout
         self.tree.grid(row=0, column=0, sticky="nsew")
@@ -151,6 +177,10 @@ class ASTTreeViewer:
         self.tree.tag_configure("io", foreground="#7dd3fc")
         self.tree.tag_configure("expresion", foreground="#c9a7ff")
         self.tree.tag_configure("error", foreground="#ff8a8a", font=("Consolas", 10, "bold"))
+        # Fase 3: nodos del árbol con anotaciones semánticas
+        self.tree.tag_configure("sem_error", foreground="#ff8a8a", font=("Consolas", 10, "bold"))
+        self.tree.tag_configure("conversion", foreground="#ffb86c", font=("Consolas", 10, "bold"))
+        self.tree.tag_configure("declarado", foreground="#b7e4a8", font=("Consolas", 10, "bold"))
     
     def load_ast_json(self, json_str: str):
         """
@@ -191,11 +221,14 @@ class ASTTreeViewer:
         # Obtener etiqueta del nodo
         label = node_dict.get("label", node_dict.get("type", "Nodo"))
         
-        # Agregar información adicional si está disponible
+        # Agregar información adicional si está disponible. En el árbol anotado
+        # la etiqueta ya trae el nombre o el valor: no se repite.
         if "valor" in node_dict:
-            label = f"{label} ({node_dict['valor']})"
+            if not (self.semantic and str(node_dict["valor"]) in label):
+                label = f"{label} ({node_dict['valor']})"
         elif "nombre" in node_dict:
-            label = f"{label} ({node_dict['nombre']})"
+            if not (self.semantic and str(node_dict["nombre"]) in label):
+                label = f"{label} ({node_dict['nombre']})"
         
         # Insertar nodo
         item_id = f"item_{self.item_count}"
@@ -205,7 +238,13 @@ class ASTTreeViewer:
         tags = ()
         
         # Aplicar tags para estilo
-        if "ERROR" in node_type:
+        if self.semantic and node_dict.get("errores_semanticos"):
+            tags = ("sem_error",)
+        elif self.semantic and node_type == "ConversionTipo":
+            tags = ("conversion",)
+        elif self.semantic and node_type == "IdentificadorDeclarado":
+            tags = ("declarado",)
+        elif "ERROR" in node_type:
             tags = ("error",)
         elif label == "PROGRAMA":
             tags = ("root",)
@@ -241,14 +280,16 @@ class ASTTreeViewer:
     def open_in_window(self):
         """Abre el árbol actual en una ventana grande para revisión."""
         top = tk.Toplevel(self.parent.winfo_toplevel())
-        top.title("Árbol Sintáctico")
+        top.title(self.title)
         top.geometry("1000x700")
         top.minsize(800, 500)
-        viewer = ASTTreeViewer(top)
+        viewer = ASTTreeViewer(
+            top, title=self.title, subtitle=self.subtitle, semantic=self.semantic
+        )
         if self.current_ast_json:
             viewer.load_ast_json(self.current_ast_json)
         else:
-            viewer.tree.insert("", "end", text="Ejecuta el análisis sintáctico para cargar el árbol")
+            viewer.tree.insert("", "end", text="Ejecuta la fase correspondiente para cargar el árbol")
     
     def _on_double_click(self, event):
         """Maneja el doble clic para expandir/contraer nodos."""
