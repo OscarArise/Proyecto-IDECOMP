@@ -352,7 +352,9 @@ class Parser:
                 return decl
 
         if self.current_token and self.current_token.tipo in self.statement_starts:
-            lista_sent = self._lista_sentencias()
+            # Una declaración de variable cierra el bloque de sentencias: la
+            # gramática permite alternar declaraciones y sentencias en main.
+            lista_sent = self._lista_sentencias(stop_tokens=self.type_starts)
             if lista_sent:
                 decl.contenido = lista_sent
                 decl.children = lista_sent.children
