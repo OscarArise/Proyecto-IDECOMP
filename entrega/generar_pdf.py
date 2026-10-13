@@ -265,7 +265,7 @@ def construir(salida, carpeta_capturas):
 
     # 1. Introducción
     s += [P("1. Descripción de la implementación", "h1"),
-          P("El análisis semántico es la tercera fase del compilador de CAOS. Recibe el Árbol "
+          P("El análisis semántico es la tercera fase del compilador. Recibe el Árbol "
             "Sintáctico Abstracto (AST) que produce el analizador sintáctico, calcula atributos de "
             "tipo y de valor sobre una <b>copia</b> del árbol, construye la tabla de símbolos y "
             "reporta los errores semánticos. El AST original no se modifica, de modo que ambos "
@@ -373,7 +373,7 @@ def construir(salida, carpeta_capturas):
 
     # 5. Tabla de símbolos
     s += [P("5. Diseño y funcionamiento de la tabla de símbolos", "h1"),
-          P("Es la tabla hash de TINY (la misma de TablaHash_Probar.cpp): tamaño 211, función hash "
+          P("Es la tabla hash de TINY: tamaño 211, función hash "
             "<font name='%s'>temp = ((temp &lt;&lt; 4) + c) mod 211</font> sobre los caracteres del "
             "nombre, y encadenamiento separado para las colisiones. Se extendió con el tipo y la "
             "posición de la declaración." % MONO),
