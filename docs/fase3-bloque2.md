@@ -38,8 +38,8 @@ y la tabla de símbolos esperada:
 | b | float | 4 | 3, 19, 21 |
 | c | float | 5 | 3, 26 |
 
-**Todavía no está conectado al compilador.** `compiler_stub.py::_run_semantico`
-sigue siendo el stub; conectarlo es el primer paso del Bloque 3 (sección 6).
+**Ya está conectado al compilador** (Bloque 3): `compiler_stub.py::_run_semantico`
+llama a `semantic.analizar` con el AST del parser. Ver `docs/fase3-bloque3.md`.
 
 ---
 
@@ -193,28 +193,13 @@ OPERACION: +  ⟨tipo: float, valor: 28.0⟩
 
 ---
 
-## 6. Pendiente para el Bloque 3
+## 6. Pendiente para el Bloque 3 (resuelto)
 
-1. **Conectar `_run_semantico` en `compiler_stub.py`.** Hoy recibe los tokens;
-   necesita el AST. Lo más simple es que `_run_sintactico` devuelva también el
-   `ast` y pasarlo:
-
-   ```python
-   resultado = analizar(ASTFormatter.to_binary(ast))
-   _write("semantic.txt", semantic_txt(resultado))
-   _write("symbols.txt", symbols_txt(resultado.tabla))
-   errors.extend(f"[SEMANTICO] {e}" for e in resultado.errores)
-   ```
-
-   Con errores semánticos el código de salida debe ser 3.
-2. **IDE.** `semantic.txt` termina con la misma sección *Representación
-   estructurada* que `syntax.txt`, así que `_load_ast_to_tree` sirve para el
-   árbol anotado. Falta un visor en la pestaña Semántico para comparar el AST
-   original con el anotado.
-3. **Marcar los errores semánticos en el editor** (hallazgo 9) y agregar la
-   pestaña Símbolos a la navegación.
-4. **Capturas y PDF.** El recorrido semántico de `semantic.txt` sirve como
-   evidencia de inserciones, búsquedas, tipos y conversiones.
+Los cuatro puntos de esta sección se completaron en el Bloque 3: conexión de
+`_run_semantico` con el AST (exit code 3 si hay errores semánticos), visor del
+árbol anotado y comparación en el IDE, marcado de errores semánticos en el
+editor, y capturas/PDF en `entrega/`. Detalle en `docs/fase3-bloque3.md` e
+`docs/informe-fase3.md`.
 
 ---
 

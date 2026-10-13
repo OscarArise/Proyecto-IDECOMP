@@ -1,12 +1,14 @@
 ================================================================================
- README_run.txt — Cómo invocar el compilador stub del IDE CAOS
+ README_run.txt — Cómo invocar el compilador del IDE CAOS
 ================================================================================
 
 DESCRIPCIÓN
 -----------
-compiler_stub.py es un script Python que simula el pipeline de compilación
-del lenguaje CAOS. Es invocado por el IDE a través de CompilerRunner usando
-el módulo subprocess.
+compiler_stub.py es el punto de entrada del pipeline de compilación del
+lenguaje CAOS. Fases reales: léxico, sintáctico y semántico. Las fases de
+código intermedio y ejecución siguen siendo stubs (fases futuras). Es invocado
+por el IDE a través de CompilerRunner usando el módulo subprocess.
+(El nombre del archivo se conserva por compatibilidad con el IDE.)
 
 
 INVOCACIÓN
@@ -55,9 +57,9 @@ FORMATO DE errors.txt
 ---------------------
 Cada error debe ir precedido de una etiqueta de fase entre corchetes:
 
-    [LEXICO] Carácter inválido '@' en línea 4, columna 7
-    [SINTACTICO] Se esperaba ';' al final de la sentencia (línea 12)
-    [SEMANTICO] Variable 'x' no declarada (línea 18)
+    [LEXICO] [4:7] Carácter inválido '@'
+    [SINTACTICO] [12:5] Se esperaba ';' al final de la sentencia
+    [SEMANTICO] [18:3] Variable 'x' no declarada
     [INTERMEDIO] Error generando cuádruplo para operación binaria
     [EJECUCION] División por cero en línea 25
 
