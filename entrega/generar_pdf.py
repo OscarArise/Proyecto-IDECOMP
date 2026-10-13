@@ -42,10 +42,27 @@ from reportlab.platypus import (
 
 AQUI = Path(__file__).resolve().parent
 
-INTEGRANTES = [
-    "Oscar Manuel García Rodríguez",
-    "Carlos Franco Acosta",
-]
+def leer_integrantes():
+    """
+    Lee los integrantes de integrantes.txt (una línea por persona):
+
+        1. Nombre completo  -  Matrícula: 123456
+
+    Es la única fuente: el mismo archivo se entrega y alimenta la portada del PDF.
+    Devuelve una lista de (nombre, matrícula); la matrícula queda vacía si no se ha escrito.
+    """
+    ruta = AQUI / "integrantes.txt"
+    gente = []
+    if ruta.exists():
+        for linea in ruta.read_text(encoding="utf-8").splitlines():
+            m = re.match(r"^\s*\d+\.\s+(.+?)\s+-\s+Matr[ií]cula:\s*(.*?)\s*$", linea)
+            if m:
+                matricula = m.group(2).strip("_ ")
+                gente.append((m.group(1).strip(), matricula))
+    return gente or [("(completar integrantes.txt)", "")]
+
+
+INTEGRANTES = leer_integrantes()
 
 
 # Fuentes (DejaVu: trae ⟨ ⟩ → ✗ ← que Helvetica no tiene)
@@ -224,7 +241,7 @@ def construir(salida, carpeta_capturas):
         str(salida), pagesize=letter, leftMargin=0.9 * inch, rightMargin=0.9 * inch,
         topMargin=0.8 * inch, bottomMargin=0.8 * inch,
         title="Compiladores II - Fase 3: Análisis Semántico",
-        author=", ".join(INTEGRANTES),
+        author=", ".join(n for n, _ in INTEGRANTES),
     )
     s = []
 
@@ -237,7 +254,7 @@ def construir(salida, carpeta_capturas):
           P("Fase 3: Análisis Semántico", "titulo"),
           P("Compilador e IDE del lenguaje CAOS (Proyecto-IDECOMP)", "sub"),
           Spacer(1, 0.6 * inch)]
-    s.append(tabla([["Integrantes", "Matrícula"]] + [[n, ""] for n in INTEGRANTES], [4.3, 1.9]))
+    s.append(tabla([["Integrantes", "Matrícula"]] + [[n, m] for n, m in INTEGRANTES], [4.3, 1.9]))
     s += [Spacer(1, 0.3 * inch),
           P("Docente: Dra. Blanca G. Estrada Rentería", "sub"),
           P("Entrega: 15 de octubre de 2026", "sub"),
