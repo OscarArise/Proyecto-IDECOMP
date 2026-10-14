@@ -2,14 +2,17 @@ Tabla de Símbolos
 ==================================================
 Tabla hash con encadenamiento (SIZE = 211, función hash de TINY).
 Ámbito único: bloque main.
+Líneas: una por cada aparición del identificador (se repite si aparece
+varias veces en la misma línea). Valor final: último valor conocido en
+compilación ('desconocido' si depende de la ejecución).
 
-Nombre  Tipo   Loc  Hash  Declarada  Líneas
-------  -----  ---  ----  ---------  --------------------------------------
-x       int    0    120   2:9        2, 5, 6, 11, 27, 30, 31, 32, 38
-y       int    1    121   2:12       2, 7, 8, 9, 12, 14, 16, 23, 29, 35, 36
-z       int    2    122   2:15       2, 8, 13
-a       float  3    97    3:11       3, 10, 16, 25
-b       float  4    98    3:14       3, 19, 21
-c       float  5    99    3:17       3, 26
+Nombre  Tipo   Loc  Hash  Declarada  Valor final  Líneas
+------  -----  ---  ----  ---------  -----------  -------------------------------------------------
+x       int    0    120   2:9        7            2, 5, 6, 11, 27, 30, 31, 32, 38
+y       int    1    121   2:12       desconocido  2, 7, 8, 9, 9, 12, 14, 16, 23, 23, 29, 29, 35, 36
+z       int    2    122   2:15       64           2, 8, 13
+a       float  3    97    3:11       62.0         3, 10, 16, 25
+b       float  4    98    3:14       3.2          3, 19, 21
+c       float  5    99    3:17       desconocido  3, 26
 
 Total de identificadores: 6

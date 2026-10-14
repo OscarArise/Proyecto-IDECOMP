@@ -24,23 +24,23 @@ PROGRAMA [L1:C1]
         NUMERO: 45  ⟨tipo: int, valor: 45⟩ [L4:C12]
       ASIGNACION: x  ⟨x: int, expresión: float, ✗ E4⟩ [L5:C5]
         NUMERO: 32.32  ⟨tipo: float, valor: 32.32⟩ [L5:C9]
-      ASIGNACION: x  ⟨x: int, expresión: int⟩ [L6:C5]
+      ASIGNACION: x  ⟨x: int, expresión: int, valor: 23⟩ [L6:C5]
         NUMERO: 23  ⟨tipo: int, valor: 23⟩ [L6:C9]
-      ASIGNACION: y  ⟨y: int, expresión: int⟩ [L7:C5]
+      ASIGNACION: y  ⟨y: int, expresión: int, valor: 4⟩ [L7:C5]
         OPERACION: -  ⟨tipo: int, valor: 4⟩ [L7:C15]
           OPERACION: +  ⟨tipo: int, valor: 5⟩ [L7:C11]
             NUMERO: 2  ⟨tipo: int, valor: 2⟩ [L7:C9]
             NUMERO: 3  ⟨tipo: int, valor: 3⟩ [L7:C13]
           NUMERO: 1  ⟨tipo: int, valor: 1⟩ [L7:C17]
-      ASIGNACION: z  ⟨z: int, expresión: int⟩ [L8:C5]
-        OPERACION: +  ⟨tipo: int⟩ [L8:C11]
-          IDENTIFICADOR: y  ⟨tipo: int⟩ [L8:C9]
+      ASIGNACION: z  ⟨z: int, expresión: int, valor: 11⟩ [L8:C5]
+        OPERACION: +  ⟨tipo: int, valor: 11⟩ [L8:C11]
+          IDENTIFICADOR: y  ⟨tipo: int, valor: 4, loc: 1⟩ [L8:C9]
           NUMERO: 7  ⟨tipo: int, valor: 7⟩ [L8:C13]
-      ASIGNACION: y  ⟨y: int, expresión: int⟩ [L9:C5]
-        OPERACION: +  ⟨tipo: int⟩ [L9:C11]
-          IDENTIFICADOR: y  ⟨tipo: int⟩ [L9:C9]
+      ASIGNACION: y  ⟨y: int, expresión: int, valor: 5⟩ [L9:C5]
+        OPERACION: +  ⟨tipo: int, valor: 5⟩ [L9:C11]
+          IDENTIFICADOR: y  ⟨tipo: int, valor: 4, loc: 1⟩ [L9:C9]
           NUMERO: 1  ⟨tipo: int, valor: 1⟩ [L9:C13]
-      ASIGNACION: a  ⟨a: float, expresión: float⟩ [L10:C5]
+      ASIGNACION: a  ⟨a: float, expresión: float, valor: 61.0⟩ [L10:C5]
         OPERACION: -  ⟨tipo: float, valor: 61.0⟩ [L10:C22]
           OPERACION: +  ⟨tipo: float, valor: 62.0⟩ [L10:C19]
             OPERACION: -  ⟨tipo: float, valor: 28.0⟩ [L10:C13]
@@ -58,7 +58,7 @@ PROGRAMA [L1:C1]
               NUMERO: 34  ⟨tipo: int, valor: 34⟩ [L10:C20]
           CONVERSION: int → float  ⟨tipo: float, valor: 1.0⟩ [L10:C23]
             NUMERO: 1  ⟨tipo: int, valor: 1⟩ [L10:C23]
-      ASIGNACION: x  ⟨x: int, expresión: int⟩ [L11:C5]
+      ASIGNACION: x  ⟨x: int, expresión: int, valor: 8⟩ [L11:C5]
         OPERACION: *  ⟨tipo: int, valor: 8⟩ [L11:C12]
           OPERACION: -  ⟨tipo: int, valor: 2⟩ [L11:C9]
             NUMERO: 5  ⟨tipo: int, valor: 5⟩ [L11:C8]
@@ -66,7 +66,7 @@ PROGRAMA [L1:C1]
           OPERACION: /  ⟨tipo: int, valor: 4⟩ [L11:C15]
             NUMERO: 8  ⟨tipo: int, valor: 8⟩ [L11:C14]
             NUMERO: 2  ⟨tipo: int, valor: 2⟩ [L11:C16]
-      ASIGNACION: y  ⟨y: int, expresión: int⟩ [L12:C5]
+      ASIGNACION: y  ⟨y: int, expresión: int, valor: -2⟩ [L12:C5]
         OPERACION: -  ⟨tipo: int, valor: -2⟩ [L12:C16]
           OPERACION: -  ⟨tipo: int, valor: 7⟩ [L12:C10]
             OPERACION: +  ⟨tipo: int, valor: 8⟩ [L12:C8]
@@ -78,7 +78,7 @@ PROGRAMA [L1:C1]
                 NUMERO: 4  ⟨tipo: int, valor: 4⟩ [L12:C13]
               NUMERO: 7  ⟨tipo: int, valor: 7⟩ [L12:C15]
           NUMERO: 9  ⟨tipo: int, valor: 9⟩ [L12:C17]
-      ASIGNACION: z  ⟨z: int, expresión: int⟩ [L13:C5]
+      ASIGNACION: z  ⟨z: int, expresión: int, valor: 64⟩ [L13:C5]
         OPERACION: +  ⟨tipo: int, valor: 64⟩ [L13:C15]
           OPERACION: /  ⟨tipo: int, valor: 4⟩ [L13:C11]
             NUMERO: 8  ⟨tipo: int, valor: 8⟩ [L13:C9]
@@ -88,22 +88,22 @@ PROGRAMA [L1:C1]
             NUMERO: 4  ⟨tipo: int, valor: 4⟩ [L13:C22]
       ASIGNACION: y  ⟨y: int, expresión: float, ✗ E4⟩ [L14:C5]
         NUMERO: 14.54  ⟨tipo: float, valor: 14.54⟩ [L14:C9]
-      IF [L15:C5]
-        CONDICION  ⟨requiere: bool, obtenido: bool⟩ [L15:C9]
+      IF  ⟨condición false → se ejecuta SINO⟩ [L15:C5]
+        CONDICION  ⟨requiere: bool, obtenido: bool, valor: false⟩ [L15:C9]
           OPERACION: >  ⟨tipo: bool, valor: false⟩ [L15:C9]
             NUMERO: 2  ⟨tipo: int, valor: 2⟩ [L15:C8]
             NUMERO: 3  ⟨tipo: int, valor: 3⟩ [L15:C10]
-        ENTONCES [L16:C9]
+        ENTONCES  ⟨no se ejecuta: la condición del if es false⟩ [L16:C9]
           BLOQUE [L16:C9]
             ASIGNACION: y  ⟨y: int, expresión: float, ✗ E4⟩ [L16:C9]
-              OPERACION: +  ⟨tipo: float⟩ [L16:C15]
-                IDENTIFICADOR: a  ⟨tipo: float⟩ [L16:C13]
+              OPERACION: +  ⟨tipo: float, valor: 64.0⟩ [L16:C15]
+                IDENTIFICADOR: a  ⟨tipo: float, valor: 61.0, loc: 3⟩ [L16:C13]
                 CONVERSION: int → float  ⟨tipo: float, valor: 3.0⟩ [L16:C17]
                   NUMERO: 3  ⟨tipo: int, valor: 3⟩ [L16:C17]
         SINO [L18:C9]
           BLOQUE [L18:C9]
-            IF [L18:C9]
-              CONDICION  ⟨requiere: bool, obtenido: bool⟩ [L18:C16]
+            IF  ⟨condición true → se ejecuta ENTONCES⟩ [L18:C9]
+              CONDICION  ⟨requiere: bool, obtenido: bool, valor: true⟩ [L18:C16]
                 OPERACION: &&  ⟨tipo: bool, valor: true⟩ [L18:C16]
                   OPERACION: >  ⟨tipo: bool, valor: true⟩ [L18:C13]
                     NUMERO: 4  ⟨tipo: int, valor: 4⟩ [L18:C12]
@@ -111,69 +111,70 @@ PROGRAMA [L1:C1]
                   BOOLEANO: true  ⟨tipo: bool, valor: true⟩ [L18:C19]
               ENTONCES [L19:C13]
                 BLOQUE [L19:C13]
-                  ASIGNACION: b  ⟨b: float, expresión: float⟩ [L19:C13]
+                  ASIGNACION: b  ⟨b: float, expresión: float, valor: 3.2⟩ [L19:C13]
                     NUMERO: 3.2  ⟨tipo: float, valor: 3.2⟩ [L19:C17]
-              SINO [L21:C13]
+              SINO  ⟨no se ejecuta: la condición del if es true⟩ [L21:C13]
                 BLOQUE [L21:C13]
-                  ASIGNACION: b  ⟨b: float, expresión: float⟩ [L21:C13]
+                  ASIGNACION: b  ⟨b: float, expresión: float, valor: 5.0⟩ [L21:C13]
                     NUMERO: 5.0  ⟨tipo: float, valor: 5.0⟩ [L21:C17]
-            ASIGNACION: y  ⟨y: int, expresión: int⟩ [L23:C9]
-              OPERACION: +  ⟨tipo: int⟩ [L23:C15]
-                IDENTIFICADOR: y  ⟨tipo: int⟩ [L23:C13]
+            ASIGNACION: y  ⟨y: int, expresión: int, valor: -1⟩ [L23:C9]
+              OPERACION: +  ⟨tipo: int, valor: -1⟩ [L23:C15]
+                IDENTIFICADOR: y  ⟨tipo: int, valor: -2, loc: 1⟩ [L23:C13]
                 NUMERO: 1  ⟨tipo: int, valor: 1⟩ [L23:C17]
-      INCREMENTO: a  ⟨tipo: float⟩ [L25:C5]
-      DECREMENTO: c  ⟨tipo: float⟩ [L26:C5]
-      ASIGNACION: x  ⟨x: int, expresión: int⟩ [L27:C5]
+      INCREMENTO: a  ⟨tipo: float, valor: 62.0⟩ [L25:C5]
+      DECREMENTO: c  ⟨tipo: float, valor: desconocido⟩ [L26:C5]
+      ASIGNACION: x  ⟨x: int, expresión: int, valor: 7⟩ [L27:C5]
         OPERACION: +  ⟨tipo: int, valor: 7⟩ [L27:C11]
           NUMERO: 3  ⟨tipo: int, valor: 3⟩ [L27:C9]
           NUMERO: 4  ⟨tipo: int, valor: 4⟩ [L27:C13]
-      DO_WHILE_UNTIL [L28:C5]
-        CUERPO_DO [L29:C9]
+      DO_UNTIL  ⟨número de iteraciones desconocido⟩ [L28:C5]
+        CUERPO  ⟨valores de la primera iteración⟩ [L29:C9]
           BLOQUE [L29:C9]
-            ASIGNACION: y  ⟨y: int, expresión: int⟩ [L29:C9]
-              OPERACION: +  ⟨tipo: int⟩ [L29:C25]
-                OPERACION: *  ⟨tipo: int⟩ [L29:C21]
-                  OPERACION: +  ⟨tipo: int⟩ [L29:C16]
-                    IDENTIFICADOR: y  ⟨tipo: int⟩ [L29:C14]
+            ASIGNACION: y  ⟨y: int, expresión: int, valor: 1⟩ [L29:C9]
+              OPERACION: +  ⟨tipo: int, valor: 1⟩ [L29:C25]
+                OPERACION: *  ⟨tipo: int, valor: 0⟩ [L29:C21]
+                  OPERACION: +  ⟨tipo: int, valor: 0⟩ [L29:C16]
+                    IDENTIFICADOR: y  ⟨tipo: int, valor: -1, loc: 1⟩ [L29:C14]
                     NUMERO: 1  ⟨tipo: int, valor: 1⟩ [L29:C18]
                   NUMERO: 2  ⟨tipo: int, valor: 2⟩ [L29:C23]
                 NUMERO: 1  ⟨tipo: int, valor: 1⟩ [L29:C27]
-        CONDICION_WHILE  ⟨requiere: bool, obtenido: bool⟩ [L30:C17]
-          OPERACION: >  ⟨tipo: bool⟩ [L30:C17]
-            IDENTIFICADOR: x  ⟨tipo: int⟩ [L30:C15]
-            NUMERO: 7  ⟨tipo: int, valor: 7⟩ [L30:C19]
-        CUERPO_WHILE [L31:C13]
-          BLOQUE [L31:C13]
-            ASIGNACION: x  ⟨x: int, expresión: int⟩ [L31:C13]
-              OPERACION: +  ⟨tipo: int, valor: 6⟩ [L31:C19]
-                NUMERO: 6  ⟨tipo: int, valor: 6⟩ [L31:C17]
-                OPERACION: /  ⟨tipo: int, valor: 0⟩ [L31:C31]
-                  OPERACION: *  ⟨tipo: int, valor: 0⟩ [L31:C27]
-                    OPERACION: /  ⟨tipo: int, valor: 0⟩ [L31:C23]
-                      NUMERO: 8  ⟨tipo: int, valor: 8⟩ [L31:C21]
-                      NUMERO: 9  ⟨tipo: int, valor: 9⟩ [L31:C25]
-                    NUMERO: 8  ⟨tipo: int, valor: 8⟩ [L31:C29]
-                  NUMERO: 3  ⟨tipo: int, valor: 3⟩ [L31:C33]
-            ENTRADA: cin x  ⟨tipo: int⟩ [L32:C13]
-            ASIGNACION: mas  ⟨destino no declarado, ✗ E1⟩ [L33:C13]
-              OPERACION: /  ⟨tipo: int, valor: 5⟩ [L33:C22]
-                NUMERO: 36  ⟨tipo: int, valor: 36⟩ [L33:C19]
-                NUMERO: 7  ⟨tipo: int, valor: 7⟩ [L33:C24]
-        CONDICION_UNTIL  ⟨requiere: bool, obtenido: bool⟩ [L35:C13]
-          OPERACION: ==  ⟨tipo: bool⟩ [L35:C13]
-            IDENTIFICADOR: y  ⟨tipo: int⟩ [L35:C11]
+            WHILE  ⟨condición inicial false → el cuerpo no se ejecuta⟩ [L30:C9]
+              CONDICION  ⟨requiere: bool, obtenido: bool, valor: false⟩ [L30:C17]
+                OPERACION: >  ⟨tipo: bool, valor: false⟩ [L30:C17]
+                  IDENTIFICADOR: x  ⟨tipo: int, valor: 7, loc: 0⟩ [L30:C15]
+                  NUMERO: 7  ⟨tipo: int, valor: 7⟩ [L30:C19]
+              CUERPO  ⟨no se ejecuta: la condición del while es false al llegar al ciclo⟩ [L31:C13]
+                BLOQUE [L31:C13]
+                  ASIGNACION: x  ⟨x: int, expresión: int, valor: 6⟩ [L31:C13]
+                    OPERACION: +  ⟨tipo: int, valor: 6⟩ [L31:C19]
+                      NUMERO: 6  ⟨tipo: int, valor: 6⟩ [L31:C17]
+                      OPERACION: /  ⟨tipo: int, valor: 0⟩ [L31:C31]
+                        OPERACION: *  ⟨tipo: int, valor: 0⟩ [L31:C27]
+                          OPERACION: /  ⟨tipo: int, valor: 0⟩ [L31:C23]
+                            NUMERO: 8  ⟨tipo: int, valor: 8⟩ [L31:C21]
+                            NUMERO: 9  ⟨tipo: int, valor: 9⟩ [L31:C25]
+                          NUMERO: 8  ⟨tipo: int, valor: 8⟩ [L31:C29]
+                        NUMERO: 3  ⟨tipo: int, valor: 3⟩ [L31:C33]
+                  ENTRADA: cin x  ⟨tipo: int, valor: se lee en ejecución⟩ [L32:C13]
+                  ASIGNACION: mas  ⟨destino no declarado, ✗ E1⟩ [L33:C13]
+                    OPERACION: /  ⟨tipo: int, valor: 5⟩ [L33:C22]
+                      NUMERO: 36  ⟨tipo: int, valor: 36⟩ [L33:C19]
+                      NUMERO: 7  ⟨tipo: int, valor: 7⟩ [L33:C24]
+        CONDICION_UNTIL  ⟨requiere: bool, obtenido: bool, valor: false⟩ [L35:C13]
+          OPERACION: ==  ⟨tipo: bool, valor: false⟩ [L35:C13]
+            IDENTIFICADOR: y  ⟨tipo: int, valor: 1, loc: 1⟩ [L35:C11]
             NUMERO: 5  ⟨tipo: int, valor: 5⟩ [L35:C16]
-      WHILE [L36:C5]
-        CONDICION  ⟨requiere: bool, obtenido: bool⟩ [L36:C13]
+      WHILE  ⟨número de iteraciones desconocido⟩ [L36:C5]
+        CONDICION  ⟨requiere: bool, obtenido: bool, valor: desconocido⟩ [L36:C13]
           OPERACION: ==  ⟨tipo: bool⟩ [L36:C13]
-            IDENTIFICADOR: y  ⟨tipo: int⟩ [L36:C11]
+            IDENTIFICADOR: y  ⟨tipo: int, valor: desconocido, loc: 1⟩ [L36:C11]
             NUMERO: 0  ⟨tipo: int, valor: 0⟩ [L36:C16]
-        CUERPO [L37:C9]
+        CUERPO  ⟨valores de la primera iteración⟩ [L37:C9]
           BLOQUE [L37:C9]
             ENTRADA: cin mas  ⟨no declarado, ✗ E1⟩ [L37:C9]
             SALIDA: cout [L38:C9]
               SALIDA [L38:C14]
-                IDENTIFICADOR: x  ⟨tipo: int⟩ [L38:C14]
+                IDENTIFICADOR: x  ⟨tipo: int, valor: 7, loc: 0⟩ [L38:C14]
 
 Recorrido semántico:
 ------------------------------------------------------------------------
@@ -187,23 +188,27 @@ Recorrido semántico:
   [3:17] INSERTAR: c → tipo float, loc 5, hash 99
   [4:5] BUSCAR: suma → no está en la tabla
   [4:5] ERROR E1: 'suma' no está declarada
-  [5:5] BUSCAR: x → tipo int, loc 0
+  [5:5] BUSCAR: x → tipo int, loc 0, valor desconocido
   [5:5] ERROR E4: No se puede asignar un valor float a 'x', que es int (la conversión float → int no está permitida)
-  [6:5] BUSCAR: x → tipo int, loc 0
+  [6:5] BUSCAR: x → tipo int, loc 0, valor desconocido
   [6:5] ASIGNACION: x: int ← int (compatible)
-  [7:5] BUSCAR: y → tipo int, loc 1
+  [6:5] VALOR: x ← 23
+  [7:5] BUSCAR: y → tipo int, loc 1, valor desconocido
   [7:11] TIPO: int + int → int, valor 5
   [7:15] TIPO: int - int → int, valor 4
   [7:5] ASIGNACION: y: int ← int (compatible)
-  [8:5] BUSCAR: z → tipo int, loc 2
-  [8:9] BUSCAR: y → tipo int, loc 1
-  [8:11] TIPO: int + int → int
+  [7:5] VALOR: y ← 4
+  [8:5] BUSCAR: z → tipo int, loc 2, valor desconocido
+  [8:9] BUSCAR: y → tipo int, loc 1, valor 4
+  [8:11] TIPO: int + int → int, valor 11
   [8:5] ASIGNACION: z: int ← int (compatible)
-  [9:5] BUSCAR: y → tipo int, loc 1
-  [9:9] BUSCAR: y → tipo int, loc 1
-  [9:11] TIPO: int + int → int
+  [8:5] VALOR: z ← 11
+  [9:5] BUSCAR: y → tipo int, loc 1, valor 4
+  [9:9] BUSCAR: y → tipo int, loc 1, valor 4
+  [9:11] TIPO: int + int → int, valor 5
   [9:5] ASIGNACION: y: int ← int (compatible)
-  [10:5] BUSCAR: a → tipo float, loc 3
+  [9:5] VALOR: y ← 5
+  [10:5] BUSCAR: a → tipo float, loc 3, valor desconocido
   [10:12] CONVERSION: int → float sobre 'NUMERO: 4'
   [10:11] TIPO: float + int → float, valor 28.0
   [10:15] TIPO: int / int → int, valor 0
@@ -215,82 +220,100 @@ Recorrido semántico:
   [10:23] CONVERSION: int → float sobre 'NUMERO: 1'
   [10:22] TIPO: float - int → float, valor 61.0
   [10:5] ASIGNACION: a: float ← float (compatible)
-  [11:5] BUSCAR: x → tipo int, loc 0
+  [10:5] VALOR: a ← 61.0
+  [11:5] BUSCAR: x → tipo int, loc 0, valor 23
   [11:9] TIPO: int - int → int, valor 2
   [11:15] TIPO: int / int → int, valor 4
   [11:12] TIPO: int * int → int, valor 8
   [11:5] ASIGNACION: x: int ← int (compatible)
-  [12:5] BUSCAR: y → tipo int, loc 1
+  [11:5] VALOR: x ← 8
+  [12:5] BUSCAR: y → tipo int, loc 1, valor 5
   [12:8] TIPO: int + int → int, valor 8
   [12:12] TIPO: int * int → int, valor 8
   [12:14] TIPO: int / int → int, valor 1
   [12:10] TIPO: int - int → int, valor 7
   [12:16] TIPO: int - int → int, valor -2
   [12:5] ASIGNACION: y: int ← int (compatible)
-  [13:5] BUSCAR: z → tipo int, loc 2
+  [12:5] VALOR: y ← -2
+  [13:5] BUSCAR: z → tipo int, loc 2, valor 11
   [13:11] TIPO: int / int → int, valor 4
   [13:20] TIPO: int * int → int, valor 60
   [13:15] TIPO: int + int → int, valor 64
   [13:5] ASIGNACION: z: int ← int (compatible)
-  [14:5] BUSCAR: y → tipo int, loc 1
+  [13:5] VALOR: z ← 64
+  [14:5] BUSCAR: y → tipo int, loc 1, valor -2
   [14:5] ERROR E4: No se puede asignar un valor float a 'y', que es int (la conversión float → int no está permitida)
   [15:5] ESTRUCTURA: IF (if)
   [15:9] TIPO: int > int → bool, valor false
-  [15:9] CONDICION: 'if' es bool (válida)
-  [16:9] BUSCAR: y → tipo int, loc 1
-  [16:13] BUSCAR: a → tipo float, loc 3
+  [15:9] CONDICION: 'if' es bool (válida), valor false
+  [16:9] RAMA NO EJECUTADA: la condición del if es false; se verifica, pero sus asignaciones no cambian los valores
+  [16:9] BUSCAR: y → tipo int, loc 1, valor -2
+  [16:13] BUSCAR: a → tipo float, loc 3, valor 61.0
   [16:17] CONVERSION: int → float sobre 'NUMERO: 3'
-  [16:15] TIPO: float + int → float
+  [16:15] TIPO: float + int → float, valor 64.0
   [16:9] ERROR E4: No se puede asignar un valor float a 'y', que es int (la conversión float → int no está permitida)
   [18:9] ESTRUCTURA: IF (if)
   [18:13] TIPO: int > int → bool, valor true
   [18:16] TIPO: bool && bool → bool, valor true
-  [18:16] CONDICION: 'if' es bool (válida)
-  [19:13] BUSCAR: b → tipo float, loc 4
+  [18:16] CONDICION: 'if' es bool (válida), valor true
+  [19:13] BUSCAR: b → tipo float, loc 4, valor desconocido
   [19:13] ASIGNACION: b: float ← float (compatible)
-  [21:13] BUSCAR: b → tipo float, loc 4
+  [19:13] VALOR: b ← 3.2
+  [21:13] RAMA NO EJECUTADA: la condición del if es true; se verifica, pero sus asignaciones no cambian los valores
+  [21:13] BUSCAR: b → tipo float, loc 4, valor 3.2
   [21:13] ASIGNACION: b: float ← float (compatible)
-  [23:9] BUSCAR: y → tipo int, loc 1
-  [23:13] BUSCAR: y → tipo int, loc 1
-  [23:15] TIPO: int + int → int
+  [21:13] VALOR: b ← 5.0
+  [23:9] BUSCAR: y → tipo int, loc 1, valor -2
+  [23:13] BUSCAR: y → tipo int, loc 1, valor -2
+  [23:15] TIPO: int + int → int, valor -1
   [23:9] ASIGNACION: y: int ← int (compatible)
-  [25:5] BUSCAR: a → tipo float, loc 3
+  [23:9] VALOR: y ← -1
+  [25:5] BUSCAR: a → tipo float, loc 3, valor 61.0
   [25:5] INCREMENTO: a++ sobre float (válido)
-  [26:5] BUSCAR: c → tipo float, loc 5
+  [25:5] VALOR: a ← 62.0
+  [26:5] BUSCAR: c → tipo float, loc 5, valor desconocido
   [26:5] DECREMENTO: c-- sobre float (válido)
-  [27:5] BUSCAR: x → tipo int, loc 0
+  [26:5] VALOR: c ← desconocido
+  [27:5] BUSCAR: x → tipo int, loc 0, valor 8
   [27:11] TIPO: int + int → int, valor 7
   [27:5] ASIGNACION: x: int ← int (compatible)
-  [28:5] ESTRUCTURA: DO_WHILE_UNTIL (do)
-  [29:9] BUSCAR: y → tipo int, loc 1
-  [29:14] BUSCAR: y → tipo int, loc 1
-  [29:16] TIPO: int + int → int
-  [29:21] TIPO: int * int → int
-  [29:25] TIPO: int + int → int
+  [27:5] VALOR: x ← 7
+  [28:5] ESTRUCTURA: DO_UNTIL (do)
+  [29:9] BUSCAR: y → tipo int, loc 1, valor -1
+  [29:14] BUSCAR: y → tipo int, loc 1, valor -1
+  [29:16] TIPO: int + int → int, valor 0
+  [29:21] TIPO: int * int → int, valor 0
+  [29:25] TIPO: int + int → int, valor 1
   [29:9] ASIGNACION: y: int ← int (compatible)
-  [30:15] BUSCAR: x → tipo int, loc 0
-  [30:17] TIPO: int > int → bool
-  [30:17] CONDICION: 'while' es bool (válida)
-  [31:13] BUSCAR: x → tipo int, loc 0
+  [29:9] VALOR: y ← 1
+  [30:9] ESTRUCTURA: WHILE (while)
+  [30:15] BUSCAR: x → tipo int, loc 0, valor 7
+  [30:17] TIPO: int > int → bool, valor false
+  [30:17] CONDICION: 'while' es bool (válida), valor false
+  [31:13] RAMA NO EJECUTADA: la condición del while es false al llegar al ciclo; se verifica, pero sus asignaciones no cambian los valores
+  [31:13] BUSCAR: x → tipo int, loc 0, valor 7
   [31:23] TIPO: int / int → int, valor 0
   [31:27] TIPO: int * int → int, valor 0
   [31:31] TIPO: int / int → int, valor 0
   [31:19] TIPO: int + int → int, valor 6
   [31:13] ASIGNACION: x: int ← int (compatible)
-  [32:17] BUSCAR: x → tipo int, loc 0
+  [31:13] VALOR: x ← 6
+  [32:17] BUSCAR: x → tipo int, loc 0, valor 6
+  [32:13] VALOR: x se lee con cin → valor desconocido en compilación
   [33:13] BUSCAR: mas → no está en la tabla
   [33:13] ERROR E1: 'mas' no está declarada
   [33:22] TIPO: int / int → int, valor 5
-  [35:11] BUSCAR: y → tipo int, loc 1
-  [35:13] TIPO: int == int → bool
-  [35:13] CONDICION: 'until' es bool (válida)
+  [35:11] BUSCAR: y → tipo int, loc 1, valor 1
+  [35:13] TIPO: int == int → bool, valor false
+  [35:13] CONDICION: 'until' es bool (válida), valor false
+  [28:5] VALOR: y queda sin valor conocido (cambia dentro del do-until)
   [36:5] ESTRUCTURA: WHILE (while)
-  [36:11] BUSCAR: y → tipo int, loc 1
+  [36:11] BUSCAR: y → tipo int, loc 1, valor desconocido
   [36:13] TIPO: int == int → bool
   [36:13] CONDICION: 'while' es bool (válida)
   [37:13] BUSCAR: mas → no está en la tabla
   [37:13] ERROR E1: 'mas' no está declarada
-  [38:14] BUSCAR: x → tipo int, loc 0
+  [38:14] BUSCAR: x → tipo int, loc 0, valor 7
 
 Errores semánticos:
 ------------------------------------------------------------------------
@@ -512,7 +535,7 @@ Representación estructurada (para visualización):
               "type": "Asignacion",
               "linea": 6,
               "columna": 5,
-              "label": "ASIGNACION: x  ⟨x: int, expresión: int⟩",
+              "label": "ASIGNACION: x  ⟨x: int, expresión: int, valor: 23⟩",
               "children": [
                 {
                   "type": "Literal",
@@ -533,13 +556,14 @@ Representación estructurada (para visualización):
               "tipo_dato": "int",
               "tipo_expresion": "int",
               "verificacion": "compatible",
+              "valor_asignado": 23,
               "label_sintactico": "ASIGNACION: x"
             },
             {
               "type": "Asignacion",
               "linea": 7,
               "columna": 5,
-              "label": "ASIGNACION: y  ⟨y: int, expresión: int⟩",
+              "label": "ASIGNACION: y  ⟨y: int, expresión: int, valor: 4⟩",
               "children": [
                 {
                   "type": "OperacionBinaria",
@@ -614,31 +638,33 @@ Representación estructurada (para visualización):
               "tipo_dato": "int",
               "tipo_expresion": "int",
               "verificacion": "compatible",
+              "valor_asignado": 4,
               "label_sintactico": "ASIGNACION: y"
             },
             {
               "type": "Asignacion",
               "linea": 8,
               "columna": 5,
-              "label": "ASIGNACION: z  ⟨z: int, expresión: int⟩",
+              "label": "ASIGNACION: z  ⟨z: int, expresión: int, valor: 11⟩",
               "children": [
                 {
                   "type": "OperacionBinaria",
                   "linea": 8,
                   "columna": 11,
-                  "label": "OPERACION: +  ⟨tipo: int⟩",
+                  "label": "OPERACION: +  ⟨tipo: int, valor: 11⟩",
                   "operador": "+",
                   "children": [
                     {
                       "type": "Identificador",
                       "linea": 8,
                       "columna": 9,
-                      "label": "IDENTIFICADOR: y  ⟨tipo: int⟩",
+                      "label": "IDENTIFICADOR: y  ⟨tipo: int, valor: 4, loc: 1⟩",
                       "children": [],
                       "nombre": "y",
                       "loc": 1,
                       "tipo_dato": "int",
                       "atributo_tipo": "sintetizado",
+                      "valor_calculado": 4,
                       "label_sintactico": "IDENTIFICADOR: y"
                     },
                     {
@@ -658,6 +684,7 @@ Representación estructurada (para visualización):
                   ],
                   "tipo_dato": "int",
                   "atributo_tipo": "sintetizado",
+                  "valor_calculado": 11,
                   "label_sintactico": "OPERACION: +"
                 }
               ],
@@ -665,31 +692,33 @@ Representación estructurada (para visualización):
               "tipo_dato": "int",
               "tipo_expresion": "int",
               "verificacion": "compatible",
+              "valor_asignado": 11,
               "label_sintactico": "ASIGNACION: z"
             },
             {
               "type": "Asignacion",
               "linea": 9,
               "columna": 5,
-              "label": "ASIGNACION: y  ⟨y: int, expresión: int⟩",
+              "label": "ASIGNACION: y  ⟨y: int, expresión: int, valor: 5⟩",
               "children": [
                 {
                   "type": "OperacionBinaria",
                   "linea": 9,
                   "columna": 11,
-                  "label": "OPERACION: +  ⟨tipo: int⟩",
+                  "label": "OPERACION: +  ⟨tipo: int, valor: 5⟩",
                   "operador": "+",
                   "children": [
                     {
                       "type": "Identificador",
                       "linea": 9,
                       "columna": 9,
-                      "label": "IDENTIFICADOR: y  ⟨tipo: int⟩",
+                      "label": "IDENTIFICADOR: y  ⟨tipo: int, valor: 4, loc: 1⟩",
                       "children": [],
                       "nombre": "y",
                       "loc": 1,
                       "tipo_dato": "int",
                       "atributo_tipo": "sintetizado",
+                      "valor_calculado": 4,
                       "label_sintactico": "IDENTIFICADOR: y"
                     },
                     {
@@ -709,6 +738,7 @@ Representación estructurada (para visualización):
                   ],
                   "tipo_dato": "int",
                   "atributo_tipo": "sintetizado",
+                  "valor_calculado": 5,
                   "label_sintactico": "OPERACION: +"
                 }
               ],
@@ -716,13 +746,14 @@ Representación estructurada (para visualización):
               "tipo_dato": "int",
               "tipo_expresion": "int",
               "verificacion": "compatible",
+              "valor_asignado": 5,
               "label_sintactico": "ASIGNACION: y"
             },
             {
               "type": "Asignacion",
               "linea": 10,
               "columna": 5,
-              "label": "ASIGNACION: a  ⟨a: float, expresión: float⟩",
+              "label": "ASIGNACION: a  ⟨a: float, expresión: float, valor: 61.0⟩",
               "children": [
                 {
                   "type": "OperacionBinaria",
@@ -961,13 +992,14 @@ Representación estructurada (para visualización):
               "tipo_dato": "float",
               "tipo_expresion": "float",
               "verificacion": "compatible",
+              "valor_asignado": 61.0,
               "label_sintactico": "ASIGNACION: a"
             },
             {
               "type": "Asignacion",
               "linea": 11,
               "columna": 5,
-              "label": "ASIGNACION: x  ⟨x: int, expresión: int⟩",
+              "label": "ASIGNACION: x  ⟨x: int, expresión: int, valor: 8⟩",
               "children": [
                 {
                   "type": "OperacionBinaria",
@@ -1069,13 +1101,14 @@ Representación estructurada (para visualización):
               "tipo_dato": "int",
               "tipo_expresion": "int",
               "verificacion": "compatible",
+              "valor_asignado": 8,
               "label_sintactico": "ASIGNACION: x"
             },
             {
               "type": "Asignacion",
               "linea": 12,
               "columna": 5,
-              "label": "ASIGNACION: y  ⟨y: int, expresión: int⟩",
+              "label": "ASIGNACION: y  ⟨y: int, expresión: int, valor: -2⟩",
               "children": [
                 {
                   "type": "OperacionBinaria",
@@ -1231,13 +1264,14 @@ Representación estructurada (para visualización):
               "tipo_dato": "int",
               "tipo_expresion": "int",
               "verificacion": "compatible",
+              "valor_asignado": -2,
               "label_sintactico": "ASIGNACION: y"
             },
             {
               "type": "Asignacion",
               "linea": 13,
               "columna": 5,
-              "label": "ASIGNACION: z  ⟨z: int, expresión: int⟩",
+              "label": "ASIGNACION: z  ⟨z: int, expresión: int, valor: 64⟩",
               "children": [
                 {
                   "type": "OperacionBinaria",
@@ -1339,6 +1373,7 @@ Representación estructurada (para visualización):
               "tipo_dato": "int",
               "tipo_expresion": "int",
               "verificacion": "compatible",
+              "valor_asignado": 64,
               "label_sintactico": "ASIGNACION: z"
             },
             {
@@ -1375,13 +1410,13 @@ Representación estructurada (para visualización):
               "type": "Seleccion",
               "linea": 15,
               "columna": 5,
-              "label": "IF",
+              "label": "IF  ⟨condición false → se ejecuta SINO⟩",
               "children": [
                 {
                   "type": "SeccionAST",
                   "linea": 15,
                   "columna": 9,
-                  "label": "CONDICION  ⟨requiere: bool, obtenido: bool⟩",
+                  "label": "CONDICION  ⟨requiere: bool, obtenido: bool, valor: false⟩",
                   "children": [
                     {
                       "type": "OperacionBinaria",
@@ -1432,7 +1467,7 @@ Representación estructurada (para visualización):
                   "type": "SeccionAST",
                   "linea": 16,
                   "columna": 9,
-                  "label": "ENTONCES",
+                  "label": "ENTONCES  ⟨no se ejecuta: la condición del if es false⟩",
                   "children": [
                     {
                       "type": "ListaSentencias",
@@ -1450,19 +1485,20 @@ Representación estructurada (para visualización):
                               "type": "OperacionBinaria",
                               "linea": 16,
                               "columna": 15,
-                              "label": "OPERACION: +  ⟨tipo: float⟩",
+                              "label": "OPERACION: +  ⟨tipo: float, valor: 64.0⟩",
                               "operador": "+",
                               "children": [
                                 {
                                   "type": "Identificador",
                                   "linea": 16,
                                   "columna": 13,
-                                  "label": "IDENTIFICADOR: a  ⟨tipo: float⟩",
+                                  "label": "IDENTIFICADOR: a  ⟨tipo: float, valor: 61.0, loc: 3⟩",
                                   "children": [],
                                   "nombre": "a",
                                   "loc": 3,
                                   "tipo_dato": "float",
                                   "atributo_tipo": "sintetizado",
+                                  "valor_calculado": 61.0,
                                   "label_sintactico": "IDENTIFICADOR: a"
                                 },
                                 {
@@ -1496,6 +1532,7 @@ Representación estructurada (para visualización):
                               ],
                               "tipo_dato": "float",
                               "atributo_tipo": "sintetizado",
+                              "valor_calculado": 64.0,
                               "label_sintactico": "OPERACION: +"
                             }
                           ],
@@ -1510,7 +1547,9 @@ Representación estructurada (para visualización):
                         }
                       ]
                     }
-                  ]
+                  ],
+                  "ejecucion": "no se ejecuta",
+                  "label_sintactico": "ENTONCES"
                 },
                 {
                   "type": "SeccionAST",
@@ -1528,13 +1567,13 @@ Representación estructurada (para visualización):
                           "type": "Seleccion",
                           "linea": 18,
                           "columna": 9,
-                          "label": "IF",
+                          "label": "IF  ⟨condición true → se ejecuta ENTONCES⟩",
                           "children": [
                             {
                               "type": "SeccionAST",
                               "linea": 18,
                               "columna": 16,
-                              "label": "CONDICION  ⟨requiere: bool, obtenido: bool⟩",
+                              "label": "CONDICION  ⟨requiere: bool, obtenido: bool, valor: true⟩",
                               "children": [
                                 {
                                   "type": "OperacionBinaria",
@@ -1623,7 +1662,7 @@ Representación estructurada (para visualización):
                                       "type": "Asignacion",
                                       "linea": 19,
                                       "columna": 13,
-                                      "label": "ASIGNACION: b  ⟨b: float, expresión: float⟩",
+                                      "label": "ASIGNACION: b  ⟨b: float, expresión: float, valor: 3.2⟩",
                                       "children": [
                                         {
                                           "type": "Literal",
@@ -1644,6 +1683,7 @@ Representación estructurada (para visualización):
                                       "tipo_dato": "float",
                                       "tipo_expresion": "float",
                                       "verificacion": "compatible",
+                                      "valor_asignado": 3.2,
                                       "label_sintactico": "ASIGNACION: b"
                                     }
                                   ]
@@ -1654,7 +1694,7 @@ Representación estructurada (para visualización):
                               "type": "SeccionAST",
                               "linea": 21,
                               "columna": 13,
-                              "label": "SINO",
+                              "label": "SINO  ⟨no se ejecuta: la condición del if es true⟩",
                               "children": [
                                 {
                                   "type": "ListaSentencias",
@@ -1666,7 +1706,7 @@ Representación estructurada (para visualización):
                                       "type": "Asignacion",
                                       "linea": 21,
                                       "columna": 13,
-                                      "label": "ASIGNACION: b  ⟨b: float, expresión: float⟩",
+                                      "label": "ASIGNACION: b  ⟨b: float, expresión: float, valor: 5.0⟩",
                                       "children": [
                                         {
                                           "type": "Literal",
@@ -1687,37 +1727,42 @@ Representación estructurada (para visualización):
                                       "tipo_dato": "float",
                                       "tipo_expresion": "float",
                                       "verificacion": "compatible",
+                                      "valor_asignado": 5.0,
                                       "label_sintactico": "ASIGNACION: b"
                                     }
                                   ]
                                 }
-                              ]
+                              ],
+                              "ejecucion": "no se ejecuta",
+                              "label_sintactico": "SINO"
                             }
-                          ]
+                          ],
+                          "label_sintactico": "IF"
                         },
                         {
                           "type": "Asignacion",
                           "linea": 23,
                           "columna": 9,
-                          "label": "ASIGNACION: y  ⟨y: int, expresión: int⟩",
+                          "label": "ASIGNACION: y  ⟨y: int, expresión: int, valor: -1⟩",
                           "children": [
                             {
                               "type": "OperacionBinaria",
                               "linea": 23,
                               "columna": 15,
-                              "label": "OPERACION: +  ⟨tipo: int⟩",
+                              "label": "OPERACION: +  ⟨tipo: int, valor: -1⟩",
                               "operador": "+",
                               "children": [
                                 {
                                   "type": "Identificador",
                                   "linea": 23,
                                   "columna": 13,
-                                  "label": "IDENTIFICADOR: y  ⟨tipo: int⟩",
+                                  "label": "IDENTIFICADOR: y  ⟨tipo: int, valor: -2, loc: 1⟩",
                                   "children": [],
                                   "nombre": "y",
                                   "loc": 1,
                                   "tipo_dato": "int",
                                   "atributo_tipo": "sintetizado",
+                                  "valor_calculado": -2,
                                   "label_sintactico": "IDENTIFICADOR: y"
                                 },
                                 {
@@ -1737,6 +1782,7 @@ Representación estructurada (para visualización):
                               ],
                               "tipo_dato": "int",
                               "atributo_tipo": "sintetizado",
+                              "valor_calculado": -1,
                               "label_sintactico": "OPERACION: +"
                             }
                           ],
@@ -1744,30 +1790,33 @@ Representación estructurada (para visualización):
                           "tipo_dato": "int",
                           "tipo_expresion": "int",
                           "verificacion": "compatible",
+                          "valor_asignado": -1,
                           "label_sintactico": "ASIGNACION: y"
                         }
                       ]
                     }
                   ]
                 }
-              ]
+              ],
+              "label_sintactico": "IF"
             },
             {
               "type": "IncrementoDecremento",
               "linea": 25,
               "columna": 5,
-              "label": "INCREMENTO: a  ⟨tipo: float⟩",
+              "label": "INCREMENTO: a  ⟨tipo: float, valor: 62.0⟩",
               "children": [],
               "identificador": "a",
               "operador": "++",
               "tipo_dato": "float",
+              "valor_asignado": 62.0,
               "label_sintactico": "INCREMENTO: a"
             },
             {
               "type": "IncrementoDecremento",
               "linea": 26,
               "columna": 5,
-              "label": "DECREMENTO: c  ⟨tipo: float⟩",
+              "label": "DECREMENTO: c  ⟨tipo: float, valor: desconocido⟩",
               "children": [],
               "identificador": "c",
               "operador": "--",
@@ -1778,7 +1827,7 @@ Representación estructurada (para visualización):
               "type": "Asignacion",
               "linea": 27,
               "columna": 5,
-              "label": "ASIGNACION: x  ⟨x: int, expresión: int⟩",
+              "label": "ASIGNACION: x  ⟨x: int, expresión: int, valor: 7⟩",
               "children": [
                 {
                   "type": "OperacionBinaria",
@@ -1826,19 +1875,20 @@ Representación estructurada (para visualización):
               "tipo_dato": "int",
               "tipo_expresion": "int",
               "verificacion": "compatible",
+              "valor_asignado": 7,
               "label_sintactico": "ASIGNACION: x"
             },
             {
               "type": "Repeticion",
               "linea": 28,
               "columna": 5,
-              "label": "DO_WHILE_UNTIL",
+              "label": "DO_UNTIL  ⟨número de iteraciones desconocido⟩",
               "children": [
                 {
                   "type": "SeccionAST",
                   "linea": 29,
                   "columna": 9,
-                  "label": "CUERPO_DO",
+                  "label": "CUERPO  ⟨valores de la primera iteración⟩",
                   "children": [
                     {
                       "type": "ListaSentencias",
@@ -1850,39 +1900,40 @@ Representación estructurada (para visualización):
                           "type": "Asignacion",
                           "linea": 29,
                           "columna": 9,
-                          "label": "ASIGNACION: y  ⟨y: int, expresión: int⟩",
+                          "label": "ASIGNACION: y  ⟨y: int, expresión: int, valor: 1⟩",
                           "children": [
                             {
                               "type": "OperacionBinaria",
                               "linea": 29,
                               "columna": 25,
-                              "label": "OPERACION: +  ⟨tipo: int⟩",
+                              "label": "OPERACION: +  ⟨tipo: int, valor: 1⟩",
                               "operador": "+",
                               "children": [
                                 {
                                   "type": "OperacionBinaria",
                                   "linea": 29,
                                   "columna": 21,
-                                  "label": "OPERACION: *  ⟨tipo: int⟩",
+                                  "label": "OPERACION: *  ⟨tipo: int, valor: 0⟩",
                                   "operador": "*",
                                   "children": [
                                     {
                                       "type": "OperacionBinaria",
                                       "linea": 29,
                                       "columna": 16,
-                                      "label": "OPERACION: +  ⟨tipo: int⟩",
+                                      "label": "OPERACION: +  ⟨tipo: int, valor: 0⟩",
                                       "operador": "+",
                                       "children": [
                                         {
                                           "type": "Identificador",
                                           "linea": 29,
                                           "columna": 14,
-                                          "label": "IDENTIFICADOR: y  ⟨tipo: int⟩",
+                                          "label": "IDENTIFICADOR: y  ⟨tipo: int, valor: -1, loc: 1⟩",
                                           "children": [],
                                           "nombre": "y",
                                           "loc": 1,
                                           "tipo_dato": "int",
                                           "atributo_tipo": "sintetizado",
+                                          "valor_calculado": -1,
                                           "label_sintactico": "IDENTIFICADOR: y"
                                         },
                                         {
@@ -1902,6 +1953,7 @@ Representación estructurada (para visualización):
                                       ],
                                       "tipo_dato": "int",
                                       "atributo_tipo": "sintetizado",
+                                      "valor_calculado": 0,
                                       "label_sintactico": "OPERACION: +"
                                     },
                                     {
@@ -1921,6 +1973,7 @@ Representación estructurada (para visualización):
                                   ],
                                   "tipo_dato": "int",
                                   "atributo_tipo": "sintetizado",
+                                  "valor_calculado": 0,
                                   "label_sintactico": "OPERACION: *"
                                 },
                                 {
@@ -1940,6 +1993,7 @@ Representación estructurada (para visualización):
                               ],
                               "tipo_dato": "int",
                               "atributo_tipo": "sintetizado",
+                              "valor_calculado": 1,
                               "label_sintactico": "OPERACION: +"
                             }
                           ],
@@ -1947,300 +2001,317 @@ Representación estructurada (para visualización):
                           "tipo_dato": "int",
                           "tipo_expresion": "int",
                           "verificacion": "compatible",
+                          "valor_asignado": 1,
                           "label_sintactico": "ASIGNACION: y"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "SeccionAST",
-                  "linea": 30,
-                  "columna": 17,
-                  "label": "CONDICION_WHILE  ⟨requiere: bool, obtenido: bool⟩",
-                  "children": [
-                    {
-                      "type": "OperacionBinaria",
-                      "linea": 30,
-                      "columna": 17,
-                      "label": "OPERACION: >  ⟨tipo: bool⟩",
-                      "operador": ">",
-                      "children": [
-                        {
-                          "type": "Identificador",
-                          "linea": 30,
-                          "columna": 15,
-                          "label": "IDENTIFICADOR: x  ⟨tipo: int⟩",
-                          "children": [],
-                          "nombre": "x",
-                          "loc": 0,
-                          "tipo_dato": "int",
-                          "atributo_tipo": "sintetizado",
-                          "label_sintactico": "IDENTIFICADOR: x"
                         },
                         {
-                          "type": "Literal",
+                          "type": "Iteracion",
                           "linea": 30,
-                          "columna": 19,
-                          "label": "NUMERO: 7  ⟨tipo: int, valor: 7⟩",
-                          "children": [],
-                          "tipo_literal": "entero",
-                          "es_entero": true,
-                          "valor": 7,
-                          "tipo_dato": "int",
-                          "atributo_tipo": "sintetizado",
-                          "valor_calculado": 7,
-                          "label_sintactico": "NUMERO: 7"
-                        }
-                      ],
-                      "tipo_dato": "bool",
-                      "atributo_tipo": "sintetizado",
-                      "label_sintactico": "OPERACION: >"
-                    }
-                  ],
-                  "tipo_requerido": "bool",
-                  "label_sintactico": "CONDICION_WHILE"
-                },
-                {
-                  "type": "SeccionAST",
-                  "linea": 31,
-                  "columna": 13,
-                  "label": "CUERPO_WHILE",
-                  "children": [
-                    {
-                      "type": "ListaSentencias",
-                      "linea": 31,
-                      "columna": 13,
-                      "label": "BLOQUE",
-                      "children": [
-                        {
-                          "type": "Asignacion",
-                          "linea": 31,
-                          "columna": 13,
-                          "label": "ASIGNACION: x  ⟨x: int, expresión: int⟩",
+                          "columna": 9,
+                          "label": "WHILE  ⟨condición inicial false → el cuerpo no se ejecuta⟩",
                           "children": [
                             {
-                              "type": "OperacionBinaria",
-                              "linea": 31,
-                              "columna": 19,
-                              "label": "OPERACION: +  ⟨tipo: int, valor: 6⟩",
-                              "operador": "+",
+                              "type": "SeccionAST",
+                              "linea": 30,
+                              "columna": 17,
+                              "label": "CONDICION  ⟨requiere: bool, obtenido: bool, valor: false⟩",
                               "children": [
                                 {
-                                  "type": "Literal",
-                                  "linea": 31,
-                                  "columna": 17,
-                                  "label": "NUMERO: 6  ⟨tipo: int, valor: 6⟩",
-                                  "children": [],
-                                  "tipo_literal": "entero",
-                                  "es_entero": true,
-                                  "valor": 6,
-                                  "tipo_dato": "int",
-                                  "atributo_tipo": "sintetizado",
-                                  "valor_calculado": 6,
-                                  "label_sintactico": "NUMERO: 6"
-                                },
-                                {
                                   "type": "OperacionBinaria",
-                                  "linea": 31,
-                                  "columna": 31,
-                                  "label": "OPERACION: /  ⟨tipo: int, valor: 0⟩",
-                                  "operador": "/",
+                                  "linea": 30,
+                                  "columna": 17,
+                                  "label": "OPERACION: >  ⟨tipo: bool, valor: false⟩",
+                                  "operador": ">",
                                   "children": [
                                     {
-                                      "type": "OperacionBinaria",
+                                      "type": "Identificador",
+                                      "linea": 30,
+                                      "columna": 15,
+                                      "label": "IDENTIFICADOR: x  ⟨tipo: int, valor: 7, loc: 0⟩",
+                                      "children": [],
+                                      "nombre": "x",
+                                      "loc": 0,
+                                      "tipo_dato": "int",
+                                      "atributo_tipo": "sintetizado",
+                                      "valor_calculado": 7,
+                                      "label_sintactico": "IDENTIFICADOR: x"
+                                    },
+                                    {
+                                      "type": "Literal",
+                                      "linea": 30,
+                                      "columna": 19,
+                                      "label": "NUMERO: 7  ⟨tipo: int, valor: 7⟩",
+                                      "children": [],
+                                      "tipo_literal": "entero",
+                                      "es_entero": true,
+                                      "valor": 7,
+                                      "tipo_dato": "int",
+                                      "atributo_tipo": "sintetizado",
+                                      "valor_calculado": 7,
+                                      "label_sintactico": "NUMERO: 7"
+                                    }
+                                  ],
+                                  "tipo_dato": "bool",
+                                  "atributo_tipo": "sintetizado",
+                                  "valor_calculado": false,
+                                  "label_sintactico": "OPERACION: >"
+                                }
+                              ],
+                              "tipo_requerido": "bool",
+                              "label_sintactico": "CONDICION"
+                            },
+                            {
+                              "type": "SeccionAST",
+                              "linea": 31,
+                              "columna": 13,
+                              "label": "CUERPO  ⟨no se ejecuta: la condición del while es false al llegar al ciclo⟩",
+                              "children": [
+                                {
+                                  "type": "ListaSentencias",
+                                  "linea": 31,
+                                  "columna": 13,
+                                  "label": "BLOQUE",
+                                  "children": [
+                                    {
+                                      "type": "Asignacion",
                                       "linea": 31,
-                                      "columna": 27,
-                                      "label": "OPERACION: *  ⟨tipo: int, valor: 0⟩",
-                                      "operador": "*",
+                                      "columna": 13,
+                                      "label": "ASIGNACION: x  ⟨x: int, expresión: int, valor: 6⟩",
                                       "children": [
                                         {
                                           "type": "OperacionBinaria",
                                           "linea": 31,
-                                          "columna": 23,
-                                          "label": "OPERACION: /  ⟨tipo: int, valor: 0⟩",
-                                          "operador": "/",
+                                          "columna": 19,
+                                          "label": "OPERACION: +  ⟨tipo: int, valor: 6⟩",
+                                          "operador": "+",
                                           "children": [
                                             {
                                               "type": "Literal",
                                               "linea": 31,
-                                              "columna": 21,
-                                              "label": "NUMERO: 8  ⟨tipo: int, valor: 8⟩",
+                                              "columna": 17,
+                                              "label": "NUMERO: 6  ⟨tipo: int, valor: 6⟩",
                                               "children": [],
                                               "tipo_literal": "entero",
                                               "es_entero": true,
-                                              "valor": 8,
+                                              "valor": 6,
                                               "tipo_dato": "int",
                                               "atributo_tipo": "sintetizado",
-                                              "valor_calculado": 8,
-                                              "label_sintactico": "NUMERO: 8"
+                                              "valor_calculado": 6,
+                                              "label_sintactico": "NUMERO: 6"
                                             },
                                             {
-                                              "type": "Literal",
+                                              "type": "OperacionBinaria",
                                               "linea": 31,
-                                              "columna": 25,
-                                              "label": "NUMERO: 9  ⟨tipo: int, valor: 9⟩",
-                                              "children": [],
-                                              "tipo_literal": "entero",
-                                              "es_entero": true,
-                                              "valor": 9,
+                                              "columna": 31,
+                                              "label": "OPERACION: /  ⟨tipo: int, valor: 0⟩",
+                                              "operador": "/",
+                                              "children": [
+                                                {
+                                                  "type": "OperacionBinaria",
+                                                  "linea": 31,
+                                                  "columna": 27,
+                                                  "label": "OPERACION: *  ⟨tipo: int, valor: 0⟩",
+                                                  "operador": "*",
+                                                  "children": [
+                                                    {
+                                                      "type": "OperacionBinaria",
+                                                      "linea": 31,
+                                                      "columna": 23,
+                                                      "label": "OPERACION: /  ⟨tipo: int, valor: 0⟩",
+                                                      "operador": "/",
+                                                      "children": [
+                                                        {
+                                                          "type": "Literal",
+                                                          "linea": 31,
+                                                          "columna": 21,
+                                                          "label": "NUMERO: 8  ⟨tipo: int, valor: 8⟩",
+                                                          "children": [],
+                                                          "tipo_literal": "entero",
+                                                          "es_entero": true,
+                                                          "valor": 8,
+                                                          "tipo_dato": "int",
+                                                          "atributo_tipo": "sintetizado",
+                                                          "valor_calculado": 8,
+                                                          "label_sintactico": "NUMERO: 8"
+                                                        },
+                                                        {
+                                                          "type": "Literal",
+                                                          "linea": 31,
+                                                          "columna": 25,
+                                                          "label": "NUMERO: 9  ⟨tipo: int, valor: 9⟩",
+                                                          "children": [],
+                                                          "tipo_literal": "entero",
+                                                          "es_entero": true,
+                                                          "valor": 9,
+                                                          "tipo_dato": "int",
+                                                          "atributo_tipo": "sintetizado",
+                                                          "valor_calculado": 9,
+                                                          "label_sintactico": "NUMERO: 9"
+                                                        }
+                                                      ],
+                                                      "tipo_dato": "int",
+                                                      "atributo_tipo": "sintetizado",
+                                                      "valor_calculado": 0,
+                                                      "label_sintactico": "OPERACION: /"
+                                                    },
+                                                    {
+                                                      "type": "Literal",
+                                                      "linea": 31,
+                                                      "columna": 29,
+                                                      "label": "NUMERO: 8  ⟨tipo: int, valor: 8⟩",
+                                                      "children": [],
+                                                      "tipo_literal": "entero",
+                                                      "es_entero": true,
+                                                      "valor": 8,
+                                                      "tipo_dato": "int",
+                                                      "atributo_tipo": "sintetizado",
+                                                      "valor_calculado": 8,
+                                                      "label_sintactico": "NUMERO: 8"
+                                                    }
+                                                  ],
+                                                  "tipo_dato": "int",
+                                                  "atributo_tipo": "sintetizado",
+                                                  "valor_calculado": 0,
+                                                  "label_sintactico": "OPERACION: *"
+                                                },
+                                                {
+                                                  "type": "Literal",
+                                                  "linea": 31,
+                                                  "columna": 33,
+                                                  "label": "NUMERO: 3  ⟨tipo: int, valor: 3⟩",
+                                                  "children": [],
+                                                  "tipo_literal": "entero",
+                                                  "es_entero": true,
+                                                  "valor": 3,
+                                                  "tipo_dato": "int",
+                                                  "atributo_tipo": "sintetizado",
+                                                  "valor_calculado": 3,
+                                                  "label_sintactico": "NUMERO: 3"
+                                                }
+                                              ],
                                               "tipo_dato": "int",
                                               "atributo_tipo": "sintetizado",
-                                              "valor_calculado": 9,
-                                              "label_sintactico": "NUMERO: 9"
+                                              "valor_calculado": 0,
+                                              "label_sintactico": "OPERACION: /"
                                             }
                                           ],
                                           "tipo_dato": "int",
                                           "atributo_tipo": "sintetizado",
-                                          "valor_calculado": 0,
-                                          "label_sintactico": "OPERACION: /"
-                                        },
-                                        {
-                                          "type": "Literal",
-                                          "linea": 31,
-                                          "columna": 29,
-                                          "label": "NUMERO: 8  ⟨tipo: int, valor: 8⟩",
-                                          "children": [],
-                                          "tipo_literal": "entero",
-                                          "es_entero": true,
-                                          "valor": 8,
-                                          "tipo_dato": "int",
-                                          "atributo_tipo": "sintetizado",
-                                          "valor_calculado": 8,
-                                          "label_sintactico": "NUMERO: 8"
+                                          "valor_calculado": 6,
+                                          "label_sintactico": "OPERACION: +"
                                         }
                                       ],
+                                      "identificador": "x",
                                       "tipo_dato": "int",
-                                      "atributo_tipo": "sintetizado",
-                                      "valor_calculado": 0,
-                                      "label_sintactico": "OPERACION: *"
+                                      "tipo_expresion": "int",
+                                      "verificacion": "compatible",
+                                      "valor_asignado": 6,
+                                      "label_sintactico": "ASIGNACION: x"
                                     },
                                     {
-                                      "type": "Literal",
-                                      "linea": 31,
-                                      "columna": 33,
-                                      "label": "NUMERO: 3  ⟨tipo: int, valor: 3⟩",
+                                      "type": "EntradaEstandar",
+                                      "linea": 32,
+                                      "columna": 13,
+                                      "label": "ENTRADA: cin x  ⟨tipo: int, valor: se lee en ejecución⟩",
                                       "children": [],
-                                      "tipo_literal": "entero",
-                                      "es_entero": true,
-                                      "valor": 3,
+                                      "identificador": "x",
+                                      "identificador_linea": 32,
+                                      "identificador_columna": 17,
                                       "tipo_dato": "int",
-                                      "atributo_tipo": "sintetizado",
-                                      "valor_calculado": 3,
-                                      "label_sintactico": "NUMERO: 3"
+                                      "label_sintactico": "ENTRADA: cin x"
+                                    },
+                                    {
+                                      "type": "Asignacion",
+                                      "linea": 33,
+                                      "columna": 13,
+                                      "label": "ASIGNACION: mas  ⟨destino no declarado, ✗ E1⟩",
+                                      "children": [
+                                        {
+                                          "type": "OperacionBinaria",
+                                          "linea": 33,
+                                          "columna": 22,
+                                          "label": "OPERACION: /  ⟨tipo: int, valor: 5⟩",
+                                          "operador": "/",
+                                          "children": [
+                                            {
+                                              "type": "Literal",
+                                              "linea": 33,
+                                              "columna": 19,
+                                              "label": "NUMERO: 36  ⟨tipo: int, valor: 36⟩",
+                                              "children": [],
+                                              "tipo_literal": "entero",
+                                              "es_entero": true,
+                                              "valor": 36,
+                                              "tipo_dato": "int",
+                                              "atributo_tipo": "sintetizado",
+                                              "valor_calculado": 36,
+                                              "label_sintactico": "NUMERO: 36"
+                                            },
+                                            {
+                                              "type": "Literal",
+                                              "linea": 33,
+                                              "columna": 24,
+                                              "label": "NUMERO: 7  ⟨tipo: int, valor: 7⟩",
+                                              "children": [],
+                                              "tipo_literal": "entero",
+                                              "es_entero": true,
+                                              "valor": 7,
+                                              "tipo_dato": "int",
+                                              "atributo_tipo": "sintetizado",
+                                              "valor_calculado": 7,
+                                              "label_sintactico": "NUMERO: 7"
+                                            }
+                                          ],
+                                          "tipo_dato": "int",
+                                          "atributo_tipo": "sintetizado",
+                                          "valor_calculado": 5,
+                                          "label_sintactico": "OPERACION: /"
+                                        }
+                                      ],
+                                      "identificador": "mas",
+                                      "errores_semanticos": [
+                                        "E1"
+                                      ],
+                                      "label_sintactico": "ASIGNACION: mas"
                                     }
-                                  ],
-                                  "tipo_dato": "int",
-                                  "atributo_tipo": "sintetizado",
-                                  "valor_calculado": 0,
-                                  "label_sintactico": "OPERACION: /"
+                                  ]
                                 }
                               ],
-                              "tipo_dato": "int",
-                              "atributo_tipo": "sintetizado",
-                              "valor_calculado": 6,
-                              "label_sintactico": "OPERACION: +"
+                              "ejecucion": "no se ejecuta",
+                              "label_sintactico": "CUERPO"
                             }
                           ],
-                          "identificador": "x",
-                          "tipo_dato": "int",
-                          "tipo_expresion": "int",
-                          "verificacion": "compatible",
-                          "label_sintactico": "ASIGNACION: x"
-                        },
-                        {
-                          "type": "EntradaEstandar",
-                          "linea": 32,
-                          "columna": 13,
-                          "label": "ENTRADA: cin x  ⟨tipo: int⟩",
-                          "children": [],
-                          "identificador": "x",
-                          "identificador_linea": 32,
-                          "identificador_columna": 17,
-                          "tipo_dato": "int",
-                          "label_sintactico": "ENTRADA: cin x"
-                        },
-                        {
-                          "type": "Asignacion",
-                          "linea": 33,
-                          "columna": 13,
-                          "label": "ASIGNACION: mas  ⟨destino no declarado, ✗ E1⟩",
-                          "children": [
-                            {
-                              "type": "OperacionBinaria",
-                              "linea": 33,
-                              "columna": 22,
-                              "label": "OPERACION: /  ⟨tipo: int, valor: 5⟩",
-                              "operador": "/",
-                              "children": [
-                                {
-                                  "type": "Literal",
-                                  "linea": 33,
-                                  "columna": 19,
-                                  "label": "NUMERO: 36  ⟨tipo: int, valor: 36⟩",
-                                  "children": [],
-                                  "tipo_literal": "entero",
-                                  "es_entero": true,
-                                  "valor": 36,
-                                  "tipo_dato": "int",
-                                  "atributo_tipo": "sintetizado",
-                                  "valor_calculado": 36,
-                                  "label_sintactico": "NUMERO: 36"
-                                },
-                                {
-                                  "type": "Literal",
-                                  "linea": 33,
-                                  "columna": 24,
-                                  "label": "NUMERO: 7  ⟨tipo: int, valor: 7⟩",
-                                  "children": [],
-                                  "tipo_literal": "entero",
-                                  "es_entero": true,
-                                  "valor": 7,
-                                  "tipo_dato": "int",
-                                  "atributo_tipo": "sintetizado",
-                                  "valor_calculado": 7,
-                                  "label_sintactico": "NUMERO: 7"
-                                }
-                              ],
-                              "tipo_dato": "int",
-                              "atributo_tipo": "sintetizado",
-                              "valor_calculado": 5,
-                              "label_sintactico": "OPERACION: /"
-                            }
-                          ],
-                          "identificador": "mas",
-                          "errores_semanticos": [
-                            "E1"
-                          ],
-                          "label_sintactico": "ASIGNACION: mas"
+                          "label_sintactico": "WHILE"
                         }
                       ]
                     }
-                  ]
+                  ],
+                  "label_sintactico": "CUERPO"
                 },
                 {
                   "type": "SeccionAST",
                   "linea": 35,
                   "columna": 13,
-                  "label": "CONDICION_UNTIL  ⟨requiere: bool, obtenido: bool⟩",
+                  "label": "CONDICION_UNTIL  ⟨requiere: bool, obtenido: bool, valor: false⟩",
                   "children": [
                     {
                       "type": "OperacionBinaria",
                       "linea": 35,
                       "columna": 13,
-                      "label": "OPERACION: ==  ⟨tipo: bool⟩",
+                      "label": "OPERACION: ==  ⟨tipo: bool, valor: false⟩",
                       "operador": "==",
                       "children": [
                         {
                           "type": "Identificador",
                           "linea": 35,
                           "columna": 11,
-                          "label": "IDENTIFICADOR: y  ⟨tipo: int⟩",
+                          "label": "IDENTIFICADOR: y  ⟨tipo: int, valor: 1, loc: 1⟩",
                           "children": [],
                           "nombre": "y",
                           "loc": 1,
                           "tipo_dato": "int",
                           "atributo_tipo": "sintetizado",
+                          "valor_calculado": 1,
                           "label_sintactico": "IDENTIFICADOR: y"
                         },
                         {
@@ -2260,25 +2331,27 @@ Representación estructurada (para visualización):
                       ],
                       "tipo_dato": "bool",
                       "atributo_tipo": "sintetizado",
+                      "valor_calculado": false,
                       "label_sintactico": "OPERACION: =="
                     }
                   ],
                   "tipo_requerido": "bool",
                   "label_sintactico": "CONDICION_UNTIL"
                 }
-              ]
+              ],
+              "label_sintactico": "DO_UNTIL"
             },
             {
               "type": "Iteracion",
               "linea": 36,
               "columna": 5,
-              "label": "WHILE",
+              "label": "WHILE  ⟨número de iteraciones desconocido⟩",
               "children": [
                 {
                   "type": "SeccionAST",
                   "linea": 36,
                   "columna": 13,
-                  "label": "CONDICION  ⟨requiere: bool, obtenido: bool⟩",
+                  "label": "CONDICION  ⟨requiere: bool, obtenido: bool, valor: desconocido⟩",
                   "children": [
                     {
                       "type": "OperacionBinaria",
@@ -2291,7 +2364,7 @@ Representación estructurada (para visualización):
                           "type": "Identificador",
                           "linea": 36,
                           "columna": 11,
-                          "label": "IDENTIFICADOR: y  ⟨tipo: int⟩",
+                          "label": "IDENTIFICADOR: y  ⟨tipo: int, valor: desconocido, loc: 1⟩",
                           "children": [],
                           "nombre": "y",
                           "loc": 1,
@@ -2326,7 +2399,7 @@ Representación estructurada (para visualización):
                   "type": "SeccionAST",
                   "linea": 37,
                   "columna": 9,
-                  "label": "CUERPO",
+                  "label": "CUERPO  ⟨valores de la primera iteración⟩",
                   "children": [
                     {
                       "type": "ListaSentencias",
@@ -2364,12 +2437,13 @@ Representación estructurada (para visualización):
                                   "type": "Identificador",
                                   "linea": 38,
                                   "columna": 14,
-                                  "label": "IDENTIFICADOR: x  ⟨tipo: int⟩",
+                                  "label": "IDENTIFICADOR: x  ⟨tipo: int, valor: 7, loc: 0⟩",
                                   "children": [],
                                   "nombre": "x",
                                   "loc": 0,
                                   "tipo_dato": "int",
                                   "atributo_tipo": "sintetizado",
+                                  "valor_calculado": 7,
                                   "label_sintactico": "IDENTIFICADOR: x"
                                 }
                               ]
@@ -2378,9 +2452,11 @@ Representación estructurada (para visualización):
                         }
                       ]
                     }
-                  ]
+                  ],
+                  "label_sintactico": "CUERPO"
                 }
-              ]
+              ],
+              "label_sintactico": "WHILE"
             }
           ]
         }
