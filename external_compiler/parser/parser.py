@@ -695,14 +695,12 @@ class Parser:
 
     def _repeticion(self) -> Optional[Repeticion]:
         """
-        Gramática propia del proyecto:
-            repeticion → do lista_sentencias while expresion cuerpo_while until expresion ;
+        repeticion → do lista_sentencias until expresion [;]
 
-        Las tres formas de cuerpo_while son válidas:
-            while cond { sentencias }     ← con bloque
-            while cond sentencias end     ← con end (estilo del archivo oficial)
-            while cond end                ← cuerpo vacío
-        until es el terminador formal del do-while.
+        El cuerpo del do es una lista de sentencias normal, así que puede
+        contener cualquier sentencia, incluidos otros ciclos (while, do-until)
+        y selecciones. Un 'while' dentro del cuerpo es una iteración anidada
+        con su propia condición y su propio 'end'; no forma parte del do.
         """
         rep = Repeticion()
 
@@ -716,41 +714,14 @@ class Parser:
         # apropiarse del siguiente do real.
         if (self.current_token
                 and self.current_token.tipo not in self.statement_starts
-                and self.current_token.tipo != "KW_WHILE"):
-            self._report_unexpected_token("encabezado do-while-until")
+                and self.current_token.tipo != "KW_UNTIL"):
+            self._report_unexpected_token("encabezado do-until")
             while self.current_token and not self._match("KW_DO", "LLAVE_DER"):
                 self._advance()
             return None
 
-        # Cuerpo principal: sentencias hasta 'while'
-        rep.cuerpo = self._lista_sentencias(stop_tokens=("KW_WHILE",))
-
-        if not self._consume("KW_WHILE", "Se esperaba 'while' después del cuerpo do"):
-            self._skip_on_error("KW_UNTIL", "PUNTO_COMA", "LLAVE_DER")
-            return rep
-
-        # Condición y bloque asociados al while interno.
-        rep.condicion = self._parse_condition("while")
-
-        if self._match("LLAVE_IZQ"):
-            self._advance()
-            rep.cuerpo_while = self._lista_sentencias(stop_tokens=("LLAVE_DER",))
-            if self._match("LLAVE_DER"):
-                self._advance()
-        elif self._match("KW_END"):
-            # Cuerpo vacío cerrado con 'end'
-            self._advance()
-        else:
-            # Forma 'while cond <sentencias> end'
-            rep.cuerpo_while = self._lista_sentencias(stop_tokens=("KW_UNTIL",))
-            if not self._consume("KW_END", "Se esperaba 'end' para cerrar el while del do"):
-                self._skip_on_error("KW_END", "KW_UNTIL", "LLAVE_DER")
-                if self._match("KW_END"):
-                    self._advance()
-
-        # ';' opcional después del bloque
-        if self._match("PUNTO_COMA"):
-            self._advance()
+        # Cuerpo: cualquier lista de sentencias hasta 'until'
+        rep.cuerpo = self._lista_sentencias(stop_tokens=("KW_UNTIL",))
 
         if self._match("KW_UNTIL"):
             self._advance()
@@ -760,7 +731,7 @@ class Parser:
         else:
             tok = self.current_token
             self.errors.append(SyntaxError(
-                "Se esperaba 'until' para cerrar do-while-until",
+                "Se esperaba 'until' para cerrar el ciclo do",
                 linea=tok.linea if tok else 0,
                 columna=tok.columna if tok else 0,
                 token_esperado="KW_UNTIL",
@@ -770,10 +741,6 @@ class Parser:
         children = []
         if rep.cuerpo:
             children.extend(rep.cuerpo.children)
-        if rep.condicion:
-            children.append(rep.condicion)
-        if rep.cuerpo_while:
-            children.extend(rep.cuerpo_while.children)
         if rep.until_condicion:
             children.append(rep.until_condicion)
         rep.children = children
