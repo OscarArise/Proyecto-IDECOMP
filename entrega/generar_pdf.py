@@ -302,7 +302,8 @@ def construir(salida, carpeta_capturas):
                "dtype ← tipo (heredado); cada idi se inserta en la tabla con ese tipo. "
                "Si ya existía: E2."],
               ["Identificador en expresión o asignación",
-               "Se busca en la tabla; tipo ← tipo registrado. Si no está: E1."],
+               "Se busca en la tabla; tipo ← tipo registrado y valor ← último valor conocido de la "
+               "variable. Si no está: E1."],
               ["Literal", "tipo ← int o float según el literal; valor ← el literal; true/false: bool."],
               ["a + b, a − b, a * b, a / b, a ^ b",
                "Si ambos son int, el resultado es int; si alguno es float, el resultado es float y el "
@@ -313,9 +314,11 @@ def construir(salida, carpeta_capturas):
               ["a && b, a || b, !a", "Operandos bool; resultado bool. En otro caso: E5."],
               ["id = expresión",
                "Mismo tipo: compatible. float ← int: conversión implícita. int ← float: E4. "
-               "bool contra número: E6."],
-              ["id++, id−−", "id debe ser numérico; en otro caso: E5."],
-              ["Condición de if, while, do-while y until", "La expresión debe ser bool; en otro caso: E7."],
+               "bool contra número: E6. Si es válida, el valor de la expresión se guarda en la "
+               "tabla como valor actual de id."],
+              ["id++, id−−", "id debe ser numérico; en otro caso: E5. Su valor aumenta o disminuye en 1."],
+              ["cin id", "El valor se conoce hasta la ejecución: el valor de id queda desconocido."],
+              ["Condición de if, while y until (do-until)", "La expresión debe ser bool; en otro caso: E7."],
           ], [2.2, 4.1]),
           Spacer(1, 4),
           P("<b>División entre enteros.</b> int / int produce int y trunca hacia cero, como en C. La "
@@ -324,7 +327,18 @@ def construir(salida, carpeta_capturas):
             "producirían cuatro errores E4 que el archivo no busca provocar."),
           P("<b>Errores en cascada.</b> Un nodo con error recibe el tipo interno <i>error</i>; una "
             "operación con un operando de tipo error no genera errores nuevos. Por ejemplo, "
-            "x = (y + 1.5) * 2 con y no declarada produce un solo E1.")]
+            "x = (y + 1.5) * 2 con y no declarada produce un solo E1."),
+          P("<b>Valores de las variables.</b> Cada variable guarda en la tabla su último valor "
+            "conocido; un identificador dentro de una expresión toma ese valor (en z = y + 7, y vale "
+            "4 y z recibe 11). Como pide la guía, el valor no se fuerza cuando no puede conocerse en "
+            "compilación: una variable sin asignar o leída con cin queda <i>desconocida</i>. En un if "
+            "con condición conocida solo la rama que se ejecuta cambia valores; la otra se verifica "
+            "igual (tipos y errores) y se marca como <i>no se ejecuta</i>. Si la condición no se "
+            "conoce, se analizan las dos ramas y una variable conserva su valor solo si coincide en "
+            "ambas. El cuerpo de un ciclo se anota con los valores de la primera iteración; como no "
+            "se sabe cuántas veces se repite, las variables que cambian dentro del ciclo quedan "
+            "desconocidas al salir, salvo que el while no se ejecute o el until se cumpla en la "
+            "primera pasada.")]
 
     # 3. Atributos
     s += [P("3. Atributos sintetizados y heredados", "h1"),
@@ -335,15 +349,16 @@ def construir(salida, carpeta_capturas):
                "identificador entra en la tabla."],
               ["tipo", "Sintetizado", "Literales, identificadores y operaciones",
                "De los hijos al padre (postorden), según las reglas de la sección 2."],
-              ["valor", "Sintetizado", "Operaciones con operandos constantes",
-               "Solo se calcula cuando todos los operandos son constantes (2 + 3 − 1 → 4). Con un "
-               "identificador no se fuerza. Una división entre la constante cero no se pliega."],
+              ["valor", "Sintetizado", "Literales, identificadores, operaciones y asignaciones",
+               "De los hijos al padre. Un identificador toma su valor de la tabla; una asignación "
+               "guarda el valor en la tabla. Si algún operando es desconocido no se fuerza; una "
+               "división entre cero no se pliega."],
               ["loc", "De tabla", "Identificadores", "Posición del símbolo en la tabla, en orden de declaración (0, 1, 2…)."],
               ["tipo de la expresión / verificación", "Sintetizado", "Asignaciones",
                "Resultado de comparar el tipo de la variable con el de la expresión: compatible, "
                "conversión o error."],
               ["tipo requerido", "Heredado", "Condiciones",
-               "Las condiciones de if, while, do-while y until heredan el tipo requerido bool."],
+               "Las condiciones de if, while y until heredan el tipo requerido bool."],
           ], [1.2, 1.0, 1.6, 2.5]),
           ]
 
@@ -356,7 +371,9 @@ def construir(salida, carpeta_capturas):
           tabla([
               ["Clave agregada", "Nodos", "Contenido"],
               ["tipo_dato, atributo_tipo", "Expresiones, identificadores", "Tipo calculado y su clase (sintetizado o heredado)."],
-              ["valor_calculado", "Expresiones constantes", "Valor obtenido en compilación."],
+              ["valor_calculado", "Expresiones e identificadores", "Valor obtenido en compilación, cuando se conoce."],
+              ["valor_asignado", "Asignaciones, ++ y −−", "Valor que se guarda en la tabla."],
+              ["ejecucion", "Ramas o cuerpos que no se ejecutan", "Se verifican, pero no cambian los valores."],
               ["dtype, loc", "Declaraciones e identificadores", "Tipo heredado y localidad en la tabla."],
               ["tipo_expresion, verificacion", "Asignaciones", "Tipo de la expresión y resultado: compatible, conversion o error."],
               ["tipo_requerido", "Secciones CONDICION*", "Siempre bool."],
@@ -367,8 +384,16 @@ def construir(salida, carpeta_capturas):
           P("Se agregan dos tipos de nodo: <b>IdentificadorDeclarado</b> (hijo de cada declaración, "
             "uno por variable, con su dtype heredado y su loc) y <b>ConversionTipo</b> (envuelve al "
             "operando que se convirtió de int a float)."),
-          P("Fragmento del árbol anotado (líneas 2–5 y 10 del archivo de prueba)", "h2"),
-          codigo(arbol_texto(semantic, 3, 26) + "\n   …"),
+          P("Fragmento del árbol anotado (líneas 2 a 9 del archivo de prueba)", "h2"),
+          P("Los identificadores toman su valor de la tabla: en la línea 8 <i>y</i> vale 4 y en la "
+            "línea 9 se usa ese valor para calcular y = y + 1 = 5."),
+          codigo(arbol_texto(semantic, 3, 31) + "\n   …"),
+          P("Fragmento del árbol anotado: ciclos anidados (líneas 28 a 38)", "h2"),
+          P("El while de la línea 30 es un ciclo anidado dentro del cuerpo del do-until. Su "
+            "condición x &gt; 7 vale false (x = 7), así que su cuerpo se verifica pero no cambia "
+            "valores."),
+          codigo(arbol_texto(semantic, 118, 137) + "\n                       …\n"
+                 + arbol_texto(semantic, 146, 166)),
           ]
 
     # 5. Tabla de símbolos
@@ -383,12 +408,15 @@ def construir(salida, carpeta_capturas):
               ["tipo", "int, float o bool (viene del atributo heredado dtype)."],
               ["loc", "Desplazamiento de memoria: 0, 1, 2… en orden de declaración."],
               ["línea y columna de declaración", "Dónde se declaró."],
-              ["líneas", "Línea de la declaración y de cada uso, sin repetir."],
+              ["líneas", "Una línea por cada aparición (declaración y cada uso). Si el identificador "
+               "aparece dos veces en la misma línea, el número se repite (y = y + 1 en la línea 9 "
+               "registra 9, 9), igual que st_insert de TINY."],
+              ["valor", "Último valor conocido en compilación, o desconocido."],
               ["siguiente", "Siguiente símbolo de la misma cubeta (encadenamiento)."],
           ], [2.2, 4.1]),
           Spacer(1, 4),
           P("Operaciones: <b>insertar</b> (si existe, se reporta E2), <b>buscar</b> (si no existe, E1; "
-            "si existe, agrega la línea de uso), <b>actualizar líneas</b> y <b>eliminar</b>. Las "
+            "si existe, agrega la línea de uso), <b>actualizar líneas</b>, <b>asignar valor</b> y <b>eliminar</b>. Las "
             "variables no declaradas no se insertan: se reporta E1 en cada uso. Como el recorrido "
             "sigue el orden del programa, usar una variable antes de declararla también es E1."),
           P("Tabla generada con el archivo de prueba", "h2"),
@@ -422,7 +450,7 @@ def construir(salida, carpeta_capturas):
               ["E4", "Conversión no válida", "Se asigna un float a un int (float → int no está permitida)."],
               ["E5", "Operador mal aplicado", "El operador no admite el tipo de sus operandos (&&, %, ++…)."],
               ["E6", "Asignación inconsistente", "Se asigna un bool a un número o un número a un bool."],
-              ["E7", "Condición no booleana", "if, while, do-while o until reciben una expresión que no es bool."],
+              ["E7", "Condición no booleana", "if, while o until reciben una expresión que no es bool."],
           ], [0.8, 1.9, 3.6]),
           Spacer(1, 4),
           P("Formato: <font name='%s'>[SEMANTICO] [línea:columna] Error semántico Ex: mensaje</font>. "
@@ -462,9 +490,9 @@ def construir(salida, carpeta_capturas):
           P("Pruebas automáticas", "h2"),
           tabla([
               ["Archivo", "Pruebas", "Qué verifica"],
-              ["test_semantico.py", "30", "Tabla de símbolos, TestSemantica (errores, tabla, valores, conversiones, árbol original intacto, dtype heredado), casos E1–E7, cascadas y formateadores."],
+              ["test_semantico.py", "41", "Tabla de símbolos (líneas repetidas), TestSemantica (errores, tabla, valores, conversiones, árbol original intacto, dtype heredado, ciclo anidado), valores de variables (if, while, do-until, cin, ++), casos E1–E7, cascadas y formateadores."],
               ["test_integracion.py", "8", "Compilador completo como subproceso: código de salida 3, los seis errores, tabla, semantic.txt y regresión de los códigos 0/1/2 con archivos de pruebas/ e ide/samples/."],
-              ["test_parser_recovery.py", "19", "Analizador sintáctico (fase anterior), sin regresiones."],
+              ["test_parser_recovery.py", "20", "Analizador sintáctico, incluidos ciclos anidados a cualquier profundidad."],
               ["ide/test_semantic_output.py", "5", "Separación del árbol anotado y del texto en la salida del compilador."],
           ], [2.0, 0.8, 3.5]),
           Spacer(1, 4),
@@ -474,20 +502,39 @@ def construir(salida, carpeta_capturas):
             "permite. Se corrigió con tres líneas en Parser._declaracion: la lista de sentencias se "
             "detiene al encontrar int, float, real o bool. Las pruebas del parser siguen pasando y "
             "los códigos de salida de todos los archivos de pruebas/ e ide/samples/ no cambiaron."),
+          P("Correcciones tras la prerevisión", "h2"),
+          tabla([
+              ["Observación", "Causa", "Corrección"],
+              ["El árbol no jala el valor de la variable.",
+               "Se había decidido calcular valores solo con constantes; los identificadores nunca "
+               "tenían valor y la tabla no lo guardaba.",
+               "La tabla guarda el valor actual de cada variable; las asignaciones lo actualizan y "
+               "los identificadores lo toman (sección 2, Valores de las variables)."],
+              ["Los ciclos no se anidan correctamente.",
+               "La gramática del parser definía repeticion → do sentencias while cond sentencias "
+               "until cond: el while de TestSemantica se tomaba como parte del do y el cuerpo del do "
+               "terminaba en el primer while.",
+               "repeticion → do lista_sentencias until expresión. El while es una iteración normal "
+               "dentro del cuerpo, así que los ciclos se anidan a cualquier profundidad."],
+              ["La tabla no repite la línea por cada aparición.",
+               "agregar_linea descartaba una línea que ya estaba en la lista.",
+               "Cada aparición agrega su línea, como en TINY: y registra 9, 9 y 23, 23."],
+          ], [1.6, 2.4, 2.3]),
           PageBreak()]
 
     # 9. Capturas
     s += [P("9. Capturas de ejecución en el IDE", "h1"),
           P("Todas las capturas corresponden a la ejecución del IDE (tecla F7) sobre TestSemantica.txt, "
-            "salvo las dos últimas (programa válido y regresión sintáctica).")]
+            "salvo la Figura 6 (programa válido) y la Figura 8 (regresión sintáctica).")]
     figuras = [
-        ("01_arbol_anotado.png", "Figura 1. Árbol con anotaciones semánticas: dtype heredado en los identificadores, tipos y valores en las expresiones y errores en rojo."),
+        ("01_arbol_anotado.png", "Figura 1. Árbol con anotaciones semánticas: tipos y valores; los identificadores toman su valor de la tabla (en z = y + 7, y vale 4)."),
         ("02_comparacion_ast_original_vs_anotado.png", "Figura 2. Comparación: AST original (izquierda) frente al AST con anotaciones (derecha)."),
-        ("03_tabla_de_simbolos.png", "Figura 3. Tabla de símbolos: tipo, localidad, hash, declaración y líneas de uso."),
+        ("03_tabla_de_simbolos.png", "Figura 3. Tabla de símbolos: tipo, localidad, hash, declaración, valor final y una línea por cada aparición."),
         ("04_semantico_recorrido_y_tipos.png", "Figura 4. Pestaña Semantico: resumen, árbol anotado en texto y recorrido semántico."),
         ("05_errores_semanticos_en_editor.png", "Figura 5. Errores semánticos y marcas en el editor (líneas 4, 5, 14, 16, 33 y 37; identificadores subrayados)."),
         ("06_programa_valido_sin_errores.png", "Figura 6. Un programa válido (codigo_valido.caos) completa la fase sin errores."),
-        ("07_regresion_errores_sintacticos.png", "Figura 7. Regresión: un programa con errores sintácticos (conerrores.caos) se detiene en esa fase y los marca en el editor."),
+        ("07_ciclos_anidados.png", "Figura 7. Ciclos anidados: el while de la línea 30 es hijo del cuerpo del do-until; su condición es false, así que su cuerpo no cambia valores."),
+        ("08_regresion_errores_sintacticos.png", "Figura 8. Regresión: un programa con errores sintácticos (conerrores.caos) se detiene en esa fase y los marca en el editor."),
     ]
     for nombre, pie in figuras:
         ruta = caps / nombre

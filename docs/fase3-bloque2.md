@@ -127,7 +127,7 @@ declaración es E1.
 | `!` | bool | bool | E5 |
 | `id = expr` | mismo tipo, o float ← int | — | E4 si int ← float; E6 si mezcla bool y número |
 | `id++`, `id--` | int, float | — | E5 |
-| condición de `if`, `while`, `do-while`, `until` | bool | — | E7 |
+| condición de `if`, `while`, `until` | bool | — | E7 |
 
 **División entre enteros:** `int / int` da `int` y **trunca hacia cero**, como en
 C. La guía (sección 7) solo pide conversión cuando los operandos son de tipos

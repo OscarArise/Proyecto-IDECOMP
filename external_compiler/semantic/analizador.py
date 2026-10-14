@@ -37,6 +37,28 @@ Reglas de tipos
     condiciones   bool (if, while, do-while, until)
 
 La división entre enteros es entera y trunca hacia cero, como en C.
+
+Atributo de valor
+-----------------
+Cada variable guarda en la tabla de símbolos su último valor conocido. Una
+asignación compatible calcula el valor de la expresión y lo guarda; un
+identificador usado en una expresión toma ("jala") ese valor de la tabla, de
+modo que z = y + 7 se calcula con el valor actual de y.
+
+Siguiendo la guía de la fase, el valor no se fuerza cuando no puede
+determinarse en compilación:
+    sin asignar, cin x           el valor queda desconocido
+    if con condición conocida    solo la rama que se ejecuta cambia valores
+    if con condición desconocida se analizan ambas ramas; una variable
+                                 conserva su valor solo si ambas coinciden
+    while / do-until             el cuerpo se anota con los valores de la
+                                 primera iteración; como no se sabe cuántas
+                                 veces se repite, las variables que cambian
+                                 dentro del ciclo quedan desconocidas después
+                                 (salvo que el while no se ejecute o el until
+                                 se cumpla en la primera pasada)
+Las ramas que no se ejecutan se verifican igual (tipos y errores), pero sus
+asignaciones no modifican los valores de la tabla.
 """
 
 import copy
@@ -55,7 +77,6 @@ Nodo = Dict[str, Any]
 # Etiquetas de las secciones de condición y la palabra reservada que las abre
 _CONDICIONES = {
     "CONDICION": None,          # depende del padre: if | while
-    "CONDICION_WHILE": "while",
     "CONDICION_UNTIL": "until",
 }
 
@@ -213,14 +234,61 @@ class AnalizadorSemantico:
             partes = partes + ["✗ " + " ".join(errores)]
         nodo["label"] = f"{original}  ⟨{', '.join(partes)}⟩" if partes else original
 
-    def _anotar_expresion(self, nodo: Nodo, tipo: str, valor: Any) -> None:
+    def _anotar_expresion(self, nodo: Nodo, tipo: str, valor: Any,
+                          extra: Optional[List[str]] = None) -> None:
         nodo["tipo_dato"] = tipo
         nodo["atributo_tipo"] = "sintetizado"
         partes = [f"tipo: {tipo}"]
         if valor is not None and tipo not in (T.ERROR, T.CADENA):
             nodo["valor_calculado"] = valor
             partes.append(f"valor: {formatear_valor(valor)}")
-        self._etiquetar(nodo, partes)
+        self._etiquetar(nodo, partes + (extra or []))
+
+    # ------------------------------------------------------------------
+    # Valores de las variables (estado de la tabla en este punto)
+    # ------------------------------------------------------------------
+
+    def _valores(self) -> Dict[str, Any]:
+        return {s.nombre: s.valor for s in self.tabla.simbolos()}
+
+    def _restaurar(self, valores: Dict[str, Any]) -> None:
+        for nombre, valor in valores.items():
+            self.tabla.asignar_valor(nombre, valor)
+
+    @staticmethod
+    def _iguales(a: Any, b: Any) -> bool:
+        return a is not None and type(a) is type(b) and a == b
+
+    def _unir(self, rama_a: Dict[str, Any], rama_b: Dict[str, Any]) -> Dict[str, Any]:
+        """Después de un if con condición desconocida: solo se conserva lo que coincide."""
+        return {n: (v if self._iguales(v, rama_b.get(n)) else None) for n, v in rama_a.items()}
+
+    def _invalidar_modificadas(self, nodo: Nodo, entrada: Dict[str, Any], motivo: str) -> None:
+        """Las variables que cambiaron dentro del ciclo quedan sin valor conocido."""
+        for nombre, valor in self._valores().items():
+            if nombre in entrada and not self._iguales(valor, entrada[nombre]) \
+                    and not (valor is None and entrada[nombre] is None):
+                self.tabla.asignar_valor(nombre, None)
+                self._paso(nodo, "VALOR", f"{nombre} queda sin valor conocido ({motivo})")
+
+    def _no_ejecutada(self, seccion: Optional[Nodo], contexto: str, motivo: str) -> None:
+        """Verifica una rama que no se ejecuta sin dejar que cambie los valores."""
+        if not seccion:
+            return
+        self._paso(seccion, "RAMA NO EJECUTADA",
+                   f"{motivo}; se verifica, pero sus asignaciones no cambian los valores")
+        entrada = self._valores()
+        self._sentencia(seccion, contexto)
+        self._restaurar(entrada)
+        seccion["ejecucion"] = "no se ejecuta"
+        self._etiquetar(seccion, [f"no se ejecuta: {motivo}"])
+
+    @staticmethod
+    def _secciones(nodo: Nodo) -> Dict[str, Nodo]:
+        return {
+            h.get("label_sintactico", h.get("label")): h
+            for h in nodo.get("children", []) if h.get("type") == "SeccionAST"
+        }
 
     def _convertir(self, padre: Nodo, indice: int, destino: str, valor: Any) -> Any:
         """
@@ -266,17 +334,84 @@ class AnalizadorSemantico:
             self._entrada(nodo)
         elif tipo_nodo == "SalidaEstandar":
             self._salida(nodo)
-        elif tipo_nodo in ("Seleccion", "Iteracion", "Repeticion"):
-            palabra = {"Seleccion": "if", "Iteracion": "while", "Repeticion": "do"}[tipo_nodo]
-            self._paso(nodo, "ESTRUCTURA", f"{nodo.get('label')} ({palabra})")
-            for hijo in nodo.get("children", []):
-                self._sentencia(hijo, contexto=palabra)
+        elif tipo_nodo == "Seleccion":
+            self._seleccion(nodo)
+        elif tipo_nodo == "Iteracion":
+            self._iteracion(nodo)
+        elif tipo_nodo == "Repeticion":
+            self._repeticion(nodo)
         elif tipo_nodo == "SeccionAST" and nodo.get("label") in _CONDICIONES:
             self._condicion(nodo, contexto)
         else:
             # Programa, DECLARACIONES, BLOQUE, secciones de cuerpo, etc.
             for hijo in nodo.get("children", []):
                 self._sentencia(hijo, contexto)
+
+    # ------------------------------------------------------------------
+    # Estructuras de control
+    # ------------------------------------------------------------------
+
+    def _seleccion(self, nodo: Nodo) -> None:
+        """if condicion then ENTONCES [else SINO] end"""
+        secciones = self._secciones(nodo)
+        self._paso(nodo, "ESTRUCTURA", "IF (if)")
+        _, valor = self._condicion(secciones.get("CONDICION"), "if")
+        entonces, sino = secciones.get("ENTONCES"), secciones.get("SINO")
+
+        if valor is True:
+            self._sentencia(entonces, "if")
+            self._no_ejecutada(sino, "if", "la condición del if es true")
+            partes = ["condición true → se ejecuta ENTONCES"]
+        elif valor is False:
+            self._no_ejecutada(entonces, "if", "la condición del if es false")
+            self._sentencia(sino, "if")
+            partes = ["condición false → se ejecuta SINO" if sino else "condición false → no se ejecuta"]
+        else:
+            entrada = self._valores()
+            self._sentencia(entonces, "if")
+            despues_entonces = self._valores()
+            self._restaurar(entrada)
+            self._sentencia(sino, "if")
+            self._restaurar(self._unir(despues_entonces, self._valores()))
+            partes = ["condición sin valor conocido → se analizan ambas ramas"]
+        self._etiquetar(nodo, partes)
+
+    def _iteracion(self, nodo: Nodo) -> None:
+        """while condicion CUERPO end"""
+        secciones = self._secciones(nodo)
+        self._paso(nodo, "ESTRUCTURA", "WHILE (while)")
+        _, valor = self._condicion(secciones.get("CONDICION"), "while")
+        cuerpo = secciones.get("CUERPO")
+
+        if valor is False:
+            self._no_ejecutada(cuerpo, "while", "la condición del while es false al llegar al ciclo")
+            partes = ["condición inicial false → el cuerpo no se ejecuta"]
+        else:
+            entrada = self._valores()
+            self._sentencia(cuerpo, "while")
+            if cuerpo:
+                self._etiquetar(cuerpo, ["valores de la primera iteración"])
+            self._invalidar_modificadas(nodo, entrada, "cambia dentro del while")
+            partes = ["número de iteraciones desconocido"]
+        self._etiquetar(nodo, partes)
+
+    def _repeticion(self, nodo: Nodo) -> None:
+        """do CUERPO until condicion  (el cuerpo se ejecuta al menos una vez)"""
+        secciones = self._secciones(nodo)
+        self._paso(nodo, "ESTRUCTURA", "DO_UNTIL (do)")
+        cuerpo = secciones.get("CUERPO")
+        entrada = self._valores()
+        self._sentencia(cuerpo, "do")
+        _, valor = self._condicion(secciones.get("CONDICION_UNTIL"), "until")
+
+        if valor is True:
+            partes = ["until true en la primera pasada → se ejecuta una vez"]
+        else:
+            if cuerpo:
+                self._etiquetar(cuerpo, ["valores de la primera iteración"])
+            self._invalidar_modificadas(nodo, entrada, "cambia dentro del do-until")
+            partes = ["número de iteraciones desconocido"]
+        self._etiquetar(nodo, partes)
 
     def _declaracion(self, nodo: Nodo) -> None:
         """
@@ -305,6 +440,7 @@ class AnalizadorSemantico:
             }
             previo = self.tabla.buscar(nombre)
             if previo is not None:
+                self.tabla.agregar_linea(nombre, linea)
                 self._error(
                     E2_DUPLICADO,
                     f"'{nombre}' ya fue declarada en la línea {previo.linea_decl}",
@@ -332,9 +468,21 @@ class AnalizadorSemantico:
             self._error(E1_NO_DECLARADO, f"'{nombre}' no está declarada", nodo, linea, columna)
             return None
         self.tabla.agregar_linea(nombre, linea)
+        valor = formatear_valor(simbolo.valor) if simbolo.valor is not None else "desconocido"
         self.traza.append(
-            f"[{linea}:{columna}] BUSCAR: {nombre} → tipo {simbolo.tipo}, loc {simbolo.loc}")
+            f"[{linea}:{columna}] BUSCAR: {nombre} → tipo {simbolo.tipo}, loc {simbolo.loc}, valor {valor}")
         return simbolo
+
+    def _guardar_valor(self, nodo: Nodo, nombre: str, valor: Any) -> List[str]:
+        """Guarda el valor en la tabla y devuelve la anotación para la etiqueta."""
+        self.tabla.asignar_valor(nombre, valor)
+        if valor is None:
+            nodo.pop("valor_asignado", None)
+            self._paso(nodo, "VALOR", f"{nombre} ← desconocido")
+            return ["valor: desconocido"]
+        nodo["valor_asignado"] = valor
+        self._paso(nodo, "VALOR", f"{nombre} ← {formatear_valor(valor)}")
+        return [f"valor: {formatear_valor(valor)}"]
 
     def _asignacion(self, nodo: Nodo) -> None:
         """id = expresion ; se compara el tipo de id con el de la expresión."""
@@ -362,12 +510,14 @@ class AnalizadorSemantico:
         if tipo_expr == destino:
             nodo["verificacion"] = "compatible"
             self._paso(nodo, "ASIGNACION", f"{nombre}: {destino} ← {tipo_expr} (compatible)")
+            partes += self._guardar_valor(nodo, nombre, valor)
         elif T.conversion_permitida(tipo_expr, destino):
-            self._convertir(nodo, 0, destino, valor)
+            valor = self._convertir(nodo, 0, destino, valor)
             nodo["verificacion"] = "conversion"
             partes.append(f"conversión {tipo_expr} → {destino}")
             self._paso(nodo, "ASIGNACION",
                        f"{nombre}: {destino} ← {tipo_expr} (conversión implícita)")
+            partes += self._guardar_valor(nodo, nombre, valor)
         elif destino == T.INT and tipo_expr == T.FLOAT:
             nodo["verificacion"] = "error"
             self._error(
@@ -399,10 +549,14 @@ class AnalizadorSemantico:
                 f"El operador '{operador}' requiere una variable int o float; '{nombre}' es {simbolo.tipo}",
                 nodo,
             )
-        else:
-            self._paso(nodo, "INCREMENTO" if operador == "++" else "DECREMENTO",
-                       f"{nombre}{operador} sobre {simbolo.tipo} (válido)")
-        self._etiquetar(nodo, [f"tipo: {simbolo.tipo}"])
+            self._etiquetar(nodo, [f"tipo: {simbolo.tipo}"])
+            return
+        self._paso(nodo, "INCREMENTO" if operador == "++" else "DECREMENTO",
+                   f"{nombre}{operador} sobre {simbolo.tipo} (válido)")
+        nuevo = None
+        if simbolo.valor is not None:
+            nuevo = simbolo.valor + (1 if operador == "++" else -1)
+        self._etiquetar(nodo, [f"tipo: {simbolo.tipo}"] + self._guardar_valor(nodo, nombre, nuevo))
 
     def _entrada(self, nodo: Nodo) -> None:
         nombre = nodo.get("identificador", "")
@@ -413,19 +567,28 @@ class AnalizadorSemantico:
             self._etiquetar(nodo, ["no declarado"])
             return
         nodo["tipo_dato"] = simbolo.tipo
-        self._etiquetar(nodo, [f"tipo: {simbolo.tipo}"])
+        # El valor se conoce hasta la ejecución
+        self.tabla.asignar_valor(nombre, None)
+        self._paso(nodo, "VALOR", f"{nombre} se lee con cin → valor desconocido en compilación")
+        self._etiquetar(nodo, [f"tipo: {simbolo.tipo}", "valor: se lee en ejecución"])
 
     def _salida(self, nodo: Nodo) -> None:
         for salida in nodo.get("children", []):
             for elemento in salida.get("children", []):
                 self._expresion(elemento)
 
-    def _condicion(self, seccion: Nodo, contexto: Optional[str]) -> None:
-        """La expresión de una condición debe ser bool (E7)."""
-        palabra = _CONDICIONES.get(seccion.get("label")) or contexto or "condición"
+    def _condicion(self, seccion: Optional[Nodo], contexto: Optional[str]) -> Tuple[str, Any]:
+        """
+        La expresión de una condición debe ser bool (E7).
+        Devuelve (tipo, valor); el valor es None si no se conoce en compilación.
+        """
+        if not seccion:
+            return T.ERROR, None
+        etiqueta = seccion.get("label_sintactico", seccion.get("label"))
+        palabra = _CONDICIONES.get(etiqueta) or contexto or "condición"
         hijos = seccion.get("children", [])
         if not hijos:
-            return
+            return T.ERROR, None
         expresion = hijos[0]
         tipo, valor = self._expresion(expresion)
         seccion["tipo_requerido"] = T.BOOL
@@ -437,8 +600,14 @@ class AnalizadorSemantico:
             )
             self._anotar_expresion(expresion, tipo, valor)
         elif tipo == T.BOOL:
-            self._paso(expresion, "CONDICION", f"'{palabra}' es bool (válida)")
-        self._etiquetar(seccion, ["requiere: bool", f"obtenido: {tipo}"])
+            detalle = f", valor {formatear_valor(valor)}" if valor is not None else ""
+            self._paso(expresion, "CONDICION", f"'{palabra}' es bool (válida){detalle}")
+        partes = ["requiere: bool", f"obtenido: {tipo}"]
+        if tipo == T.BOOL:
+            partes.append(f"valor: {formatear_valor(valor)}" if valor is not None
+                          else "valor: desconocido")
+        self._etiquetar(seccion, partes)
+        return tipo, (valor if tipo == T.BOOL else None)
 
     # ------------------------------------------------------------------
     # Expresiones (atributos sintetizados: tipo y valor)
@@ -463,9 +632,14 @@ class AnalizadorSemantico:
             if simbolo is None:
                 self._anotar_expresion(nodo, T.ERROR, None)
                 return T.ERROR, None
+            # El identificador toma su valor actual de la tabla de símbolos
             nodo["loc"] = simbolo.loc
-            self._anotar_expresion(nodo, simbolo.tipo, None)
-            return simbolo.tipo, None
+            valor = simbolo.valor
+            extra = [f"loc: {simbolo.loc}"]
+            if valor is None:
+                extra.insert(0, "valor: desconocido")
+            self._anotar_expresion(nodo, simbolo.tipo, valor, extra)
+            return simbolo.tipo, valor
 
         if tipo_nodo == "OperacionUnaria":
             return self._unaria(nodo)

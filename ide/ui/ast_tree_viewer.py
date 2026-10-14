@@ -79,6 +79,7 @@ class ASTTreeViewer:
                 self._make_legend(legend, "Error semántico", "#ff8a8a")
                 self._make_legend(legend, "Conversión", "#ffb86c")
                 self._make_legend(legend, "Declarado", "#b7e4a8")
+                self._make_legend(legend, "No se ejecuta", "#8b93a3")
             else:
                 self._make_legend(legend, "Producción", "#8ab4f8")
                 self._make_legend(legend, "Token", "#c8d0df")
@@ -181,6 +182,7 @@ class ASTTreeViewer:
         self.tree.tag_configure("sem_error", foreground="#ff8a8a", font=("Consolas", 10, "bold"))
         self.tree.tag_configure("conversion", foreground="#ffb86c", font=("Consolas", 10, "bold"))
         self.tree.tag_configure("declarado", foreground="#b7e4a8", font=("Consolas", 10, "bold"))
+        self.tree.tag_configure("no_ejecutada", foreground="#8b93a3", font=("Consolas", 10, "italic"))
     
     def load_ast_json(self, json_str: str):
         """
@@ -244,6 +246,8 @@ class ASTTreeViewer:
             tags = ("conversion",)
         elif self.semantic and node_type == "IdentificadorDeclarado":
             tags = ("declarado",)
+        elif self.semantic and node_dict.get("ejecucion") == "no se ejecuta":
+            tags = ("no_ejecutada",)
         elif "ERROR" in node_type:
             tags = ("error",)
         elif label == "PROGRAMA":

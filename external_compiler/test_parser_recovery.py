@@ -148,7 +148,7 @@ class ParserRecoveryTests(unittest.TestCase):
         self.assertIn("OPERACION: <", labels(con_parentesis))
         self.assertIn("OPERACION: <", labels(sin_parentesis))
 
-    def test_do_while_until_accepts_body_closed_with_end(self):
+    def test_do_until_with_nested_while_closed_with_end(self):
         ast, lexical_errors, syntax_errors = parse_source(
             """main {
   int x, y;
@@ -164,11 +164,40 @@ class ParserRecoveryTests(unittest.TestCase):
         tree_labels = labels(ast)
         self.assertEqual([], lexical_errors)
         self.assertEqual([], syntax_errors)
-        self.assertIn("CUERPO_DO", tree_labels)
-        self.assertIn("CONDICION_WHILE", tree_labels)
-        self.assertIn("CUERPO_WHILE", tree_labels)
+        self.assertIn("DO_UNTIL", tree_labels)
         self.assertIn("CONDICION_UNTIL", tree_labels)
         self.assertIn("ASIGNACION: x", tree_labels)
+
+        # El while es un ciclo anidado dentro del cuerpo del do
+        repeticion = next(n for n in walk(ast) if n["type"] == "Repeticion")
+        cuerpo = repeticion["children"][0]
+        self.assertEqual("CUERPO", cuerpo["label"])
+        anidados = [n["type"] for n in walk(cuerpo)]
+        self.assertIn("Iteracion", anidados)
+        self.assertEqual("CONDICION_UNTIL", repeticion["children"][-1]["label"])
+
+    def test_nested_loops_any_depth(self):
+        ast, lexical_errors, syntax_errors = parse_source(
+            """main {
+  int i, j;
+  while i < 3
+    do
+      while j < 2
+        j++;
+      end
+      i++;
+    until i == 3
+  end
+}"""
+        )
+
+        self.assertEqual([], lexical_errors)
+        self.assertEqual([], syntax_errors)
+        exterior = next(n for n in walk(ast) if n["type"] == "Iteracion")
+        repeticion = next(n for n in walk(exterior) if n["type"] == "Repeticion")
+        interior = [n for n in walk(repeticion) if n["type"] == "Iteracion"]
+        self.assertEqual(1, len(interior))
+        self.assertIn("INCREMENTO: j", labels(interior[0]))
 
     def test_official_semantic_test_file_has_no_syntax_errors(self):
         ruta = os.path.join(PROJECT_DIR, "pruebas", "TestSemantica.txt")
@@ -418,18 +447,16 @@ class ParserRecoveryTests(unittest.TestCase):
 
         tree_labels = labels(ast)
         self.assertEqual([], lexical_errors)
-        self.assertEqual(1, tree_labels.count("DO_WHILE_UNTIL"))
-        self.assertEqual(1, tree_labels.count("WHILE"))
-        self.assertIn("CUERPO_DO", tree_labels)
-        self.assertIn("CONDICION_WHILE", tree_labels)
-        self.assertIn("CUERPO_WHILE", tree_labels)
+        self.assertEqual(1, tree_labels.count("DO_UNTIL"))
+        # un while anidado dentro del do y el while que sigue al ciclo
+        self.assertEqual(2, tree_labels.count("WHILE"))
         self.assertIn("CONDICION_UNTIL", tree_labels)
         self.assertEqual(2, tree_labels.count("ASIGNACION: mas"))
         self.assertIn("ENTRADA: cin mas", tree_labels)
         self.assertIn("SALIDA: cout", tree_labels)
         self.assertEqual(
             [
-                "Token inesperado '-' en encabezado do-while-until",
+                "Token inesperado '-' en encabezado do-until",
                 "Token inesperado '(' en lista de sentencias",
             ],
             [error.mensaje for error in syntax_errors],

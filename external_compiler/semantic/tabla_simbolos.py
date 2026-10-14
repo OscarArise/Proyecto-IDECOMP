@@ -13,14 +13,18 @@ Cada entrada (cubeta) guarda:
     tipo           int | float | bool (atributo heredado dtype de la declaración)
     loc            desplazamiento de memoria, asignado en orden de declaración
     linea_decl     línea y columna donde se declaró
-    lineas         líneas donde aparece (declaración + cada uso), sin repetir
+    lineas         una línea por cada aparición del identificador (declaración
+                   y cada uso). Si aparece dos veces en la misma línea, el número
+                   se repite, igual que en st_insert de TINY.
+    valor          último valor conocido en compilación (None si no se puede
+                   determinar: sin asignar, leído con cin o modificado en un ciclo)
     siguiente      siguiente cubeta de la misma posición hash (encadenamiento)
 
 El lenguaje tiene un solo ámbito (el bloque main), así que basta una tabla.
 """
 
 from dataclasses import dataclass, field
-from typing import Iterator, List, Optional
+from typing import Any, Iterator, List, Optional
 
 SIZE = 211   # número primo, igual que en TINY
 SHIFT = 4    # desplazamiento de la función hash de TINY
@@ -42,6 +46,7 @@ class Simbolo:
     linea_decl: int
     columna_decl: int
     lineas: List[int] = field(default_factory=list)
+    valor: Any = None
     siguiente: Optional["Simbolo"] = field(default=None, repr=False)
 
     @property
@@ -88,12 +93,23 @@ class TablaSimbolos:
         return simbolo
 
     def agregar_linea(self, nombre: str, linea: int) -> bool:
-        """Registra una referencia al identificador. False si no existe."""
+        """
+        Registra una aparición del identificador. Cada aparición agrega su
+        línea, aunque ya esté en la lista (x = x + 1 en la línea 9 → 9, 9).
+        False si no existe.
+        """
         simbolo = self.buscar(nombre)
         if simbolo is None:
             return False
-        if linea not in simbolo.lineas:
-            simbolo.lineas.append(linea)
+        simbolo.lineas.append(linea)
+        return True
+
+    def asignar_valor(self, nombre: str, valor: Any) -> bool:
+        """Actualiza el valor conocido del identificador. False si no existe."""
+        simbolo = self.buscar(nombre)
+        if simbolo is None:
+            return False
+        simbolo.valor = valor
         return True
 
     def eliminar(self, nombre: str) -> bool:
