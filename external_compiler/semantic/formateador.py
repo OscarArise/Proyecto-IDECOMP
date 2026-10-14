@@ -14,7 +14,7 @@ Salidas de texto del análisis semántico.
 import json
 from typing import Any, Dict, List, Optional
 
-from .analizador import ResultadoSemantico
+from .analizador import ResultadoSemantico, formatear_valor
 from .errores import ErrorSemantico
 from .tabla_simbolos import TablaSimbolos
 
@@ -38,7 +38,7 @@ def tabla_a_texto(tabla: TablaSimbolos) -> str:
     simbolos = tabla.simbolos()
     if not simbolos:
         return "(tabla vacía)\n"
-    filas = [("Nombre", "Tipo", "Loc", "Hash", "Declarada", "Líneas")]
+    filas = [("Nombre", "Tipo", "Loc", "Hash", "Declarada", "Valor final", "Líneas")]
     for s in simbolos:
         filas.append((
             s.nombre,
@@ -46,6 +46,7 @@ def tabla_a_texto(tabla: TablaSimbolos) -> str:
             str(s.loc),
             str(s.hash),
             f"{s.linea_decl}:{s.columna_decl}",
+            formatear_valor(s.valor) if s.valor is not None else "desconocido",
             ", ".join(str(n) for n in s.lineas),
         ))
     anchos = [max(len(f[i]) for f in filas) for i in range(len(filas[0]))]
@@ -65,7 +66,10 @@ def symbols_txt(tabla: TablaSimbolos) -> str:
         "Tabla de Símbolos\n"
         + "=" * 50 + "\n"
         + "Tabla hash con encadenamiento (SIZE = 211, función hash de TINY).\n"
-        + "Ámbito único: bloque main.\n\n"
+        + "Ámbito único: bloque main.\n"
+        + "Líneas: una por cada aparición del identificador (se repite si aparece\n"
+        + "varias veces en la misma línea). Valor final: último valor conocido en\n"
+        + "compilación ('desconocido' si depende de la ejecución).\n\n"
         + tabla_a_texto(tabla)
         + f"\nTotal de identificadores: {len(tabla)}\n"
     )

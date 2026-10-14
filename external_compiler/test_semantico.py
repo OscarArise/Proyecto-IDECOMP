@@ -84,13 +84,13 @@ class TablaSimbolosTests(unittest.TestCase):
         self.assertEqual("bool", tabla.buscar(par[1]).tipo)
         self.assertEqual(2, len(tabla))
 
-    def test_agregar_linea_sin_repetir(self):
+    def test_agregar_linea_repite_cada_aparicion(self):
         tabla = TablaSimbolos()
         tabla.insertar("x", "int", 2)
         tabla.agregar_linea("x", 5)
         tabla.agregar_linea("x", 5)
         tabla.agregar_linea("x", 7)
-        self.assertEqual([2, 5, 7], tabla.buscar("x").lineas)
+        self.assertEqual([2, 5, 5, 7], tabla.buscar("x").lineas)
         self.assertFalse(tabla.agregar_linea("y", 3))
 
     def test_eliminar(self):
@@ -123,7 +123,7 @@ class ArchivoOficialTests(unittest.TestCase):
         filas = [(s.nombre, s.tipo, s.loc, s.lineas) for s in self.resultado.tabla.simbolos()]
         self.assertEqual([
             ("x", "int", 0, [2, 5, 6, 11, 27, 30, 31, 32, 38]),
-            ("y", "int", 1, [2, 7, 8, 9, 12, 14, 16, 23, 29, 35, 36]),
+            ("y", "int", 1, [2, 7, 8, 9, 9, 12, 14, 16, 23, 23, 29, 29, 35, 36]),
             ("z", "int", 2, [2, 8, 13]),
             ("a", "float", 3, [3, 10, 16, 25]),
             ("b", "float", 4, [3, 19, 21]),
@@ -133,6 +133,24 @@ class ArchivoOficialTests(unittest.TestCase):
     def test_no_declaradas_no_entran_a_la_tabla(self):
         self.assertNotIn("suma", self.resultado.tabla)
         self.assertNotIn("mas", self.resultado.tabla)
+
+    def test_valores_finales_en_la_tabla(self):
+        valores = {s.nombre: s.valor for s in self.resultado.tabla.simbolos()}
+        self.assertEqual({"x": 7, "y": None, "z": 64, "a": 62.0, "b": 3.2, "c": None}, valores)
+
+    def test_identificadores_jalan_su_valor(self):
+        # z = y + 7 en la línea 8: y vale 4
+        ident = next(n for n in recorrer(self.resultado.arbol_anotado)
+                     if n["type"] == "Identificador" and n["linea"] == 8)
+        self.assertEqual(4, ident["valor_calculado"])
+        asignacion = next(n for n in recorrer(self.resultado.arbol_anotado)
+                          if n["type"] == "Asignacion" and n["linea"] == 8)
+        self.assertEqual(11, asignacion["valor_asignado"])
+
+    def test_while_anidado_en_el_do(self):
+        repeticion = next(n for n in recorrer(self.resultado.arbol_anotado)
+                          if n["type"] == "Repeticion")
+        self.assertIn("Iteracion", [n["type"] for n in recorrer(repeticion)])
 
     def test_valores_con_division_entera(self):
         asignaciones = {
@@ -283,10 +301,54 @@ class ReglasDeTiposTests(unittest.TestCase):
         r = analizar_fuente(programa('int x;\ncout "x = " << x << "!";'))
         self.assertEqual([], codigos(r))
 
-    def test_identificador_no_tiene_valor_en_compilacion(self):
+    def test_identificador_toma_su_valor_de_la_tabla(self):
         r = analizar_fuente(programa("int x, y;\nx = 1;\ny = x + 1;"))
-        sumas = [n for n in recorrer(r.arbol_anotado) if n.get("operador") == "+"]
-        self.assertNotIn("valor_calculado", sumas[0])
+        ident = next(n for n in recorrer(r.arbol_anotado) if n["type"] == "Identificador")
+        self.assertEqual(1, ident["valor_calculado"])
+        suma = next(n for n in recorrer(r.arbol_anotado) if n.get("operador") == "+")
+        self.assertEqual(2, suma["valor_calculado"])
+        self.assertEqual(2, r.tabla.buscar("y").valor)
+
+    def test_variable_sin_asignar_no_tiene_valor(self):
+        r = analizar_fuente(programa("int x, y;\ny = x + 1;"))
+        suma = next(n for n in recorrer(r.arbol_anotado) if n.get("operador") == "+")
+        self.assertNotIn("valor_calculado", suma)
+        self.assertIsNone(r.tabla.buscar("y").valor)
+
+    def test_cin_deja_el_valor_desconocido(self):
+        r = analizar_fuente(programa("int x;\nx = 3;\ncin x;"))
+        self.assertIsNone(r.tabla.buscar("x").valor)
+
+    def test_incremento_actualiza_el_valor(self):
+        r = analizar_fuente(programa("int x;\nfloat f;\nx = 3;\nx++;\nf = 1.5;\nf--;"))
+        self.assertEqual(4, r.tabla.buscar("x").valor)
+        self.assertEqual(0.5, r.tabla.buscar("f").valor)
+
+    def test_if_con_condicion_conocida_solo_ejecuta_una_rama(self):
+        r = analizar_fuente(programa("int x;\nif 2 > 3 then\n x = 1;\nelse\n x = 2;\nend"))
+        self.assertEqual(2, r.tabla.buscar("x").valor)
+
+    def test_if_con_condicion_desconocida_une_las_ramas(self):
+        r = analizar_fuente(programa(
+            "int x, y, z;\ncin z;\nif z > 3 then\n x = 1; y = 5;\nelse\n x = 2; y = 5;\nend"))
+        self.assertIsNone(r.tabla.buscar("x").valor)
+        self.assertEqual(5, r.tabla.buscar("y").valor)
+
+    def test_while_que_no_se_ejecuta_no_cambia_valores(self):
+        r = analizar_fuente(programa("int x;\nx = 7;\nwhile x > 7\n x = 1;\nend"))
+        self.assertEqual(7, r.tabla.buscar("x").valor)
+
+    def test_variable_modificada_en_ciclo_queda_desconocida(self):
+        r = analizar_fuente(programa("int x, k;\nx = 0; k = 9;\nwhile x < 5\n x = x + 1;\nend"))
+        self.assertIsNone(r.tabla.buscar("x").valor)
+        self.assertEqual(9, r.tabla.buscar("k").valor)
+        # dentro del cuerpo se ve el valor de la primera iteración
+        suma = next(n for n in recorrer(r.arbol_anotado) if n.get("operador") == "+")
+        self.assertEqual(1, suma["valor_calculado"])
+
+    def test_do_until_que_termina_en_la_primera_pasada_conserva_valores(self):
+        r = analizar_fuente(programa("int x;\nx = 0;\ndo\n x = x + 5;\nuntil x == 5"))
+        self.assertEqual(5, r.tabla.buscar("x").valor)
 
 
 class FormateadorTests(unittest.TestCase):
