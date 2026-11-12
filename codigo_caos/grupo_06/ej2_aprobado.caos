@@ -1,0 +1,11 @@
+// Grupo 6 - Ejercicio 2 (selectivo)
+// "aprobado = 1" si la calificacion es mayor o igual que 8, "reprobado = 0" si no.
+main {
+  float calificacion;
+  cin calificacion;
+  if (calificacion >= 8) then
+    cout "aprobado = 1";
+  else
+    cout "reprobado = 0";
+  end
+}

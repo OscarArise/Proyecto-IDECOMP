@@ -1,0 +1,12 @@
+// Grupo 5 - Ejercicio 2 (selectivo)
+// Aumento del 15% si el sueldo es inferior a $1000 y del 12% en caso contrario.
+main {
+  float sueldo, nuevo;
+  cin sueldo;
+  if (sueldo < 1000) then
+    nuevo = sueldo * 1.15;
+  else
+    nuevo = sueldo * 1.12;
+  end
+  cout "Nuevo sueldo: " << nuevo;
+}

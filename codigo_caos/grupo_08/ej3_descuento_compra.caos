@@ -1,0 +1,30 @@
+// Ejercicio 3 (selectivo)
+// Descuento segun el monto de la compra:
+//   menor que $500: sin descuento
+//   de $500 a $1 000 inclusive: 5%
+//   hasta $7 000 inclusive: 11%
+//   hasta $15 000 inclusive: 18%
+//   mayor a $15 000: 25%
+main {
+  float monto, descuento, pagar;
+  cin monto;
+  if (monto < 500) then
+    descuento = 0;
+  else
+    if (monto <= 1000) then
+      descuento = monto * 0.05;
+    else
+      if (monto <= 7000) then
+        descuento = monto * 0.11;
+      else
+        if (monto <= 15000) then
+          descuento = monto * 0.18;
+        else
+          descuento = monto * 0.25;
+        end
+      end
+    end
+  end
+  pagar = monto - descuento;
+  cout "Total a pagar: " << pagar;
+}

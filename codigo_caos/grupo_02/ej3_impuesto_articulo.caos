@@ -1,0 +1,24 @@
+// Ejercicio 3 (selectivo)
+// Los primeros $20 no causan impuesto, los siguientes $20 pagan 30% y el resto 40%;
+// si el costo es mayor a $500, el resto paga 50% en lugar de 40%.
+// precio total = precio basico + impuesto
+main {
+  float costo, impuesto, tasa, total;
+  cin costo;
+  if (costo <= 20) then
+    impuesto = 0;
+  else
+    if (costo <= 40) then
+      impuesto = (costo - 20) * 0.30;
+    else
+      if (costo > 500) then
+        tasa = 0.50;
+      else
+        tasa = 0.40;
+      end
+      impuesto = 20 * 0.30 + (costo - 40) * tasa;
+    end
+  end
+  total = costo + impuesto;
+  cout "Precio total: " << total;
+}

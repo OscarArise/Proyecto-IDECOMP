@@ -16,6 +16,8 @@ OUTPUT_FILES = {
     "ejecutar":   "exec.txt",
     "simbolos":   "symbols.txt",
     "errors":     "errors.txt",
+    "tm":         "code.tm",
+    "ci":         "code.ci",
 }
 
 
@@ -82,10 +84,12 @@ def main():
         _write_errors(errors)
         sys.exit(3)
 
-    # Fase 4: Código Intermedio
+    # Fase 4: Código Intermedio (.ci) y código objetivo TM (.tm)
     if "intermedio" in phases_to_run:
-        intermediate = _run_intermedio(errors)
-        _write(OUTPUT_FILES["intermedio"], intermediate)
+        tm_code, ci_code = _run_generacion(ast, source_path, errors)
+        _write(OUTPUT_FILES["tm"], tm_code)
+        _write(OUTPUT_FILES["ci"], ci_code)
+        _write(OUTPUT_FILES["intermedio"], tm_code)
 
     if errors:
         _write_errors(errors)
@@ -106,8 +110,8 @@ def main():
 
 
 # Implementación de cada fase
-# Léxico, sintáctico y semántico están completos; intermedio y ejecución
-# siguen siendo stubs.
+# Léxico, sintáctico y semántico (fases 1-3, validadas) no se modifican en la
+# fase 4; la generación de código solo consume sus resultados.
 
 def _run_lexico(source: str, errors: list) -> list[tuple]:
     """
@@ -244,19 +248,55 @@ def _run_semantico(ast, errors: list) -> tuple[str, str]:
     return symbols_txt(resultado.tabla), semantic_txt(resultado)
 
 
-def _run_intermedio(errors: list) -> str:
-    return (
-        "Código Intermedio (stub)\n"
-        "========================\n"
-        "  [Implementación real pendiente]\n"
-    )
+def _run_generacion(ast, source_path: Path, errors: list) -> tuple[str, str]:
+    """
+    Generación de código (Fase 4).
+
+    Obtiene el árbol anotado y la tabla de símbolos con la API pública del
+    análisis semántico (el mismo análisis, determinista, que ya validó la fase
+    3) y produce por caminos paralelos:
+        code.tm  instrucciones para la TM (codegen/cgen.py + codegen/code.py)
+        code.ci  código de tres direcciones (codegen/intermedio.py)
+    Retorna (texto_tm, texto_ci). Los fallos se reportan con [GENERACION].
+    """
+    import os
+    from datetime import datetime
+
+    _ec_dir = os.path.dirname(os.path.abspath(__file__))
+    if _ec_dir not in sys.path:
+        sys.path.insert(0, _ec_dir)
+
+    from parser.ast_formatter import ASTFormatter
+    from semantic import analizar
+    from codegen import ErrorGeneracion, code_gen, generar_codigo_intermedio
+
+    resultado = analizar(ASTFormatter.to_binary(ast))
+    if resultado.errores:
+        errors.extend(f"[GENERACION] El árbol no es válido: {e}" for e in resultado.errores)
+        return "", ""
+
+    encabezado = [
+        f"Fuente: {source_path.resolve()}",
+        f"Compilado: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+    ]
+    try:
+        tm_code = code_gen(resultado.arbol_anotado, resultado.tabla, source_path.name, encabezado)
+        ci_code = generar_codigo_intermedio(resultado.arbol_anotado, source_path.name, encabezado)
+    except ErrorGeneracion as exc:
+        errors.append(f"[GENERACION] {exc}")
+        return "", ""
+    return tm_code, ci_code
 
 
 def _run_ejecutar(errors: list) -> str:
+    """
+    La ejecución es interactiva (las instrucciones IN piden datos), así que la
+    realiza el simulador TM (tm/tm.py en el IDE o tm/tm.exe en consola) sobre
+    el code.tm que generó la fase 4.
+    """
     return (
-        "Ejecución (stub)\n"
-        "================\n"
-        "  [Implementación real pendiente]\n"
+        "Código TM generado en code.tm.\n"
+        "Ejecútelo en el simulador TM: tm/tm.py (IDE) o tm/tm.exe code.tm (consola).\n"
     )
 
 

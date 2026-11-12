@@ -1,0 +1,32 @@
+// Ejercicio 4 (repetitivo)
+// Eleccion con 4 candidatos (1, 2, 3, 4). Se teclean los votos uno por uno y el
+// fin de datos es un 0. Se imprime el numero de votos de cada candidato y el
+// porcentaje que obtuvo respecto al total de votantes.
+main {
+  int voto, c1, c2, c3, c4, total;
+  float p1, p2, p3, p4;
+  c1 = 0;
+  c2 = 0;
+  c3 = 0;
+  c4 = 0;
+  do
+    cin voto;
+    if (voto == 1) then c1++; end
+    if (voto == 2) then c2++; end
+    if (voto == 3) then c3++; end
+    if (voto == 4) then c4++; end
+  until (voto == 0);
+  total = c1 + c2 + c3 + c4;
+  if (total > 0) then
+    p1 = c1 * 100.0 / total;
+    p2 = c2 * 100.0 / total;
+    p3 = c3 * 100.0 / total;
+    p4 = c4 * 100.0 / total;
+    cout "Candidato 1: " << c1 << " votos, " << p1 << "%";
+    cout "Candidato 2: " << c2 << " votos, " << p2 << "%";
+    cout "Candidato 3: " << c3 << " votos, " << p3 << "%";
+    cout "Candidato 4: " << c4 << " votos, " << p4 << "%";
+  else
+    cout "Sin votos";
+  end
+}

@@ -72,7 +72,7 @@ class Menu:
             command=self.callbacks.get("semantico"),
         )
         compile_menu.add_command(
-            label="Generación de Código Intermedio",
+            label="Generación de Código Intermedio (TM)",
             accelerator="F8",
             command=self.callbacks.get("intermedio"),
         )
@@ -81,4 +81,9 @@ class Menu:
             label="Ejecutar",
             accelerator="F9",
             command=self.callbacks.get("ejecutar"),
+        )
+        compile_menu.add_command(
+            label="Abrir en TM (consola)",
+            accelerator="Shift+F9",
+            command=self.callbacks.get("tm_consola"),
         )

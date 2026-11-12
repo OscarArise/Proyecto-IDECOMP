@@ -1,0 +1,16 @@
+// Grupo 11 - Ejercicio 4 (repetitivo)
+// Conjetura de ULAM: si el numero es par se divide entre 2; si es impar se
+// multiplica por 3 y se le suma 1, hasta llegar a 1.
+main {
+  int n;
+  cin n;
+  cout n;
+  while (n != 1) {
+    if (n % 2 == 0) then
+      n = n / 2;
+    else
+      n = n * 3 + 1;
+    end
+    cout n;
+  }
+}

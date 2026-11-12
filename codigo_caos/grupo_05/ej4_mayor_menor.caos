@@ -1,0 +1,22 @@
+// Grupo 5 - Ejercicio 4 (repetitivo)
+// Dados N numeros enteros, calcular y mostrar el mayor y el menor.
+main {
+  int n, i, x, mayor, menor;
+  cin n;
+  mayor = 0;
+  menor = 0;
+  i = 1;
+  while (i <= n) {
+    cin x;
+    if (i == 1) then
+      mayor = x;
+      menor = x;
+    else
+      if (x > mayor) then mayor = x; end
+      if (x < menor) then menor = x; end
+    end
+    i++;
+  }
+  cout "Mayor: " << mayor;
+  cout "Menor: " << menor;
+}

@@ -1,0 +1,41 @@
+// Grupo 10 - Ejercicio 5 (repetitivo)
+// Venta de boletos de un estadio con 5 tipos de localidad (clave 1 a 5).
+// Datos: precios P1..P5; luego pares CLAVE, CANT; el fin de datos es -1, -1.
+// Por venta: clave, cantidad e importe; boletos por tipo y recaudacion total.
+main {
+  int clave, cant, fin, b1, b2, b3, b4, b5;
+  float p1, p2, p3, p4, p5, precio, importe, total;
+  fin = 0 - 1;
+  b1 = 0;
+  b2 = 0;
+  b3 = 0;
+  b4 = 0;
+  b5 = 0;
+  total = 0;
+  cin p1;
+  cin p2;
+  cin p3;
+  cin p4;
+  cin p5;
+  cin clave;
+  cin cant;
+  while (clave != fin) {
+    precio = 0;
+    if (clave == 1) then precio = p1; b1 = b1 + cant; end
+    if (clave == 2) then precio = p2; b2 = b2 + cant; end
+    if (clave == 3) then precio = p3; b3 = b3 + cant; end
+    if (clave == 4) then precio = p4; b4 = b4 + cant; end
+    if (clave == 5) then precio = p5; b5 = b5 + cant; end
+    importe = cant * precio;
+    total = total + importe;
+    cout "Venta: clave " << clave << ", cantidad " << cant << ", importe " << importe;
+    cin clave;
+    cin cant;
+  }
+  cout "Boletos tipo 1: " << b1;
+  cout "Boletos tipo 2: " << b2;
+  cout "Boletos tipo 3: " << b3;
+  cout "Boletos tipo 4: " << b4;
+  cout "Boletos tipo 5: " << b5;
+  cout "Recaudacion total: " << total;
+}

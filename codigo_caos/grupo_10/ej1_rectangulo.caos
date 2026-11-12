@@ -1,0 +1,11 @@
+// Ejercicio 1 (secuencial)
+// Dados la base y la altura de un rectangulo, calcular el perimetro y el area.
+main {
+  float base, altura, perimetro, area;
+  cin base;
+  cin altura;
+  perimetro = 2 * (base + altura);
+  area = base * altura;
+  cout "Perimetro: " << perimetro;
+  cout "Area: " << area;
+}

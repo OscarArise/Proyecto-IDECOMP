@@ -1,0 +1,13 @@
+// Grupo 1 - Ejercicio 3 (selectivo)
+// Dados tres enteros, determinar si estan en orden creciente (1 = Si, 0 = No).
+main {
+  int a, b, c;
+  cin a;
+  cin b;
+  cin c;
+  if (a < b && b < c) then
+    cout 1;
+  else
+    cout 0;
+  end
+}

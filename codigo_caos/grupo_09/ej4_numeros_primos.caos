@@ -1,0 +1,25 @@
+// Grupo 9 - Ejercicio 4 (repetitivo)
+// Leer M, obtener y contar todos los numeros primos menores a M.
+main {
+  int m, n, d, cuenta;
+  bool primo;
+  cin m;
+  cuenta = 0;
+  n = 2;
+  while (n < m) {
+    primo = true;
+    d = 2;
+    while (d * d <= n && primo) {
+      if (n % d == 0) then
+        primo = false;
+      end
+      d++;
+    }
+    if (primo) then
+      cout n;
+      cuenta++;
+    end
+    n++;
+  }
+  cout "Primos menores a " << m << ": " << cuenta;
+}

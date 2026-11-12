@@ -1,0 +1,24 @@
+// Selectivo con reales: descuento según el monto de compra (Grupo 8, ejercicio 3)
+main {
+  float monto, descuento, pagar;
+  cin monto;
+  if (monto < 500) then
+    descuento = 0;
+  else
+    if (monto >= 500 && monto <= 1000) then
+      descuento = monto * 0.05;
+    else
+      if (monto <= 7000) then
+        descuento = monto * 0.11;
+      else
+        if (monto <= 15000) then
+          descuento = monto * 0.18;
+        else
+          descuento = monto * 0.25;
+        end
+      end
+    end
+  end
+  pagar = monto - descuento;
+  cout "Total a pagar: " << pagar;
+}

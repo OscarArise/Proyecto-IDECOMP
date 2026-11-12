@@ -1,0 +1,10 @@
+// Ejercicio 2
+// Temperatura en grados Fahrenheit a partir de los sonidos de un grillo:
+//   T = N / 4 + 40
+main {
+  int n;
+  float t;
+  cin n;
+  t = n / 4.0 + 40;
+  cout "Temperatura (F): " << t;
+}

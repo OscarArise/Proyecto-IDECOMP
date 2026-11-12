@@ -1,0 +1,34 @@
+// Grupo 4 - Ejercicio 4 (repetitivo)
+// Se leen N ventas. Se informan las ventas de $200 o menos, las mayores a $200
+// pero inferiores a $400 y las de $400 o mas (cantidad e importe de cada grupo).
+main {
+  int n, i, c1, c2, c3;
+  float venta, s1, s2, s3;
+  c1 = 0;
+  c2 = 0;
+  c3 = 0;
+  s1 = 0;
+  s2 = 0;
+  s3 = 0;
+  cin n;
+  i = 1;
+  while (i <= n) {
+    cin venta;
+    if (venta <= 200) then
+      c1++;
+      s1 = s1 + venta;
+    else
+      if (venta < 400) then
+        c2++;
+        s2 = s2 + venta;
+      else
+        c3++;
+        s3 = s3 + venta;
+      end
+    end
+    i++;
+  }
+  cout "Ventas de 200 o menos: " << c1 << " por " << s1;
+  cout "Ventas entre 200 y 400: " << c2 << " por " << s2;
+  cout "Ventas de 400 o mas: " << c3 << " por " << s3;
+}

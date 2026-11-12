@@ -1,0 +1,40 @@
+// Ejercicio repetitivo
+// Promedios mensuales de lluvia de las regiones NORTE, CENTRO y SUR.
+// Por cada mes (1 a 12) se leen las lluvias de NORTE, CENTRO y SUR.
+// a) Promedio anual de la region centro.
+// b) Mes y registro con menor lluvia en la region sur.
+// c) Region con mayor lluvia anual.
+main {
+  int mes, mesmenor;
+  float norte, centro, sur, totnorte, totcentro, totsur, menorsur;
+  totnorte = 0;
+  totcentro = 0;
+  totsur = 0;
+  menorsur = 0;
+  mesmenor = 0;
+  mes = 1;
+  while (mes <= 12) {
+    cin norte;
+    cin centro;
+    cin sur;
+    totnorte = totnorte + norte;
+    totcentro = totcentro + centro;
+    totsur = totsur + sur;
+    if (mes == 1 || sur < menorsur) then
+      menorsur = sur;
+      mesmenor = mes;
+    end
+    mes++;
+  }
+  cout "Promedio anual centro: " << totcentro / 12;
+  cout "Menor lluvia sur: mes " << mesmenor << ", registro " << menorsur;
+  if (totnorte > totcentro && totnorte > totsur) then
+    cout "Region con mayor lluvia: NORTE";
+  else
+    if (totcentro > totsur) then
+      cout "Region con mayor lluvia: CENTRO";
+    else
+      cout "Region con mayor lluvia: SUR";
+    end
+  end
+}
