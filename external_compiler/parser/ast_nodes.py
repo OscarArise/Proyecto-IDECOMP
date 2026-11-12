@@ -122,11 +122,13 @@ class Iteracion(ASTNode):
 
 @dataclass
 class Repeticion(ASTNode):
-    """repeticion → do cuerpo_do while condicion { cuerpo_while } ; until condicion ;"""
-    cuerpo: Optional['ListaSentencias'] = None        # cuerpo inicial del do
-    condicion: Optional['Expresion'] = None           # condición del while interno
-    cuerpo_while: Optional['ListaSentencias'] = None  # bloque asociado al while
-    until_condicion: Optional['Expresion'] = None     # condición del until (terminador)
+    """repeticion → do lista_sentencias until expresion [;]
+
+    El cuerpo puede contener ciclos anidados (un while dentro del do es un
+    nodo Iteracion hijo del cuerpo, no parte de la repetición).
+    """
+    cuerpo: Optional['ListaSentencias'] = None        # cuerpo del do
+    until_condicion: Optional['Expresion'] = None     # condición del until
     children: List[ASTNode] = field(default_factory=list)
 
 

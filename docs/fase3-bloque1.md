@@ -230,7 +230,7 @@ de tipo `SeccionAST`, identificados por su `label`:
 | --- | --- |
 | `Seleccion` (`IF`) | `CONDICION`, `ENTONCES`, `SINO` |
 | `Iteracion` (`WHILE`) | `CONDICION`, `CUERPO` |
-| `Repeticion` (`DO_WHILE_UNTIL`) | `CUERPO_DO`, `CONDICION_WHILE`, `CUERPO_WHILE`, `CONDICION_UNTIL` |
+| `Repeticion` (`DO_UNTIL`) | `CUERPO`, `CONDICION_UNTIL` (desde la prerevisión; un `while` dentro del cuerpo es un `Iteracion` anidado) |
 
 Las secciones vacías no aparecen: un `if` sin `else` no trae nodo `SINO`.
 

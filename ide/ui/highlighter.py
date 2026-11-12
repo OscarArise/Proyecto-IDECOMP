@@ -165,6 +165,20 @@ class SyntaxHighlighter:
         re.IGNORECASE
     )
 
+    #Los errores sintacticos y semanticos usan el formato "[SEMANTICO] [l:c] ..."
+    _ERROR_PATTERN_LC = re.compile(r"\[(\d+):(\d+)\]")
+
+    @classmethod
+    def _extract_position(cls, line: str):
+        #Devuelve (linea, columna, formato) o None si la linea no trae posicion
+        match = cls._ERROR_PATTERN.search(line)
+        if match:
+            return int(match.group(1)), int(match.group(2)), "lexico"
+        match = cls._ERROR_PATTERN_LC.search(line)
+        if match:
+            return int(match.group(1)), int(match.group(2)), "lc"
+        return None
+
     def mark_errors(self, errors_content: str):
         #Lee el contenido de los errors.txt y marca cada error en el editor
         #Con un subrayado rojo en la posicion exacta
@@ -182,16 +196,26 @@ class SyntaxHighlighter:
             return
 
         for line in errors_content.splitlines():
-            match = self._ERROR_PATTERN.search(line)
-            if not match:
+            posicion = self._extract_position(line)
+            if not posicion:
                 continue
 
-            linea = int(match.group(1))
-            columna = int(match.group(2))
+            linea, columna, formato = posicion
 
             #Construir indices de inicio y fin del caracter erroneo
             start = f"{linea}.{columna - 1}"
             end = f"{linea}.{columna}"
+
+            #En errores sintacticos/semanticos se marca la palabra completa
+            #(por ejemplo el identificador no declarado), no solo un caracter
+            if formato == "lc":
+                try:
+                    texto = self.text.get(start, f"{linea}.end")
+                    palabra = re.match(r"\w+|\S", texto)
+                    if palabra:
+                        end = f"{linea}.{columna - 1 + len(palabra.group(0))}"
+                except Exception:
+                    pass
 
             #Verificar que el indice existe en el editor
             try:
@@ -211,9 +235,9 @@ class SyntaxHighlighter:
 
         error_lines = set()
         for line in errors_content.splitlines():
-            match = self._ERROR_PATTERN.search(line)
-            if match:
-                error_lines.add(int(match.group(1)))
+            posicion = self._extract_position(line)
+            if posicion:
+                error_lines.add(posicion[0])
 
         for linea in error_lines:
             dline = self.text.dlineinfo(f"{linea}.0")

@@ -1,3 +1,4 @@
+import json
 import os
 import tkinter as tk
 from tkinter import messagebox
@@ -5,6 +6,11 @@ from tkinter import messagebox
 from core.compiler_runner import CompilerRunner
 from core.ast_text import ast_to_connected_text
 from core.file_manager import FileManager
+from core.semantic_output import (
+    error_text_for_editor,
+    extract_ast_dict,
+    split_semantic_output,
+)
 from core.state import AppState
 
 # Lexico
@@ -344,7 +350,6 @@ class IDEWindow:
         # Volcar salidas en paneles de resultados
         panel_map = {
             "lexico": self.panels.tab_lexico,
-            "semantico": self.panels.tab_semantico,
             "intermedio": self.panels.tab_intermedio,
             "simbolos": self.panels.tab_simbolos,
             "ejecucion": self.panels.tab_ejecucion,
@@ -354,6 +359,12 @@ class IDEWindow:
             if content.strip():
                 self.panels.write(widget, content)
         
+        # Caso especial para semántico: texto legible + árbol anotado + comparación
+        self._load_semantic_results(
+            result.outputs.get("sintactico", ""),
+            result.outputs.get("semantico", ""),
+        )
+
         # Caso especial para sintáctico: cargar en árbol colapsable
         if result.outputs.get("sintactico", "").strip():
             self.panels.write(
@@ -375,16 +386,17 @@ class IDEWindow:
             if content.strip():
                 self.panels.write(widget, content)
 
-        # Marcar errores en el editor
-        errors_content = result.errors_by_phase.get("err_lexico", "")
+        # Marcar en el editor los errores léxicos, sintácticos y semánticos
+        errors_content = error_text_for_editor(result.errors_by_phase)
         self._last_errors_content = errors_content
         self.highlighter.mark_errors(errors_content)
         self.highlighter.mark_error_lines(errors_content, self.line_numbers)
 
-        # stderr del proceso (error interno del compilador)
+        # stderr del proceso (error interno del compilador): va a la pestaña de
+        # Ejecución, no a la de errores léxicos
         if result.stderr.strip():
             self.panels.write(
-                self.panels.tab_err_lexico,
+                self.panels.tab_ejecucion,
                 f"[Error interno del compilador]\n{result.stderr}",
             )
 
@@ -456,6 +468,27 @@ class IDEWindow:
                     notebook.select(frame)
                 except Exception:
                     pass  # Silenciar si el frame no es seleccionable
+
+    def _load_semantic_results(self, syntax_output: str, semantic_output: str):
+        """
+        Fase 3. Con la salida de semantic.txt:
+          - pestaña Semántico: resumen, árbol anotado en texto y recorrido
+            (sin el JSON, que solo sirve para el visor);
+          - pestaña Árbol Anotado: visor con los atributos y los errores;
+          - pestaña Comparación: AST original (de syntax.txt) frente al anotado.
+        """
+        if not semantic_output.strip():
+            return
+        texto, anotado = split_semantic_output(semantic_output)
+        self.panels.write(self.panels.tab_semantico, texto)
+        if not anotado:
+            return
+        anotado_json = json.dumps(anotado)
+        self.panels.annotated_tree_viewer.load_ast_json(anotado_json)
+        self.panels.compare_annotated_viewer.load_ast_json(anotado_json)
+        original = extract_ast_dict(syntax_output)
+        if original:
+            self.panels.compare_original_viewer.load_ast_json(json.dumps(original))
 
     def _load_ast_to_tree(self, syntax_output: str):
         """

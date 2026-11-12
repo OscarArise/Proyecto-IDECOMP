@@ -269,11 +269,9 @@ class ASTFormatter:
             return node_dict
 
         if isinstance(node, Repeticion):
-            node_dict = ASTFormatter._abstract_base(node, "DO_WHILE_UNTIL", "Repeticion")
+            node_dict = ASTFormatter._abstract_base(node, "DO_UNTIL", "Repeticion")
             for child in (
-                ASTFormatter._role("CUERPO_DO", node.cuerpo),
-                ASTFormatter._role("CONDICION_WHILE", node.condicion),
-                ASTFormatter._role("CUERPO_WHILE", node.cuerpo_while),
+                ASTFormatter._role("CUERPO", node.cuerpo),
                 ASTFormatter._role("CONDICION_UNTIL", node.until_condicion),
             ):
                 if child:
