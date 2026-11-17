@@ -53,3 +53,5 @@ tm/tm.exe
 
 # Evidencia generada por codigo_caos/probar_ejercicios.py
 codigo_caos/salidas/
+/.mimosa
+/.video_agent

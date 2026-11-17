@@ -1,0 +1,52 @@
+// Ejercicio 5 (repetitivo)
+// Produccion de N fabricas en los 12 meses del anio anterior.
+// Datos: N; luego por fabrica su clave y la produccion de los meses 1 a 12.
+// i)   Total anual de produccion de cada fabrica.
+// ii)  Clave de la fabrica que mas produjo en el anio y su total.
+// iii) Claves de las fabricas cuya produccion de julio supero $3 000 000.
+main {
+  int n, i, mes, clave, clavemayor;
+  float produccion, total, mayor, julio;
+  cout "Ingrese el numero de fabricas:";
+  cin n;
+  mayor = 0;
+  clavemayor = 0;
+  i = 1;
+  while (i <= n) {
+    cout "Fabrica " << i << " de " << n << ". Ingrese la clave de la fabrica:";
+    cin clave;
+    total = 0;
+    julio = 0;
+    mes = 1;
+    while (mes <= 12) {
+      if (mes == 1) then cout "Produccion de enero (fabrica " << clave << "):"; end
+      if (mes == 2) then cout "Produccion de febrero (fabrica " << clave << "):"; end
+      if (mes == 3) then cout "Produccion de marzo (fabrica " << clave << "):"; end
+      if (mes == 4) then cout "Produccion de abril (fabrica " << clave << "):"; end
+      if (mes == 5) then cout "Produccion de mayo (fabrica " << clave << "):"; end
+      if (mes == 6) then cout "Produccion de junio (fabrica " << clave << "):"; end
+      if (mes == 7) then cout "Produccion de julio (fabrica " << clave << "):"; end
+      if (mes == 8) then cout "Produccion de agosto (fabrica " << clave << "):"; end
+      if (mes == 9) then cout "Produccion de septiembre (fabrica " << clave << "):"; end
+      if (mes == 10) then cout "Produccion de octubre (fabrica " << clave << "):"; end
+      if (mes == 11) then cout "Produccion de noviembre (fabrica " << clave << "):"; end
+      if (mes == 12) then cout "Produccion de diciembre (fabrica " << clave << "):"; end
+      cin produccion;
+      total = total + produccion;
+      if (mes == 7) then
+        julio = produccion;
+      end
+      mes++;
+    }
+    cout "Fabrica " << clave << ": total anual " << total;
+    if (julio > 3000000) then
+      cout "Fabrica " << clave << " supero 3000000 en julio";
+    end
+    if (i == 1 || total > mayor) then
+      mayor = total;
+      clavemayor = clave;
+    end
+    i++;
+  }
+  cout "Fabrica que mas produjo: " << clavemayor << " con " << mayor;
+}
