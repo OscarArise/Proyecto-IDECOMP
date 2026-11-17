@@ -79,7 +79,8 @@ class ResultadoPrograma:
 
 
 def programas(grupos: Optional[List[int]] = None) -> List[Path]:
-    archivos = sorted(AQUI.glob("grupo_*/ej*.caos"))
+    archivos = sorted(a for a in AQUI.glob("grupo_*/ej*.caos")
+                      if a.parent.name.split("_", 1)[1].isdigit())
     if grupos:
         archivos = [a for a in archivos if int(a.parent.name.split("_")[1]) in grupos]
     return archivos
