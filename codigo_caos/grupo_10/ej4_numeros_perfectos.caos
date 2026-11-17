@@ -1,0 +1,25 @@
+// Grupo 10 - Ejercicio 4 (repetitivo)
+// Un numero es perfecto si la suma de sus divisores, excepto el mismo, es igual
+// al numero. Imprimir los numeros perfectos menores o iguales que N.
+main {
+  int n, x, d, suma;
+  cin n;
+  x = 2;
+  while (x <= n) {
+    suma = 1;
+    d = 2;
+    while (d * d <= x) {
+      if (x % d == 0) then
+        suma = suma + d;
+        if (d * d != x) then
+          suma = suma + x / d;
+        end
+      end
+      d++;
+    }
+    if (suma == x) then
+      cout x;
+    end
+    x++;
+  }
+}

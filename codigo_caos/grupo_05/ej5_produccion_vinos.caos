@@ -1,0 +1,54 @@
+// Ejercicio 5 (repetitivo)
+// Produccion de 5 tipos de vino a lo largo de N anios. Por cada anio se leen
+// los litros de los tipos 1 a 5.
+// a) Total producido de cada tipo de vino en los N anios.
+// b) Total producido de vino por anio.
+// c) Anio con la mayor produccion del tipo 2 y la cantidad de litros.
+// d) Si hubo algun anio sin produccion del tipo 3, imprimirlo.
+main {
+  int n, anio, v1, v2, v3, v4, v5, totanio;
+  int t1, t2, t3, t4, t5, mayor2, aniomayor;
+  bool sintipo3;
+  t1 = 0;
+  t2 = 0;
+  t3 = 0;
+  t4 = 0;
+  t5 = 0;
+  mayor2 = 0;
+  aniomayor = 0;
+  sintipo3 = false;
+  cin n;
+  anio = 1;
+  while (anio <= n) {
+    cin v1;
+    cin v2;
+    cin v3;
+    cin v4;
+    cin v5;
+    t1 = t1 + v1;
+    t2 = t2 + v2;
+    t3 = t3 + v3;
+    t4 = t4 + v4;
+    t5 = t5 + v5;
+    totanio = v1 + v2 + v3 + v4 + v5;
+    cout "Anio " << anio << ": " << totanio << " litros";
+    if (anio == 1 || v2 > mayor2) then
+      mayor2 = v2;
+      aniomayor = anio;
+    end
+    if (v3 == 0) then
+      cout "Anio " << anio << " sin produccion de vino tipo 3";
+      sintipo3 = true;
+    end
+    anio++;
+  }
+  cout "Total tipo 1: " << t1;
+  cout "Total tipo 2: " << t2;
+  cout "Total tipo 3: " << t3;
+  cout "Total tipo 4: " << t4;
+  cout "Total tipo 5: " << t5;
+  cout "Mayor produccion tipo 2: anio " << aniomayor << " con " << mayor2 << " litros";
+  if (!sintipo3) then
+    cout "Ningun anio sin produccion de vino tipo 3";
+  end
+}

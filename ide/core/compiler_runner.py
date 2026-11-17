@@ -33,7 +33,12 @@ OUTPUT_FILE_MAP: dict[str, str] = {
     "intermediate.txt": "intermedio",
     "symbols.txt": "simbolos",
     "exec.txt": "ejecucion",
+    "code.tm": "codigo_tm",
+    "code.ci": "codigo_ci",
 }
+
+# Archivo de instrucciones TM que genera la fase 4 (entrada del simulador)
+TM_FILENAME = "code.tm"
 
 # Prefijos reconocidos dentro de errors.txt para clasificar por fase
 # (el compilador stub puede incluir líneas como "[LEXICO] Error: ...")
@@ -46,7 +51,8 @@ _PHASE_KEYWORDS: dict[str, str] = {
     "semantico": "err_semantico",
     "semantic": "err_semantico",
     "sem": "err_semantico",
-    "intermedio": "intermedio",
+    "generacion": "err_generacion",
+    "intermedio": "err_generacion",
     "ejecucion": "ejecucion",
     "exec": "ejecucion",
     "runtime": "ejecucion",
@@ -94,6 +100,11 @@ class CompilerRunner:
         # Asegurar que el directorio de salida exista antes de lanzar
         # el compilador (éste escribe tokens.txt, errors.txt, etc. aquí).
         self.outputs_dir.mkdir(parents=True, exist_ok=True)
+
+    @property
+    def tm_path(self) -> Path:
+        """Ruta del code.tm generado por la última compilación."""
+        return self.outputs_dir / TM_FILENAME
 
     def run(self, source_file: str, phase: str = "all") -> CompilerResult:
         """
@@ -253,7 +264,7 @@ class CompilerRunner:
         Identifica la primera fase en que se produjo un error.
 
         Orden de prioridad (de más temprana a más tardía en la pipeline):
-            err_lexico → err_sintactico → err_semantico → intermedio → ejecucion
+            err_lexico → err_sintactico → err_semantico → err_generacion → ejecucion
 
         Retorna el nombre de la fase, o None si no se detectó ningún error.
         """
@@ -264,7 +275,7 @@ class CompilerRunner:
             "err_lexico",
             "err_sintactico",
             "err_semantico",
-            "intermedio",
+            "err_generacion",
             "ejecucion",
         ]
         for phase_key in phase_order:

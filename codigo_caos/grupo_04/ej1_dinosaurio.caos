@@ -1,0 +1,12 @@
+// Grupo 4 - Ejercicio 1 (secuencial)
+// Peso en libras y longitud en pies de un dinosaurio, convertidos a
+// kilogramos (1 lb = 0.453592 kg) y metros (1 pie = 0.3048 m).
+main {
+  float libras, pies, kilos, metros;
+  cin libras;
+  cin pies;
+  kilos = libras * 0.453592;
+  metros = pies * 0.3048;
+  cout "Peso (kg): " << kilos;
+  cout "Longitud (m): " << metros;
+}

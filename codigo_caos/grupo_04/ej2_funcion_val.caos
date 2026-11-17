@@ -1,0 +1,27 @@
+// Grupo 4 - Ejercicio 2 (selectivo)
+// VAL = 100 * V si NUM = 1;  100 ^ V si NUM = 2;  100 / V si NUM = 3;  0 en otro caso.
+main {
+  int num, v;
+  float val;
+  cin num;
+  cin v;
+  if (num == 1) then
+    val = 100 * v;
+  else
+    if (num == 2) then
+      val = 100 ^ v;
+    else
+      if (num == 3) then
+        if (v == 0) then
+          val = 0;
+          cout "No se puede dividir entre cero";
+        else
+          val = 100.0 / v;
+        end
+      else
+        val = 0;
+      end
+    end
+  end
+  cout "VAL = " << val;
+}

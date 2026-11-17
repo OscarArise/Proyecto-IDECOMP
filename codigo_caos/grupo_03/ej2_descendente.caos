@@ -1,0 +1,25 @@
+// Grupo 3 - Ejercicio 2 (selectivo)
+// Dados A, B y C enteros diferentes, escribirlos en forma descendente.
+// Se ordenan con tres comparaciones e intercambios.
+main {
+  int a, b, c, aux;
+  cin a;
+  cin b;
+  cin c;
+  if (a < b) then
+    aux = a;
+    a = b;
+    b = aux;
+  end
+  if (b < c) then
+    aux = b;
+    b = c;
+    c = aux;
+  end
+  if (a < b) then
+    aux = a;
+    a = b;
+    b = aux;
+  end
+  cout a << " " << b << " " << c;
+}

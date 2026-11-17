@@ -1,0 +1,27 @@
+// Operadores de CAOS que no existen en TINY: % ^ ! && || != <= >= ++ -- y división entera/real
+main {
+  int a, b, m, p, d;
+  float x, y;
+  bool f, g;
+  a = 17;
+  b = 5;
+  m = a % b;
+  p = 2 ^ 10;
+  d = a / b;
+  x = a / 2.0;
+  y = 2.0 ^ 0.5;
+  f = a > b && !(b == 0);
+  g = a < b || a != 17;
+  a--;
+  b++;
+  cout m;
+  cout p;
+  cout d;
+  cout x;
+  cout y;
+  cout f << " " << g;
+  cout a << " " << b;
+  if (a >= 16 && b <= 6) then
+    cout "comparaciones correctas";
+  end
+}

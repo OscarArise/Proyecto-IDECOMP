@@ -90,7 +90,12 @@ class Panels:
         self.results_notebook.add(self.tab_comparacion_frame, text="Comparacion")
         self._build_comparison_tab()
 
-        self.tab_intermedio = self._make_result_tab("Intermedio")
+        # Fase 4: instrucciones TM (.tm) y código de tres direcciones (.ci)
+        self.tab_intermedio = self._make_result_tab("Codigo Intermedio", wrap="none")
+        self._configure_tm_tags(self.tab_intermedio)
+        self.tab_tres_direcciones = self._make_result_tab(
+            "Codigo intermedio de tres direcciones", wrap="none"
+        )
         self.tab_simbolos = self._make_result_tab("Simbolos", wrap="none")
 
     #Pestaña "Comparacion": AST original (izquierda) y AST anotado (derecha)
@@ -154,7 +159,12 @@ class Panels:
         self.tab_err_lexico = self._make_result_tab("Errores Lexicos", notebook = self.bottom_notebook)
         self.tab_err_sintactico = self._make_result_tab("Errores Sintacticos", notebook = self.bottom_notebook)
         self.tab_err_semantico = self._make_result_tab("Errores Semanticos", notebook = self.bottom_notebook)
+        self.tab_err_generacion = self._make_result_tab("Errores Generacion", notebook = self.bottom_notebook)
         self.tab_ejecucion = self._make_result_tab("Ejecucion", notebook = self.bottom_notebook)
+        self.tab_ejecucion.tag_configure("tm_input", foreground="#4fc1ff")
+        self.tab_ejecucion.tag_configure("tm_info", foreground="#8f98aa")
+        self.tab_ejecucion.tag_configure("tm_error", foreground="#f48771")
+        self.tab_ejecucion.tag_configure("tm_ok", foreground="#89d185")
 
     #Ventana de solo lectura
     def _make_result_tab(self, title, notebook = None, wrap = "char"):
@@ -190,6 +200,46 @@ class Panels:
         widget.insert(tk.END, content)
         widget.config(state = "disabled")
 
+    #agregar texto al final de un panel (salida del simulador TM)
+    def append(self, widget, content, tag=None):
+        widget.config(state = "normal")
+        widget.insert(tk.END, content, tag) if tag else widget.insert(tk.END, content)
+        widget.see(tk.END)
+        widget.config(state = "disabled")
+
+    #Colores del listado TM: comentarios, dirección, opcode y operandos
+    @staticmethod
+    def _configure_tm_tags(widget):
+        widget.tag_configure("tm_comment", foreground="#6a9955")
+        widget.tag_configure("tm_loc", foreground="#dcdcaa")
+        widget.tag_configure("tm_op", foreground="#569cd6", font=("Courier New", 10, "bold"))
+        widget.tag_configure("tm_args", foreground="#ce9178")
+        widget.tag_configure("tm_note", foreground="#808080")
+
+    #escribir un listado .tm distinguiendo dirección, instrucción y operandos
+    def write_tm(self, widget, content):
+        widget.config(state = "normal")
+        widget.delete(1.0, tk.END)
+        for line in content.splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("*"):
+                widget.insert(tk.END, line + "\n", "tm_comment")
+                continue
+            loc, _, rest = line.partition(":")
+            parts = rest.split(None, 2)
+            widget.insert(tk.END, loc + ":", "tm_loc")
+            if len(parts) >= 2:
+                opcode_start = rest.find(parts[0])
+                widget.insert(tk.END, rest[:opcode_start])
+                widget.insert(tk.END, parts[0] + "  ", "tm_op")
+                widget.insert(tk.END, parts[1], "tm_args")
+                if len(parts) == 3:
+                    widget.insert(tk.END, "\t" + parts[2], "tm_note")
+                widget.insert(tk.END, "\n")
+            else:
+                widget.insert(tk.END, rest + "\n")
+        widget.config(state = "disabled")
+
     #limpiar un panel
     def clear(self, widget):
         if widget is None:
@@ -204,9 +254,9 @@ class Panels:
         for widget in [
             self.tab_lexico, self.tab_sintactico_conectado,
             self.tab_sintactico_analisis, self.tab_semantico,
-            self.tab_intermedio, self.tab_simbolos,
+            self.tab_intermedio, self.tab_tres_direcciones, self.tab_simbolos,
             self.tab_err_lexico, self.tab_err_sintactico,
-            self.tab_err_semantico, self.tab_ejecucion
+            self.tab_err_semantico, self.tab_err_generacion, self.tab_ejecucion
         ]:
             self.clear(widget)
         for viewer in (

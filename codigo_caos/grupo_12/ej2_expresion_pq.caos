@@ -1,0 +1,13 @@
+// Ejercicio 2 (selectivo)
+// Dados los enteros P y Q, determinar si satisfacen P^3 + Q^4 - 2 * P^2 < 680
+main {
+  int p, q, valor;
+  cin p;
+  cin q;
+  valor = p ^ 3 + q ^ 4 - 2 * p ^ 2;
+  if (valor < 680) then
+    cout "P y Q satisfacen la expresion (" << valor << " < 680)";
+  else
+    cout "P y Q no satisfacen la expresion (" << valor << " >= 680)";
+  end
+}

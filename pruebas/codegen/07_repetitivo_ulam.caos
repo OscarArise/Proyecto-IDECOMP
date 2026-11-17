@@ -1,0 +1,14 @@
+// Repetitivo: sucesión de ULAM (Grupo 11, ejercicio 4)
+main {
+  int n;
+  cin n;
+  cout n;
+  while (n != 1) {
+    if (n % 2 == 0) then
+      n = n / 2;
+    else
+      n = n * 3 + 1;
+    end
+    cout n;
+  }
+}

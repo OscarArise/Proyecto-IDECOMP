@@ -1,0 +1,10 @@
+// Ejercicio 1 (secuencial)
+// Dados los enteros A y B, escribir el resultado de (A + B)^2 / 3
+main {
+  int a, b;
+  float resultado;
+  cin a;
+  cin b;
+  resultado = (a + b) ^ 2 / 3.0;
+  cout "Resultado: " << resultado;
+}

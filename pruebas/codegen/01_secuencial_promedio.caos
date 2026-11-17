@@ -1,0 +1,14 @@
+// Secuencial: matrícula y promedio de 5 calificaciones (Grupo 2, ejercicio 1)
+main {
+  int id;
+  float c1, c2, c3, c4, c5, promedio;
+  cin id;
+  cin c1;
+  cin c2;
+  cin c3;
+  cin c4;
+  cin c5;
+  promedio = (c1 + c2 + c3 + c4 + c5) / 5;
+  cout "Matricula: " << id;
+  cout "Promedio: " << promedio;
+}

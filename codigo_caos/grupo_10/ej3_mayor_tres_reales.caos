@@ -1,0 +1,20 @@
+// Ejercicio 3 (selectivo)
+// Dados tres numeros reales, identificar cual es el mayor (pueden ser iguales).
+main {
+  float a, b, c, mayor;
+  cin a;
+  cin b;
+  cin c;
+  if (a == b && b == c) then
+    cout "Los tres son iguales: " << a;
+  else
+    mayor = a;
+    if (b > mayor) then
+      mayor = b;
+    end
+    if (c > mayor) then
+      mayor = c;
+    end
+    cout "Mayor: " << mayor;
+  end
+}

@@ -1,0 +1,13 @@
+// Factorial: el mismo programa del ejemplo de TINY (factorial.tny) escrito en CAOS
+main {
+  int x, fact;
+  cin x;
+  if (0 < x) then
+    fact = 1;
+    do
+      fact = fact * x;
+      x = x - 1;
+    until (x == 0);
+    cout fact;
+  end
+}

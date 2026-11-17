@@ -1,8 +1,9 @@
 import json
 import os
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, simpledialog
 
+from core import tm_tools
 from core.compiler_runner import CompilerRunner
 from core.ast_text import ast_to_connected_text
 from core.file_manager import FileManager
@@ -27,6 +28,10 @@ class IDEWindow:
         self.state = AppState()
         self._last_errors_content = ""
         self._suppress_modified = False
+        # Ejecución en el simulador TM integrado
+        self._tm = None
+        self._tm_after_id = None
+        self._tm_line_open = False
         self._create_ui()
 
         self.file_manager = FileManager(
@@ -62,6 +67,7 @@ class IDEWindow:
                 "semantico": self.run_semantico,
                 "intermedio": self.run_intermedio,
                 "ejecutar": self.run_ejecutar,
+                "tm_consola": self.open_tm_console,
             },
         )
 
@@ -154,6 +160,7 @@ class IDEWindow:
         self.root.bind_all("<F7>", lambda e: self.run_semantico())
         self.root.bind_all("<F8>", lambda e: self.run_intermedio())
         self.root.bind_all("<F9>", lambda e: self.run_ejecutar())
+        self.root.bind_all("<Shift-F9>", lambda e: self.open_tm_console())
 
     def _bind_editor_events(self):
         """Bindings propios del área de texto."""
@@ -314,9 +321,26 @@ class IDEWindow:
         self._run_phase("intermedio")
 
     def run_ejecutar(self):
-        self._run_phase("ejecutar")
+        # Siempre se recompila: el simulador recibe el .tm del fuente actual
+        result = self._run_phase("ejecutar")
+        if result and result.success:
+            self._start_tm_execution()
+
+    def open_tm_console(self):
+        """Compila el fuente actual y abre su code.tm en tm.exe (consola externa)."""
+        result = self._run_phase("intermedio")
+        if not result or not result.success:
+            return
+        error = tm_tools.open_tm_console(self.compiler.tm_path)
+        if error:
+            messagebox.showerror("TM (consola)", error, parent=self.root)
+            return
+        self.status_bar.config(
+            text="\u2714 code.tm abierto en tm.exe (consola externa)", fg="#27ae60"
+        )
 
     def _run_phase(self, phase: str):
+        self._stop_tm_execution()
 
         # Guardar antes de compilar
         if self.state.has_unsaved_changes() or not self.state.current_file:
@@ -350,7 +374,7 @@ class IDEWindow:
         # Volcar salidas en paneles de resultados
         panel_map = {
             "lexico": self.panels.tab_lexico,
-            "intermedio": self.panels.tab_intermedio,
+            "codigo_ci": self.panels.tab_tres_direcciones,
             "simbolos": self.panels.tab_simbolos,
             "ejecucion": self.panels.tab_ejecucion,
         }
@@ -358,6 +382,10 @@ class IDEWindow:
             content = result.outputs.get(key, "")
             if content.strip():
                 self.panels.write(widget, content)
+
+        # Código Intermedio: listado TM con dirección, instrucción y operandos
+        if result.outputs.get("codigo_tm", "").strip():
+            self.panels.write_tm(self.panels.tab_intermedio, result.outputs["codigo_tm"])
         
         # Caso especial para semántico: texto legible + árbol anotado + comparación
         self._load_semantic_results(
@@ -380,6 +408,7 @@ class IDEWindow:
             "err_lexico": self.panels.tab_err_lexico,
             "err_sintactico": self.panels.tab_err_sintactico,
             "err_semantico": self.panels.tab_err_semantico,
+            "err_generacion": self.panels.tab_err_generacion,
         }
         for key, widget in error_panel_map.items():
             content = result.errors_by_phase.get(key, "")
@@ -401,7 +430,7 @@ class IDEWindow:
             )
 
         # Navegar a la pestaña del resultado de esta fase
-        self._focus_result_tab(phase, result.success)
+        self._focus_result_tab(phase, result.success, result.failed_phase)
 
         # Actualizar barra de estado
         if result.success:
@@ -415,6 +444,7 @@ class IDEWindow:
                 text=f"\u2716 Error en fase: {fase_fallida}  (c\u00f3d. {result.returncode})",
                 fg="#c0392b",
             )
+        return result
 
     # Navegación automática de pestañas tras compilar
     # Mapa fase → (notebook_attr, tab_widget_attr)
@@ -428,15 +458,31 @@ class IDEWindow:
         "lexico": ("bottom_notebook", "tab_err_lexico"),
         "sintactico": ("bottom_notebook", "tab_err_sintactico"),
         "semantico": ("bottom_notebook", "tab_err_semantico"),
-        "intermedio": ("bottom_notebook", "tab_err_lexico"),
+        "intermedio": ("bottom_notebook", "tab_err_generacion"),
         "ejecutar": ("bottom_notebook", "tab_ejecucion"),
     }
+    # Fase en la que falló el compilador → pestaña de errores de esa fase
+    _FAILED_PHASE_TAB = {
+        "err_lexico": ("bottom_notebook", "tab_err_lexico"),
+        "err_sintactico": ("bottom_notebook", "tab_err_sintactico"),
+        "err_semantico": ("bottom_notebook", "tab_err_semantico"),
+        "err_generacion": ("bottom_notebook", "tab_err_generacion"),
+    }
 
-    def _focus_result_tab(self, phase: str, success: bool):
+    def _focus_result_tab(self, phase: str, success: bool, failed_phase: str | None = None):
         """
         Selecciona la pestaña de resultado (éxito) o de error (fallo)
-        correspondiente a la fase que acaba de ejecutarse.
+        correspondiente a la fase que acaba de ejecutarse. Si falló una fase
+        anterior (por ejemplo, un error léxico al pedir Ejecutar), se muestra
+        la pestaña de errores de esa fase.
         """
+        if not success and failed_phase in self._FAILED_PHASE_TAB:
+            notebook_attr, tab_attr = self._FAILED_PHASE_TAB[failed_phase]
+            frame = self.panels.get_tab_frame(getattr(self.panels, tab_attr))
+            if frame:
+                getattr(self.panels, notebook_attr).select(frame)
+            return
+
         # Caso especial para sintáctico con árbol
         if phase == "sintactico" and success:
             try:
@@ -534,3 +580,119 @@ class IDEWindow:
 
     def _ast_to_connected_text(self, ast_dict: dict) -> str:
         return ast_to_connected_text(ast_dict)
+
+    # ------------------------------------------------------------------
+    # Ejecución del code.tm en el simulador TM integrado (tm/tm.py)
+    # ------------------------------------------------------------------
+
+    # Instrucciones por bloque antes de devolver el control a Tk, y límite
+    # total para detectar ciclos infinitos
+    _TM_CHUNK = 20000
+    _TM_MAX_STEPS = 5_000_000
+
+    def _start_tm_execution(self):
+        tm_path = self.compiler.tm_path
+        try:
+            tm_text = tm_path.read_text(encoding="utf-8")
+        except OSError as exc:
+            self.panels.write(self.panels.tab_ejecucion, f"No se pudo leer {tm_path.name}: {exc}\n")
+            return
+
+        out = self.panels.tab_ejecucion
+        self.panels.clear(out)
+        self._tm = tm_tools.TMSimulator(on_input=self._tm_input, on_output=self._tm_output)
+        try:
+            self._tm.load(tm_text)
+        except tm_tools.TMLoadError as exc:
+            self.panels.append(out, f"Error al cargar {tm_path.name} en la TM:\n{exc}\n", "tm_error")
+            self._tm = None
+            return
+
+        fuente = os.path.basename(self.state.current_file or "")
+        self.panels.append(
+            out,
+            f"TM: ejecutando {tm_path.name} generado de {fuente}\n"
+            + "-" * 60 + "\n",
+            "tm_info",
+        )
+        self._tm_line_open = False
+        self.status_bar.config(text="\u23f3 Ejecutando en la TM...", fg="#7f8c8d")
+        self._focus_result_tab("ejecutar", True)
+        self._tm_after_id = self.root.after(1, self._tm_run_chunk)
+
+    def _tm_run_chunk(self):
+        self._tm_after_id = None
+        tm = self._tm
+        if tm is None:
+            return
+        for _ in range(self._TM_CHUNK):
+            resultado = tm.step()
+            if resultado != tm_tools.OKAY:
+                self._finish_tm_execution(resultado)
+                return
+            if tm.steps >= self._TM_MAX_STEPS:
+                self._finish_tm_execution(tm_tools.STEP_LIMIT)
+                return
+        self._tm_after_id = self.root.after(1, self._tm_run_chunk)
+
+    def _finish_tm_execution(self, resultado: str):
+        out = self.panels.tab_ejecucion
+        if self._tm_line_open:
+            self.panels.append(out, "\n")
+        pasos = self._tm.steps if self._tm else 0
+        self.panels.append(out, "-" * 60 + "\n", "tm_info")
+        if resultado == tm_tools.HALT:
+            self.panels.append(out, f"HALT: ejecución terminada ({pasos} instrucciones ejecutadas)\n", "tm_ok")
+            self.status_bar.config(text="\u2714 Ejecución en la TM terminada (HALT)", fg="#27ae60")
+        else:
+            mensajes = {
+                tm_tools.STEP_LIMIT: f"se alcanzó el límite de {self._TM_MAX_STEPS} instrucciones "
+                                     "(¿ciclo infinito?)",
+                tm_tools.ZERODIVIDE: "división entre 0 (Division by 0)",
+                tm_tools.DMEM_ERR: "acceso fuera de la memoria de datos (Data Memory Fault)",
+                tm_tools.IMEM_ERR: "salto fuera de la memoria de instrucciones "
+                                   "(Instruction Memory Fault)",
+                tm_tools.INPUT_CANCELLED: "se canceló la entrada de datos",
+            }
+            detalle = mensajes.get(resultado, resultado)
+            self.panels.append(out, f"La ejecución se detuvo: {detalle} "
+                                    f"({pasos} instrucciones ejecutadas)\n", "tm_error")
+            self.status_bar.config(text=f"\u2716 TM: {detalle}", fg="#c0392b")
+        self._tm = None
+
+    def _stop_tm_execution(self):
+        if self._tm_after_id is not None:
+            self.root.after_cancel(self._tm_after_id)
+            self._tm_after_id = None
+        self._tm = None
+
+    def _tm_output(self, texto: str):
+        self.panels.append(self.panels.tab_ejecucion, texto)
+        if texto:
+            self._tm_line_open = not texto.endswith("\n")
+
+    def _tm_input(self, real: bool):
+        """IN pide un entero e INF un real; None cancela la ejecución."""
+        out = self.panels.tab_ejecucion
+        instruccion = "INF" if real else "IN"
+        clase = "real" if real else "entero"
+        self.root.update_idletasks()
+        while True:
+            texto = simpledialog.askstring(
+                f"Entrada para {instruccion}",
+                f"La TM ejecuta {instruccion}: escriba un valor {clase}",
+                parent=self.root,
+            )
+            if texto is None:
+                return None
+            valor = tm_tools.parse_input(texto, real)
+            if valor is not None:
+                break
+            messagebox.showwarning(
+                "Valor no válido", f"'{texto}' no es un valor {clase} válido.", parent=self.root
+            )
+        if self._tm_line_open:
+            self.panels.append(out, "\n")
+            self._tm_line_open = False
+        self.panels.append(out, f"[{instruccion}] {texto.strip()}\n", "tm_input")
+        return valor

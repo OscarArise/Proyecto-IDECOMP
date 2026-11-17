@@ -1,0 +1,8 @@
+// Grupo 6 - Ejercicio 1 (secuencial)
+// Numero de segundos que hay en un determinado numero de dias.
+main {
+  int dias, segundos;
+  cin dias;
+  segundos = dias * 24 * 60 * 60;
+  cout "Segundos: " << segundos;
+}

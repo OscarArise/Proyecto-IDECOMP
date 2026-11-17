@@ -1,0 +1,10 @@
+// Ejercicio 1 (secuencial)
+// Dado el costo de un articulo y el dinero entregado por el cliente,
+// calcular el cambio que se le debe entregar.
+main {
+  float costo, pago, cambio;
+  cin costo;
+  cin pago;
+  cambio = pago - costo;
+  cout "Cambio: " << cambio;
+}

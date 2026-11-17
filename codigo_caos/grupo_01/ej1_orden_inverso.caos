@@ -1,0 +1,10 @@
+// Grupo 1 - Ejercicio 1 (secuencial)
+// Dados los enteros A, B, C y D, escribirlos en orden inverso.
+main {
+  int a, b, c, d;
+  cin a;
+  cin b;
+  cin c;
+  cin d;
+  cout d << " " << c << " " << b << " " << a;
+}

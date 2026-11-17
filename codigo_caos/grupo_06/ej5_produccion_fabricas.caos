@@ -1,0 +1,38 @@
+// Ejercicio 5 (repetitivo)
+// Produccion de N fabricas en los 12 meses del anio anterior.
+// Datos: N; luego por fabrica su clave y la produccion de los meses 1 a 12.
+// i)   Total anual de produccion de cada fabrica.
+// ii)  Clave de la fabrica que mas produjo en el anio y su total.
+// iii) Claves de las fabricas cuya produccion de julio supero $3 000 000.
+main {
+  int n, i, mes, clave, clavemayor;
+  float produccion, total, mayor, julio;
+  cin n;
+  mayor = 0;
+  clavemayor = 0;
+  i = 1;
+  while (i <= n) {
+    cin clave;
+    total = 0;
+    julio = 0;
+    mes = 1;
+    while (mes <= 12) {
+      cin produccion;
+      total = total + produccion;
+      if (mes == 7) then
+        julio = produccion;
+      end
+      mes++;
+    }
+    cout "Fabrica " << clave << ": total anual " << total;
+    if (julio > 3000000) then
+      cout "Fabrica " << clave << " supero 3000000 en julio";
+    end
+    if (i == 1 || total > mayor) then
+      mayor = total;
+      clavemayor = clave;
+    end
+    i++;
+  }
+  cout "Fabrica que mas produjo: " << clavemayor << " con " << mayor;
+}

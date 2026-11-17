@@ -41,3 +41,15 @@ external_compiler/semantic.txt
 external_compiler/intermediate.txt
 external_compiler/errors.txt
 external_compiler/exec.txt
+
+# Fase 4: código generado y simulador compilado
+ide/outputs/code.tm
+ide/outputs/code.ci
+/code.tm
+/code.ci
+external_compiler/code.tm
+external_compiler/code.ci
+tm/tm.exe
+
+# Evidencia generada por codigo_caos/probar_ejercicios.py
+codigo_caos/salidas/

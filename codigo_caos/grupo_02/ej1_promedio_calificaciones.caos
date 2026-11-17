@@ -1,0 +1,15 @@
+// Grupo 2 - Ejercicio 1 (secuencial)
+// Dado el ID y 5 calificaciones de un alumno, imprimir la matricula y el promedio.
+main {
+  int id;
+  float c1, c2, c3, c4, c5, promedio;
+  cin id;
+  cin c1;
+  cin c2;
+  cin c3;
+  cin c4;
+  cin c5;
+  promedio = (c1 + c2 + c3 + c4 + c5) / 5;
+  cout "Matricula: " << id;
+  cout "Promedio: " << promedio;
+}
