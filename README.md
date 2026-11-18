@@ -2,12 +2,14 @@
 
 Proyecto de Compiladores II (UAA). IDE en Python/Tkinter con un compilador por fases para el lenguaje CAOS.
 
+**Estado del proyecto: Finalizado.**
+
 | Fase | Estado | Código |
 |---|---|---|
 | 1. Léxico | Completa | `external_compiler/lexer/` |
 | 2. Sintáctico (AST) | Completa | `external_compiler/parser/` |
 | 3. Semántico (tabla de símbolos, tipos) | Completa | `external_compiler/semantic/` |
-| Código intermedio / ejecución | Stubs (fases futuras) | `external_compiler/compiler_stub.py` |
+| 4. Generación de código / ejecución | Completa | `external_compiler/codegen/`, `external_compiler/tm/` |
 
 ## Requisitos
 
@@ -25,13 +27,14 @@ Línea de comandos (desde `external_compiler/`):
 python compiler_stub.py ../pruebas/TestSemantica.txt --phase semantico
 ```
 
-Códigos de salida: 0 ok, 1 léxico, 2 sintáctico, 3 semántico. Ver `external_compiler/README_run.txt`.
+Códigos de salida: 0 ok, 1 léxico, 2 sintáctico, 3 semántico, 4 generación de código y 5 ejecución. Ver `external_compiler/README_run.txt`.
 
 ## Pruebas
 
 ```
 cd external_compiler
 python -m unittest test_semantico test_integracion test_parser_recovery
+python -m unittest test_codegen
 cd ../ide
 python -m unittest test_semantic_output
 ```
@@ -41,5 +44,5 @@ python -m unittest test_semantic_output
 - `ide/` — interfaz gráfica (editor, paneles, visor de árboles).
 - `external_compiler/` — compilador (lexer, parser, semantic) y sus pruebas.
 - `pruebas/` — programas de prueba; `TestSemantica.txt` es la prueba oficial de la Fase 3.
-- `docs/` — documentación por bloque e `informe-fase3.md` (construcción, decisiones y demostración).
-- `entrega/` — entregables de la Fase 3 (salidas, capturas, PDF y su generador).
+- `docs/` — documentación de las fases, generación de código y ejecución.
+- `entrega/` — entregables finales (salidas, capturas, PDF y su generador).
